@@ -17,6 +17,14 @@ COPY src ./src
 COPY migrations ./migrations
 COPY .sqlx ./.sqlx
 
+# Debug: Check environment
+RUN echo "=== BUILD DEBUG INFO ===" && \
+    echo "SQLX_OFFLINE will be set to: true" && \
+    echo "DATABASE_URL is set: $(if [ -n "$DATABASE_URL" ]; then echo YES; else echo NO; fi)" && \
+    echo ".sqlx directory contents:" && \
+    ls -la .sqlx/ | head -5 && \
+    echo "======================="
+
 # Build application with offline mode (no DATABASE_URL needed)
 ENV SQLX_OFFLINE=true
 RUN touch src/main.rs && cargo build --release
