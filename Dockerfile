@@ -11,10 +11,14 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy dependency files first for better caching
-COPY backend/Cargo.toml ./
+# Configure cargo for better network reliability
+ENV CARGO_NET_RETRY=10
+ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 
-# Create dummy main.rs to build dependencies (Cargo will generate Cargo.lock)
+# Copy dependency files first for better caching
+COPY backend/Cargo.toml backend/Cargo.lock ./
+
+# Create dummy main.rs to build dependencies
 RUN mkdir src && \
     echo "fn main() {}" > src/main.rs && \
     cargo build --release && \
