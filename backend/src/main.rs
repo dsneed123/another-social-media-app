@@ -37,22 +37,21 @@ pub struct AppState {
 }
 
 async fn serve_login() -> Html<String> {
-    let html = tokio::fs::read_to_string("../frontend/start.html").await.unwrap();
-    Html(html)
+    Html("<h1>API Server Running</h1><p>Frontend not available. Use API endpoints directly.</p>".to_string())
 }
 
 async fn serve_chat() -> Html<String> {
-    let html = tokio::fs::read_to_string("../frontend/basic-chat.html").await.unwrap();
-    Html(html)
+    Html("<h1>API Server Running</h1><p>Frontend not available. Use API endpoints directly.</p>".to_string())
 }
 
 async fn serve_test_chat() -> Html<String> {
-    let html = tokio::fs::read_to_string("../frontend/test-chat.html").await.unwrap();
-    Html(html)
+    Html("<h1>API Server Running</h1><p>Frontend not available. Use API endpoints directly.</p>".to_string())
 }
 
 async fn serve_stories() -> Html<String> {
-    let html = tokio::fs::read_to_string("../frontend/stories.html").await.unwrap();
+    let html = tokio::fs::read_to_string("../frontend/stories.html").await.unwrap_or_else(|_| {
+        "<h1>API Server Running</h1><p>Frontend not available. Use API endpoints directly.</p>".to_string()
+    });
     Html(html)
 }
 
