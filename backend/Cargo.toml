@@ -16,7 +16,7 @@ rand_core = "0.6"
 chrono = { version = "0.4", features = ["serde"] }
 dotenvy = "0.15"
 tower-http = { version = "0.5", features = ["cors", "fs", "trace"] }
-redis = { version = "0.24", features = ["tokio-comp", "connection-manager"] }
+redis = { version = "0.24", features = ["tokio-comp", "connection-manager", "tokio-native-tls-comp"] }
 aws-sdk-s3 = "1.0"
 aws-config = "1.0"
 futures = "0.3"
