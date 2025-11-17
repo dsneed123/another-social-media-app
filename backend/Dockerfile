@@ -5,7 +5,7 @@ FROM rust:1.75 as builder
 WORKDIR /app
 
 # Copy manifests
-COPY Cargo.toml Cargo.lock ./
+COPY backend/Cargo.toml backend/Cargo.lock ./
 
 # Build dependencies (cached layer)
 RUN mkdir src && \
@@ -14,9 +14,9 @@ RUN mkdir src && \
     rm -rf src
 
 # Copy source code
-COPY src ./src
-COPY migrations ./migrations
-COPY .sqlx ./.sqlx
+COPY backend/src ./src
+COPY backend/migrations ./migrations
+COPY backend/.sqlx ./.sqlx
 
 # Debug: Check environment
 RUN echo "=== BUILD DEBUG INFO ===" && \
@@ -46,10 +46,10 @@ WORKDIR /app
 COPY --from=builder /app/target/release/backend /app/backend
 
 # Copy frontend files
-COPY ../frontend ./frontend
+COPY frontend ./frontend
 
 # Copy migrations
-COPY migrations ./migrations
+COPY backend/migrations ./migrations
 
 # Expose port
 EXPOSE 3000
