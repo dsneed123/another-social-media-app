@@ -81,7 +81,7 @@ services:
 
       - key: SQLX_OFFLINE
         scope: RUN_AND_BUILD_TIME
-        value: "false"
+        value: "true"
 
     health_check:
       http_path: /health
