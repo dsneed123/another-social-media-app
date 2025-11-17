@@ -34,6 +34,12 @@ services:
     instance_count: 1
     instance_size_slug: basic-xs  # $5/month - Upgrade to basic-s ($12/mo) for production
 
+    # Pass DATABASE_URL as build argument
+    build:
+      args:
+        - name: DATABASE_URL
+          value: ${DATABASE_URL}
+
     envs:
       - key: DATABASE_URL
         scope: RUN_AND_BUILD_TIME
