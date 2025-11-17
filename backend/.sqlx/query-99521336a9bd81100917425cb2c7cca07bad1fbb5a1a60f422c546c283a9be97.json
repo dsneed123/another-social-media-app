@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO message_reads (message_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING read_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "read_at",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "99521336a9bd81100917425cb2c7cca07bad1fbb5a1a60f422c546c283a9be97"
+}

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE stories\n        SET view_count = view_count + 1\n        WHERE id = $1\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9671e55c69bb3bd2ae4c9614df6d5cbb1fa2edb151f9db9e7f49837a70ae3c31"
+}

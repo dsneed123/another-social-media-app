@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT \n            u.id,\n            u.username,\n            sl.created_at\n        FROM story_likes sl\n        JOIN users u ON sl.user_id = u.id\n        WHERE sl.story_id = $1\n        ORDER BY sl.created_at DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "254ed55b4da5a6752552a3160dc1a0b3e5b11c05941d505f97293e7fa12a5a27"
+}

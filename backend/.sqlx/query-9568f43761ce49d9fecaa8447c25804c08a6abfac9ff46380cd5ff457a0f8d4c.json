@@ -1,0 +1,67 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO story_comments (story_id, user_id, comment_text, parent_comment_id)\n        VALUES ($1, $2, $3, $4)\n        RETURNING \n            id,\n            story_id,\n            user_id,\n            (SELECT username FROM users WHERE id = $2) as \"username!\",\n            comment_text,\n            parent_comment_id,\n            reply_count,\n            created_at\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "story_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "username!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "comment_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "parent_comment_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "reply_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "9568f43761ce49d9fecaa8447c25804c08a6abfac9ff46380cd5ff457a0f8d4c"
+}

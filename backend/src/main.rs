@@ -209,20 +209,7 @@ async fn main() {
         // WebSocket endpoint
         .route("/ws/:user_id", get(websocket::ws_handler))
 
-        .layer({
-            let cors_origin = std::env::var("CORS_ORIGIN")
-                .unwrap_or_else(|_| "*".to_string());
-
-            if cors_origin == "*" {
-                CorsLayer::permissive()
-            } else {
-                CorsLayer::new()
-                    .allow_origin(cors_origin.parse::<tower_http::cors::AllowOrigin>().unwrap())
-                    .allow_methods(tower_http::cors::Any)
-                    .allow_headers(tower_http::cors::Any)
-                    .allow_credentials(true)
-            }
-        })
+        .layer(CorsLayer::permissive())
         .with_state(state)
         // Serve static files from frontend directory as fallback
         .fallback_service(ServeDir::new("../frontend"));

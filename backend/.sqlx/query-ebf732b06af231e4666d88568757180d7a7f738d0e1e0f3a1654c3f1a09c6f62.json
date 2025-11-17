@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT \n            c.id,\n            c.story_id,\n            c.user_id,\n            u.username,\n            c.comment_text,\n            c.parent_comment_id,\n            c.reply_count,\n            c.created_at\n        FROM story_comments c\n        JOIN users u ON c.user_id = u.id\n        WHERE c.parent_comment_id = $1\n        ORDER BY c.created_at ASC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "story_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "comment_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "parent_comment_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "reply_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "ebf732b06af231e4666d88568757180d7a7f738d0e1e0f3a1654c3f1a09c6f62"
+}

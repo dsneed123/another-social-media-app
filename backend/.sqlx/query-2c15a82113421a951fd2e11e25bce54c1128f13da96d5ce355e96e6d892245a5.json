@@ -1,0 +1,100 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT \n            s.id,\n            s.user_id,\n            s.media_url,\n            s.media_type,\n            s.thumbnail_url,\n            s.caption,\n            s.view_count as \"view_count?\",\n            s.like_count as \"like_count?\",\n            s.comment_count as \"comment_count?\",\n            s.created_at,\n            s.expires_at,\n            u.username,\n            CASE WHEN sv.viewer_id IS NOT NULL THEN TRUE ELSE FALSE END as \"is_viewed?\",\n            EXISTS(SELECT 1 FROM story_likes sl WHERE sl.story_id = s.id AND sl.user_id = $1) as \"is_liked?\"\n        FROM stories s\n        JOIN users u ON s.user_id = u.id\n        LEFT JOIN story_views sv ON s.id = sv.story_id AND sv.viewer_id = $1\n        WHERE s.expires_at > NOW()\n        ORDER BY \n            CASE WHEN sv.viewer_id IS NULL THEN 0 ELSE 1 END,\n            s.created_at DESC\n        LIMIT 50\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "media_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "media_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "thumbnail_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "caption",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "view_count?",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "like_count?",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "comment_count?",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 10,
+        "name": "expires_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 11,
+        "name": "username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 12,
+        "name": "is_viewed?",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 13,
+        "name": "is_liked?",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "2c15a82113421a951fd2e11e25bce54c1128f13da96d5ce355e96e6d892245a5"
+}

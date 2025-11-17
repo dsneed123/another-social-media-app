@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO story_likes (story_id, user_id)\n        VALUES ($1, $2)\n        ON CONFLICT (story_id, user_id) DO NOTHING\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "82b051ea17329b93a3cb83270619b07e0d97f624bb303f5f7ec47811eb68d61a"
+}
