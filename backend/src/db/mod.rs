@@ -23,33 +23,9 @@ pub async fn init_pool() -> PgPool {
         }
     };
     
-    let mut database_url = database_url;
+    let database_url = database_url;
     
     println!("Attempting to connect to database...");
-    
-    // Remove sslmode if present and add sslmode=disable for internal DO connections
-    // Digital Ocean's internal network doesn't require SSL
-    if database_url.contains("sslmode=") {
-        println!("  Removing existing sslmode parameter");
-        // Remove existing sslmode parameter
-        let parts: Vec<&str> = database_url.split('?').collect();
-        if parts.len() > 1 {
-            let base = parts[0];
-            let params: Vec<&str> = parts[1].split('&')
-                .filter(|p| !p.starts_with("sslmode="))
-                .collect();
-            database_url = if params.is_empty() {
-                base.to_string()
-            } else {
-                format!("{}?{}", base, params.join("&"))
-            };
-        }
-    }
-    
-    // Add sslmode=disable for internal network connection
-    let separator = if database_url.contains('?') { "&" } else { "?" };
-    database_url.push_str(&format!("{}sslmode=disable", separator));
-    println!("  Using sslmode=disable for internal network");
     
     let pool = PgPoolOptions::new()
         .max_connections(5)
