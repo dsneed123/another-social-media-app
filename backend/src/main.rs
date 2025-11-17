@@ -37,26 +37,37 @@ pub struct AppState {
 }
 
 async fn serve_login() -> Html<String> {
-    Html("<h1>API Server Running</h1><p>Frontend not available. Use API endpoints directly.</p>".to_string())
+    let html = tokio::fs::read_to_string("frontend/start.html")
+        .await
+        .unwrap_or_else(|_| "<h1>Error loading page</h1>".to_string());
+    Html(html)
 }
 
 async fn serve_chat() -> Html<String> {
-    Html("<h1>API Server Running</h1><p>Frontend not available. Use API endpoints directly.</p>".to_string())
+    let html = tokio::fs::read_to_string("frontend/basic-chat.html")
+        .await
+        .unwrap_or_else(|_| "<h1>Error loading page</h1>".to_string());
+    Html(html)
 }
 
 async fn serve_test_chat() -> Html<String> {
-    Html("<h1>API Server Running</h1><p>Frontend not available. Use API endpoints directly.</p>".to_string())
+    let html = tokio::fs::read_to_string("frontend/test-chat.html")
+        .await
+        .unwrap_or_else(|_| "<h1>Error loading page</h1>".to_string());
+    Html(html)
 }
 
 async fn serve_stories() -> Html<String> {
-    let html = tokio::fs::read_to_string("../frontend/stories.html").await.unwrap_or_else(|_| {
-        "<h1>API Server Running</h1><p>Frontend not available. Use API endpoints directly.</p>".to_string()
-    });
+    let html = tokio::fs::read_to_string("frontend/stories.html")
+        .await
+        .unwrap_or_else(|_| "<h1>Error loading page</h1>".to_string());
     Html(html)
 }
 
 async fn serve_create_story() -> Html<String> {
-    let html = tokio::fs::read_to_string("../frontend/create-story.html").await.unwrap();
+    let html = tokio::fs::read_to_string("frontend/create-story.html")
+        .await
+        .unwrap_or_else(|_| "<h1>Error loading page</h1>".to_string());
     Html(html)
 }
 
@@ -211,7 +222,7 @@ async fn main() {
         .layer(CorsLayer::permissive())
         .with_state(state)
         // Serve static files from frontend directory as fallback
-        .fallback_service(ServeDir::new("../frontend"));
+        .fallback_service(ServeDir::new("frontend"));
 
     // Get host and port from environment variables
     let host = std::env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string());

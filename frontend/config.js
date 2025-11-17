@@ -1,16 +1,14 @@
 // API Configuration
-// For production deployment, update these URLs to match your domain
+// Automatically uses the current origin (works for localhost and production)
 
 const CONFIG = {
-    // API Base URL
-    API_URL: window.location.hostname === 'localhost'
-        ? 'http://localhost:3000'
-        : 'https://relays.social',
+    // API Base URL - use same origin as the page
+    API_URL: window.location.origin,
 
-    // WebSocket URL
-    WS_URL: window.location.hostname === 'localhost'
-        ? 'ws://localhost:3000'
-        : 'wss://relays.social',
+    // WebSocket URL - use same host with ws/wss protocol
+    WS_URL: window.location.protocol === 'https:' 
+        ? 'wss://' + window.location.host
+        : 'ws://' + window.location.host,
 
     // Environment
     ENV: window.location.hostname === 'localhost' ? 'development' : 'production'
