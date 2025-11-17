@@ -7,7 +7,6 @@ use uuid::Uuid;
 use std::sync::Arc;
 use aws_sdk_s3::Client as S3Client;
 use aws_sdk_s3::primitives::ByteStream;
-use chrono::Utc;
 use base64::{Engine as _, engine::general_purpose};
 
 #[derive(Serialize, Deserialize)]
@@ -33,7 +32,9 @@ pub struct MediaService {
 
 impl MediaService {
     pub async fn new() -> Self {
-        let config = aws_config::load_from_env().await;
+        let config = aws_config::defaults(aws_config::BehaviorVersion::latest())
+            .load()
+            .await;
 
         // Check if using Cloudflare R2 (or other S3-compatible service)
         let s3_client = if let Ok(r2_endpoint) = std::env::var("R2_ENDPOINT") {

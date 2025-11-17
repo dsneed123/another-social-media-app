@@ -6,7 +6,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use crate::AppState;
-use chrono::{Utc, NaiveDateTime};
+use chrono::Utc;
 
 #[derive(Deserialize)]
 pub struct FeedQuery {
@@ -180,7 +180,7 @@ async fn calculate_feed_scores(
     .fetch_all(&*state.pool)
     .await?;
 
-    let following_ids: Vec<uuid::Uuid> = following.iter().map(|f| f.following_id).collect();
+    let _following_ids: Vec<uuid::Uuid> = following.iter().map(|f| f.following_id).collect();
 
     // Get recent stories
     let stories = sqlx::query!(

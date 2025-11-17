@@ -1,7 +1,6 @@
 use axum::{
     extract::{Json, State},
     http::StatusCode,
-    response::IntoResponse,
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

@@ -2,7 +2,6 @@ use sqlx::PgPool;
 use std::sync::Arc;
 use tokio::time::{interval, Duration};
 use crate::media::MediaService;
-use uuid::Uuid;
 
 pub struct ExpirationService {
     pool: Arc<PgPool>,

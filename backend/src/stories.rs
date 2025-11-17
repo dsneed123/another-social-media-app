@@ -6,7 +6,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use uuid::Uuid;
-use chrono::{DateTime, Utc, NaiveDateTime};
+use chrono::{Utc, NaiveDateTime};
 use aws_sdk_s3::primitives::ByteStream;
 
 use crate::AppState;

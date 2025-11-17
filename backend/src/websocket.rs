@@ -373,7 +373,7 @@ async fn handle_ws_message(
                         .await;
 
                         // Notify all participants that message expired
-                        let expired_msg = WsMessage::MessageExpired { message_id };
+                        let _expired_msg = WsMessage::MessageExpired { message_id };
                         // Broadcast to chat members (implementation similar to above)
                     }
                 }

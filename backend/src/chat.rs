@@ -3,10 +3,9 @@ use axum::{
     http::StatusCode,
 };
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
 use uuid::Uuid;
 use std::sync::Arc;
-use chrono::{DateTime, Utc, NaiveDateTime};
+use chrono::NaiveDateTime;
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateChatRequest {
