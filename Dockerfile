@@ -15,8 +15,8 @@ RUN apt-get update && apt-get install -y \
 ENV CARGO_NET_RETRY=10
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 
-# Copy dependency files first for better caching
-COPY backend/Cargo.toml backend/Cargo.lock ./
+# Copy only Cargo.toml first (let Cargo generate Cargo.lock)
+COPY backend/Cargo.toml ./
 
 # Create dummy main.rs to build dependencies
 RUN mkdir src && \
