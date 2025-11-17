@@ -79,6 +79,10 @@ services:
         scope: RUN_AND_BUILD_TIME
         value: "https://pub-aa4febe0119c483e81aa307bd678bddb.r2.dev"
 
+      - key: SQLX_OFFLINE
+        scope: RUN_AND_BUILD_TIME
+        value: "false"
+
     health_check:
       http_path: /health
       initial_delay_seconds: 30
