@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT \n            s.id,\n            s.user_id,\n            s.created_at,\n            s.view_count,\n            s.like_count,\n            s.comment_count,\n            EXISTS(SELECT 1 FROM follows WHERE follower_id = $1 AND following_id = s.user_id) as \"is_following!\"\n        FROM stories s\n        WHERE s.created_at > NOW() - INTERVAL '7 days'\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 3,
+        "name": "view_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "like_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "comment_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "is_following!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "2246e924ebe58a1122773cbe9dc290befb97341e2a4abc890297f209b390bab6"
+}
