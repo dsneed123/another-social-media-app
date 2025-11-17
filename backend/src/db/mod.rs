@@ -6,7 +6,14 @@ pub async fn init_pool() -> PgPool {
     let database_url = match env::var("DATABASE_URL") {
         Ok(url) => {
             println!("✓ DATABASE_URL found");
+            println!("  Raw URL length: {} chars", url.len());
+            println!("  URL starts with: {}", url.chars().take(15).collect::<String>());
             println!("  Connection host: {}", url.split('@').nth(1).and_then(|s| s.split('/').next()).unwrap_or("unknown"));
+            
+            if url.is_empty() {
+                eprintln!("✗ DATABASE_URL is EMPTY!");
+                panic!("DATABASE_URL is empty");
+            }
             url
         }
         Err(_) => {
