@@ -37,11 +37,8 @@ services:
     instance_size_slug: basic-xs  # $5/month - Upgrade to basic-s ($12/mo) for production
 
     envs:
-      - key: DATABASE_URL
-        scope: RUN_AND_BUILD_TIME
-        type: SECRET
-        # Set this to your standalone database connection string in DO dashboard
-
+      # DATABASE_URL is set via App-Level Environment Variables in DO UI
+      
       - key: REDIS_URL
         scope: RUN_AND_BUILD_TIME
         type: SECRET
