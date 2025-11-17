@@ -23,7 +23,8 @@ RUN mkdir src && \
 # Copy actual source code
 COPY backend/src ./src
 
-# Build the application
+# Build the application with SQLx offline mode (doesn't need DATABASE_URL at compile time)
+ENV SQLX_OFFLINE=true
 RUN cargo build --release
 
 # Stage 2: Runtime
