@@ -100,30 +100,25 @@ cargo run
 
 **Automated deployments are set up!** Every push to `main` automatically deploys to production.
 
-### Quick Setup (5 minutes)
+### 📖 Deployment Guides
 
-1. **Create DigitalOcean Account** and get your [API token](https://cloud.digitalocean.com/account/api/tokens)
+Choose your preferred guide:
 
-2. **Add GitHub Secrets** (Settings > Secrets > Actions):
-   ```
-   DIGITALOCEAN_ACCESS_TOKEN = your_do_token
-   DIGITALOCEAN_APP_ID = your_app_id
-   ADMIN_TOKEN = random_secret_string
-   ```
+- **[STEP_BY_STEP_DEPLOY.md](./STEP_BY_STEP_DEPLOY.md)** ⭐ **RECOMMENDED**
+  - Complete walkthrough with exact steps
+  - Screenshots and examples
+  - Perfect for first-time deployment
+  - 30-45 minutes from start to finish
 
-3. **Deploy App Platform**:
-   ```bash
-   doctl apps create --spec .do/app.yaml
-   ```
+- **[QUICK_DEPLOY.md](./QUICK_DEPLOY.md)** ⚡ FAST TRACK
+  - Quick reference for experienced users
+  - 5-minute setup guide
+  - Assumes you know the basics
 
-4. **Push to main**:
-   ```bash
-   git push origin main
-   ```
-
-**That's it!** GitHub Actions will automatically build, test, and deploy. No SSH needed!
-
-👉 **Complete Guide**: [CI_CD_SETUP.md](./CI_CD_SETUP.md) - Full setup with screenshots and troubleshooting
+- **[CI_CD_SETUP.md](./CI_CD_SETUP.md)** 📚 DETAILED
+  - In-depth CI/CD explanation
+  - Troubleshooting section
+  - Advanced configurations
 
 ### What Happens on Every Push
 

@@ -22,8 +22,12 @@ services:
       branch: main
       deploy_on_push: true
 
+    # Source directory (optional) - use if deploying from a subdirectory
+    # source_dir: /
+
     dockerfile_path: backend/Dockerfile.prod
 
+    # Port the container listens on
     http_port: 3000
 
     instance_count: 1
@@ -99,6 +103,9 @@ jobs:
       repo: your-username/another-social-media-app
       branch: main
       deploy_on_push: true
+
+    # Source directory (optional) - use if deploying from a subdirectory
+    # source_dir: /
 
     dockerfile_path: backend/Dockerfile.prod
 
