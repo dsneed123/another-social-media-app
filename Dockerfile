@@ -1,6 +1,7 @@
 # Production Dockerfile for relays.social backend
 
-FROM rust:1.83-slim AS builder
+# Use nightly for edition2024 support
+FROM rustlang/rust:nightly-slim AS builder
 
 WORKDIR /app
 
