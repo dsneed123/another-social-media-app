@@ -26,7 +26,10 @@ services:
     # source_dir: /
 
     # Use root Dockerfile for easier auto-detection
-    dockerfile_path: Dockerfile
+    # dockerfile_path: Dockerfile
+    # NOTE: Dockerfile disabled - using buildpack so DATABASE_URL is available during build
+    
+    source_dir: backend
 
     # Port the container listens on
     http_port: 3000
