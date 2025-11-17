@@ -23,11 +23,10 @@ RUN mkdir src && \
 # Copy actual source code
 COPY backend/src ./src
 
-# Copy .sqlx cache directory (must exist and have cached query data)
-COPY backend/.sqlx ./.sqlx
-
-# Build the application in offline mode using the cached SQLx data
-ENV SQLX_OFFLINE=true
+# Build the application
+# SQLx offline mode is disabled - requires DATABASE_URL to be available at build time
+# DigitalOcean should pass this automatically when scope is RUN_AND_BUILD_TIME
+ENV SQLX_OFFLINE=false
 RUN cargo build --release
 
 # Stage 2: Runtime
