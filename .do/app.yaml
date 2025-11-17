@@ -18,14 +18,15 @@ services:
   # Backend API
   - name: backend
     github:
-      repo: your-username/another-social-media-app
+      repo: dsneed123/another-social-media-app
       branch: main
       deploy_on_push: true
 
     # Source directory (optional) - use if deploying from a subdirectory
     # source_dir: /
 
-    dockerfile_path: backend/Dockerfile.prod
+    # Use root Dockerfile for easier auto-detection
+    dockerfile_path: Dockerfile
 
     # Port the container listens on
     http_port: 3000
@@ -107,7 +108,8 @@ jobs:
     # Source directory (optional) - use if deploying from a subdirectory
     # source_dir: /
 
-    dockerfile_path: backend/Dockerfile.prod
+    # Use root Dockerfile for easier auto-detection
+    dockerfile_path: Dockerfile
 
     envs:
       - key: DATABASE_URL
