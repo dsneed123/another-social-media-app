@@ -2,7 +2,7 @@ use sqlx::{PgPool, postgres::PgPoolOptions};
 use std::env;
 
 pub async fn init_pool() -> PgPool {
-    // Check if DATABASE_URL is set
+    // Check if DATABASE_URL is set (updated to use correct PostgreSQL database)
     let database_url = match env::var("DATABASE_URL") {
         Ok(url) => {
             println!("✓ DATABASE_URL found");
