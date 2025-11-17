@@ -26,6 +26,14 @@ COPY backend/src ./src
 # Copy sqlx offline query cache
 COPY backend/.sqlx ./.sqlx
 
+# Debug: Check environment
+RUN echo "=== BUILD DEBUG INFO ===" && \
+    echo "SQLX_OFFLINE will be set to: true" && \
+    echo "DATABASE_URL is set: $(if [ -n "$DATABASE_URL" ]; then echo YES; else echo NO; fi)" && \
+    echo ".sqlx directory contents:" && \
+    ls -la .sqlx/ 2>&1 | head -10 && \
+    echo "======================="
+
 # Build the application with offline mode (no DATABASE_URL needed at build time)
 ENV SQLX_OFFLINE=true
 RUN cargo build --release
