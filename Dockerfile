@@ -1,7 +1,7 @@
 # Production Dockerfile for relays.social backend
 
-# Stage 1: Build - Use Debian base that matches runtime
-FROM rust:1.75-bookworm AS builder
+# Stage 1: Build - Use latest Rust with Debian bookworm
+FROM rust:bookworm AS builder
 
 WORKDIR /app
 
