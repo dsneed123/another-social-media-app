@@ -148,12 +148,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Grant permissions
-GRANT SELECT ON popular_users TO relayhub_user;
-GRANT EXECUTE ON FUNCTION refresh_popular_users() TO relayhub_user;
-GRANT EXECUTE ON FUNCTION cleanup_old_feed_scores() TO relayhub_user;
-GRANT EXECUTE ON FUNCTION cleanup_old_interactions() TO relayhub_user;
-
 -- Add comments for documentation
 COMMENT ON TABLE user_preferences IS 'Stores user content preferences for personalized feed algorithm';
 COMMENT ON TABLE user_interactions IS 'Tracks all user interactions with stories for algorithm learning';
