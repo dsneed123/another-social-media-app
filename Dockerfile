@@ -24,9 +24,8 @@ RUN mkdir src && \
 COPY backend/src ./src
 
 # Build the application (requires DATABASE_URL at build time)
-# DATABASE_URL must be set in DigitalOcean with scope: RUN_AND_BUILD_TIME
-ARG DATABASE_URL
-ENV DATABASE_URL=$DATABASE_URL
+# DATABASE_URL is set by DigitalOcean with scope: RUN_AND_BUILD_TIME
+# SQLx will connect to the database during build to verify queries
 ENV SQLX_OFFLINE=false
 RUN cargo build --release
 
