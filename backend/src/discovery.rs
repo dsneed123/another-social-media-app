@@ -35,17 +35,6 @@ pub struct UserSearchResult {
     pub is_following: bool,
 }
 
-#[derive(Serialize)]
-pub struct PopularUser {
-    pub id: String,
-    pub username: String,
-    pub display_name: Option<String>,
-    pub avatar_url: Option<String>,
-    pub bio: Option<String>,
-    pub follower_count: i64,
-    pub story_count: i64,
-}
-
 // Search users by username, display name, or bio
 pub async fn search_users(
     State(state): State<Arc<AppState>>,

@@ -29,13 +29,6 @@ pub struct Story {
     pub is_liked: Option<bool>,
 }
 
-#[derive(Debug, Deserialize)]
-pub struct CreateStoryRequest {
-    pub user_id: Uuid,
-    pub media_type: String,
-    pub caption: Option<String>,
-}
-
 #[derive(Debug, Serialize)]
 pub struct CreateStoryResponse {
     pub story_id: Uuid,
