@@ -15,8 +15,10 @@ RUN mkdir src && \
 # Copy source code
 COPY src ./src
 COPY migrations ./migrations
+COPY .sqlx ./.sqlx
 
-# Build application
+# Build application with offline mode (no DATABASE_URL needed)
+ENV SQLX_OFFLINE=true
 RUN touch src/main.rs && cargo build --release
 
 # Stage 2: Runtime
