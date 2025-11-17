@@ -1,7 +1,6 @@
-# This is a symlink/wrapper for DigitalOcean auto-detection
-# The actual Dockerfile is at backend/Dockerfile.prod
+# Production Dockerfile for relays.social backend
 
-FROM rust:1.75-slim AS builder
+FROM rust:1.83-slim AS builder
 
 WORKDIR /app
 

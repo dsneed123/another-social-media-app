@@ -37,7 +37,8 @@ services:
     envs:
       - key: DATABASE_URL
         scope: RUN_AND_BUILD_TIME
-        value: ${db.DATABASE_URL}  # Auto-populated from managed database
+        type: SECRET
+        # Set this to your standalone database connection string in DO dashboard
 
       - key: REDIS_URL
         scope: RUN_AND_BUILD_TIME
@@ -87,14 +88,15 @@ services:
       - path: /
 
 # Managed PostgreSQL Database
-databases:
-  - name: db
-    engine: PG
-    version: "15"
-    production: false  # Set to true for production (more expensive but better)
-    cluster_name: relays-db
-    db_name: relayhub
-    db_user: relayhub_user
+# You created a standalone database, so this section is commented out
+# databases:
+#   - name: db
+#     engine: PG
+#     version: "15"
+#     production: false
+#     cluster_name: relays-db
+#     db_name: relayhub
+#     db_user: relayhub_user
 
 # Jobs (for migrations)
 jobs:
