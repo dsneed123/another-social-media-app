@@ -122,7 +122,8 @@ jobs:
     envs:
       - key: DATABASE_URL
         scope: RUN_TIME
-        value: ${db.DATABASE_URL}
+        type: SECRET
+        # Managed by attached database or manual env var
 
     run_command: |
       for migration in /app/migrations/*.sql; do
