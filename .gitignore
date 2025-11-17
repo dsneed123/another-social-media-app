@@ -1,0 +1,72 @@
+# Rust
+backend/target/
+backend/**/*.rs.bk
+*.pdb
+
+# Environment files
+.env
+.env.local
+.env.*.local
+backend/.env
+backend/.env.production
+!backend/.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+*.swp
+*.swo
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+*.sublime-workspace
+*.sublime-project
+
+# Node modules (if you add any frontend tooling)
+node_modules/
+npm-debug.log
+
+# Build artifacts
+dist/
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Secrets and sensitive data
+*.pem
+*.key
+*.cert
+secrets/
+credentials.json
+
+# Docker
+.dockerignore
+
+# Local development
+.local/

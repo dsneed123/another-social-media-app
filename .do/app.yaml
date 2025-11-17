@@ -1,0 +1,121 @@
+# DigitalOcean App Platform Specification for relays.social
+# This file defines the infrastructure and deployment configuration
+
+name: relays-social
+region: nyc
+
+# Environment variables for all services
+envs:
+  - key: CORS_ORIGIN
+    value: https://relays.social
+  - key: HOST
+    value: 0.0.0.0
+  - key: PORT
+    value: "8080"
+
+# Services
+services:
+  # Backend API
+  - name: backend
+    github:
+      repo: your-username/another-social-media-app
+      branch: main
+      deploy_on_push: true
+
+    dockerfile_path: backend/Dockerfile.prod
+
+    http_port: 3000
+
+    instance_count: 1
+    instance_size_slug: basic-xs  # $5/month - Upgrade to basic-s ($12/mo) for production
+
+    envs:
+      - key: DATABASE_URL
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.DATABASE_URL}  # Auto-populated from managed database
+
+      - key: REDIS_URL
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        # Set this in DigitalOcean dashboard
+
+      - key: JWT_SECRET
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        # Set this in DigitalOcean dashboard
+
+      - key: AWS_REGION
+        scope: RUN_AND_BUILD_TIME
+        value: "auto"
+
+      - key: AWS_ACCESS_KEY_ID
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        # Your Cloudflare R2 access key
+
+      - key: AWS_SECRET_ACCESS_KEY
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        # Your Cloudflare R2 secret key
+
+      - key: S3_BUCKET_NAME
+        scope: RUN_AND_BUILD_TIME
+        value: "relay"
+
+      - key: R2_ENDPOINT
+        scope: RUN_AND_BUILD_TIME
+        value: "https://601ebb5191a1c06898f94fac4a9cc451.r2.cloudflarestorage.com"
+
+      - key: R2_PUBLIC_URL
+        scope: RUN_AND_BUILD_TIME
+        value: "https://pub-aa4febe0119c483e81aa307bd678bddb.r2.dev"
+
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 30
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+
+    routes:
+      - path: /
+
+# Managed PostgreSQL Database
+databases:
+  - name: db
+    engine: PG
+    version: "15"
+    production: false  # Set to true for production (more expensive but better)
+    cluster_name: relays-db
+    db_name: relayhub
+    db_user: relayhub_user
+
+# Jobs (for migrations)
+jobs:
+  - name: migrate
+    kind: PRE_DEPLOY
+    github:
+      repo: your-username/another-social-media-app
+      branch: main
+      deploy_on_push: true
+
+    dockerfile_path: backend/Dockerfile.prod
+
+    envs:
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${db.DATABASE_URL}
+
+    run_command: |
+      for migration in /app/migrations/*.sql; do
+        echo "Running migration: $migration"
+        psql $DATABASE_URL -f "$migration" || echo "Migration may already be applied"
+      done
+
+# Domains
+domains:
+  - domain: relays.social
+    type: PRIMARY
+  - domain: www.relays.social
+    type: ALIAS

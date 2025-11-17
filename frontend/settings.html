@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - RelayHub</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #000;
+            color: #fff;
+            padding-bottom: 70px;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #000;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        /* Main Content */
+        .content {
+            margin-top: 60px;
+            padding: 0;
+        }
+
+        /* Settings Section */
+        .settings-section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #888;
+            padding: 16px 20px 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .settings-item {
+            background: #111;
+            border-bottom: 1px solid #222;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .settings-item:active {
+            background: #1a1a1a;
+        }
+
+        .settings-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .settings-item i {
+            font-size: 20px;
+            color: #888;
+            width: 24px;
+        }
+
+        .settings-item-content {
+            flex: 1;
+        }
+
+        .settings-item-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .settings-item-subtitle {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .settings-item-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .settings-value {
+            font-size: 14px;
+            color: #888;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 51px;
+            height: 31px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #333;
+            transition: 0.3s;
+            border-radius: 31px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 27px;
+            width: 27px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #a855f7;
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Chevron Icon */
+        .chevron {
+            font-size: 18px;
+            color: #555;
+        }
+
+        /* Logout Button */
+        .logout-btn {
+            background: #dc2626;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 16px;
+            margin: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            width: calc(100% - 40px);
+            transition: opacity 0.2s;
+        }
+
+        .logout-btn:active {
+            opacity: 0.8;
+        }
+
+        /* Delete Account Button */
+        .delete-btn {
+            background: transparent;
+            border: 2px solid #dc2626;
+            color: #dc2626;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 16px;
+            margin: 0 20px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            width: calc(100% - 40px);
+            transition: all 0.2s;
+        }
+
+        .delete-btn:active {
+            background: #dc2626;
+            color: #fff;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #000;
+            border-top: 1px solid #333;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px;
+            color: #888;
+            text-decoration: none;
+            font-size: 11px;
+            transition: color 0.2s;
+        }
+
+        .nav-item i {
+            font-size: 24px;
+        }
+
+        .nav-item.active {
+            color: #a855f7;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .modal-body {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .modal-input {
+            width: 100%;
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: #a855f7;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .modal-btn:active {
+            opacity: 0.8;
+        }
+
+        .modal-btn-cancel {
+            background: #333;
+            border: none;
+            color: #fff;
+        }
+
+        .modal-btn-confirm {
+            background: #a855f7;
+            border: none;
+            color: #fff;
+        }
+
+        .modal-btn-danger {
+            background: #dc2626;
+            border: none;
+            color: #fff;
+        }
+
+        /* Version Info */
+        .version-info {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <button class="back-btn" onclick="goBack()">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+        <h1>Settings</h1>
+        <div style="width: 40px;"></div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- Account Section -->
+        <div class="settings-section">
+            <div class="section-title">Account</div>
+            <div class="settings-item" onclick="showEditUsernameModal()">
+                <div class="settings-item-left">
+                    <i class="bi bi-person"></i>
+                    <div class="settings-item-content">
+                        <div class="settings-item-title">Username</div>
+                        <div class="settings-item-subtitle" id="current-username">Loading...</div>
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right chevron"></i>
+            </div>
+            <div class="settings-item" onclick="showEditEmailModal()">
+                <div class="settings-item-left">
+                    <i class="bi bi-envelope"></i>
+                    <div class="settings-item-content">
+                        <div class="settings-item-title">Email</div>
+                        <div class="settings-item-subtitle" id="current-email">Loading...</div>
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right chevron"></i>
+            </div>
+            <div class="settings-item" onclick="showChangePasswordModal()">
+                <div class="settings-item-left">
+                    <i class="bi bi-lock"></i>
+                    <div class="settings-item-content">
+                        <div class="settings-item-title">Change Password</div>
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right chevron"></i>
+            </div>
+        </div>
+
+        <!-- Privacy Section -->
+        <div class="settings-section">
+            <div class="section-title">Privacy</div>
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <i class="bi bi-lock-fill"></i>
+                    <div class="settings-item-content">
+                        <div class="settings-item-title">Private Account</div>
+                        <div class="settings-item-subtitle">Only followers can see your stories</div>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="private-account" onchange="togglePrivateAccount()">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <i class="bi bi-eye-slash"></i>
+                    <div class="settings-item-content">
+                        <div class="settings-item-title">Hide Story Views</div>
+                        <div class="settings-item-subtitle">Hide who viewed your stories</div>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="hide-views" onchange="toggleHideViews()">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <i class="bi bi-people"></i>
+                    <div class="settings-item-content">
+                        <div class="settings-item-title">Allow Comments</div>
+                        <div class="settings-item-subtitle">Let people comment on your stories</div>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="allow-comments" onchange="toggleAllowComments()" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Notifications Section -->
+        <div class="settings-section">
+            <div class="section-title">Notifications</div>
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <i class="bi bi-bell"></i>
+                    <div class="settings-item-content">
+                        <div class="settings-item-title">Push Notifications</div>
+                        <div class="settings-item-subtitle">Get notified about activity</div>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="push-notifications" onchange="togglePushNotifications()" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <i class="bi bi-heart"></i>
+                    <div class="settings-item-content">
+                        <div class="settings-item-title">Likes</div>
+                        <div class="settings-item-subtitle">Notify when someone likes your story</div>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="notify-likes" onchange="toggleNotifyLikes()" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <i class="bi bi-chat"></i>
+                    <div class="settings-item-content">
+                        <div class="settings-item-title">Comments</div>
+                        <div class="settings-item-subtitle">Notify when someone comments</div>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="notify-comments" onchange="toggleNotifyComments()" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <i class="bi bi-person-plus"></i>
+                    <div class="settings-item-content">
+                        <div class="settings-item-title">New Followers</div>
+                        <div class="settings-item-subtitle">Notify when someone follows you</div>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="notify-followers" onchange="toggleNotifyFollowers()" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Display Section -->
+        <div class="settings-section">
+            <div class="section-title">Display</div>
+            <div class="settings-item" onclick="showThemeModal()">
+                <div class="settings-item-left">
+                    <i class="bi bi-palette"></i>
+                    <div class="settings-item-content">
+                        <div class="settings-item-title">Theme</div>
+                    </div>
+                </div>
+                <div class="settings-item-right">
+                    <span class="settings-value" id="current-theme">Dark</span>
+                    <i class="bi bi-chevron-right chevron"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Section -->
+        <div class="settings-section">
+            <div class="section-title">About</div>
+            <div class="settings-item" onclick="window.open('https://github.com', '_blank')">
+                <div class="settings-item-left">
+                    <i class="bi bi-info-circle"></i>
+                    <div class="settings-item-content">
+                        <div class="settings-item-title">About RelayHub</div>
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right chevron"></i>
+            </div>
+            <div class="settings-item" onclick="window.open('https://github.com', '_blank')">
+                <div class="settings-item-left">
+                    <i class="bi bi-file-text"></i>
+                    <div class="settings-item-content">
+                        <div class="settings-item-title">Terms of Service</div>
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right chevron"></i>
+            </div>
+            <div class="settings-item" onclick="window.open('https://github.com', '_blank')">
+                <div class="settings-item-left">
+                    <i class="bi bi-shield-check"></i>
+                    <div class="settings-item-content">
+                        <div class="settings-item-title">Privacy Policy</div>
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right chevron"></i>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <button class="logout-btn" onclick="logout()">
+            <i class="bi bi-box-arrow-right"></i> Logout
+        </button>
+
+        <button class="delete-btn" onclick="showDeleteAccountModal()">
+            <i class="bi bi-trash"></i> Delete Account
+        </button>
+
+        <!-- Version -->
+        <div class="version-info">
+            RelayHub v1.0.0
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="/basic-chat.html" class="nav-item">
+            <i class="bi bi-chat-dots"></i>
+            <span>Chats</span>
+        </a>
+        <a href="/stories.html" class="nav-item">
+            <i class="bi bi-play-circle"></i>
+            <span>Stories</span>
+        </a>
+        <a href="/discover.html" class="nav-item">
+            <i class="bi bi-search"></i>
+            <span>Discover</span>
+        </a>
+        <a href="/notifications.html" class="nav-item">
+            <i class="bi bi-bell"></i>
+            <span>Notifications</span>
+        </a>
+        <a href="/profile.html" class="nav-item">
+            <i class="bi bi-person"></i>
+            <span>Profile</span>
+        </a>
+        <a href="/settings.html" class="nav-item active">
+            <i class="bi bi-gear-fill"></i>
+            <span>Settings</span>
+        </a>
+    </div>
+
+    <!-- Edit Username Modal -->
+    <div class="modal" id="username-modal">
+        <div class="modal-content">
+            <div class="modal-header">Change Username</div>
+            <div class="modal-body">
+                <input type="text" class="modal-input" id="new-username" placeholder="New username" maxlength="30">
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" onclick="closeModal('username-modal')">Cancel</button>
+                <button class="modal-btn modal-btn-confirm" onclick="updateUsername()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Email Modal -->
+    <div class="modal" id="email-modal">
+        <div class="modal-content">
+            <div class="modal-header">Change Email</div>
+            <div class="modal-body">
+                <input type="email" class="modal-input" id="new-email" placeholder="New email">
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" onclick="closeModal('email-modal')">Cancel</button>
+                <button class="modal-btn modal-btn-confirm" onclick="updateEmail()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal" id="password-modal">
+        <div class="modal-content">
+            <div class="modal-header">Change Password</div>
+            <div class="modal-body">
+                <input type="password" class="modal-input" id="current-password" placeholder="Current password">
+                <input type="password" class="modal-input" id="new-password" placeholder="New password">
+                <input type="password" class="modal-input" id="confirm-password" placeholder="Confirm new password">
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" onclick="closeModal('password-modal')">Cancel</button>
+                <button class="modal-btn modal-btn-confirm" onclick="updatePassword()">Change</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theme Modal -->
+    <div class="modal" id="theme-modal">
+        <div class="modal-content">
+            <div class="modal-header">Choose Theme</div>
+            <div class="modal-body">Currently only Dark theme is available</div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-confirm" onclick="closeModal('theme-modal')">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Account Modal -->
+    <div class="modal" id="delete-modal">
+        <div class="modal-content">
+            <div class="modal-header">Delete Account</div>
+            <div class="modal-body">
+                Are you sure you want to delete your account? This action cannot be undone. All your stories, messages, and data will be permanently deleted.
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" onclick="closeModal('delete-modal')">Cancel</button>
+                <button class="modal-btn modal-btn-danger" onclick="deleteAccount()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUserId = null;
+
+        // Load user data on page load
+        async function loadUserData() {
+            currentUserId = localStorage.getItem('userId');
+            if (!currentUserId) {
+                window.location.href = '/';
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/profile/${currentUserId}/${currentUserId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('current-username').textContent = data.username;
+                    document.getElementById('current-email').textContent = data.email || 'Not set';
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+
+            // Load settings from localStorage
+            loadSettings();
+        }
+
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem(`settings_${currentUserId}`) || '{}');
+            
+            document.getElementById('private-account').checked = settings.privateAccount || false;
+            document.getElementById('hide-views').checked = settings.hideViews || false;
+            document.getElementById('allow-comments').checked = settings.allowComments !== false;
+            document.getElementById('push-notifications').checked = settings.pushNotifications !== false;
+            document.getElementById('notify-likes').checked = settings.notifyLikes !== false;
+            document.getElementById('notify-comments').checked = settings.notifyComments !== false;
+            document.getElementById('notify-followers').checked = settings.notifyFollowers !== false;
+        }
+
+        function saveSettings() {
+            const settings = {
+                privateAccount: document.getElementById('private-account').checked,
+                hideViews: document.getElementById('hide-views').checked,
+                allowComments: document.getElementById('allow-comments').checked,
+                pushNotifications: document.getElementById('push-notifications').checked,
+                notifyLikes: document.getElementById('notify-likes').checked,
+                notifyComments: document.getElementById('notify-comments').checked,
+                notifyFollowers: document.getElementById('notify-followers').checked
+            };
+            
+            localStorage.setItem(`settings_${currentUserId}`, JSON.stringify(settings));
+        }
+
+        // Modal functions
+        function showEditUsernameModal() {
+            document.getElementById('new-username').value = '';
+            document.getElementById('username-modal').classList.add('active');
+        }
+
+        function showEditEmailModal() {
+            document.getElementById('new-email').value = '';
+            document.getElementById('email-modal').classList.add('active');
+        }
+
+        function showChangePasswordModal() {
+            document.getElementById('current-password').value = '';
+            document.getElementById('new-password').value = '';
+            document.getElementById('confirm-password').value = '';
+            document.getElementById('password-modal').classList.add('active');
+        }
+
+        function showThemeModal() {
+            document.getElementById('theme-modal').classList.add('active');
+        }
+
+        function showDeleteAccountModal() {
+            document.getElementById('delete-modal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Update functions
+        async function updateUsername() {
+            const newUsername = document.getElementById('new-username').value.trim();
+            
+            if (!newUsername) {
+                alert('Please enter a username');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/settings/${currentUserId}/username`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: newUsername })
+                });
+
+                if (response.ok) {
+                    document.getElementById('current-username').textContent = newUsername;
+                    closeModal('username-modal');
+                    alert('Username updated successfully');
+                } else {
+                    const error = await response.text();
+                    alert('Error updating username: ' + error);
+                }
+            } catch (error) {
+                console.error('Error updating username:', error);
+                alert('Error updating username');
+            }
+        }
+
+        async function updateEmail() {
+            const newEmail = document.getElementById('new-email').value.trim();
+            
+            if (!newEmail) {
+                alert('Please enter an email');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/settings/${currentUserId}/email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: newEmail })
+                });
+
+                if (response.ok) {
+                    document.getElementById('current-email').textContent = newEmail;
+                    closeModal('email-modal');
+                    alert('Email updated successfully');
+                } else {
+                    const error = await response.text();
+                    alert('Error updating email: ' + error);
+                }
+            } catch (error) {
+                console.error('Error updating email:', error);
+                alert('Error updating email');
+            }
+        }
+
+        async function updatePassword() {
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alert('New passwords do not match');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                alert('Password must be at least 6 characters');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/settings/${currentUserId}/password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        current_password: currentPassword,
+                        new_password: newPassword 
+                    })
+                });
+
+                if (response.ok) {
+                    closeModal('password-modal');
+                    alert('Password changed successfully');
+                } else {
+                    const error = await response.text();
+                    alert('Error changing password: ' + error);
+                }
+            } catch (error) {
+                console.error('Error changing password:', error);
+                alert('Error changing password');
+            }
+        }
+
+        // Privacy toggle functions
+        function togglePrivateAccount() {
+            saveSettings();
+            // TODO: Call API to update privacy settings
+        }
+
+        function toggleHideViews() {
+            saveSettings();
+        }
+
+        function toggleAllowComments() {
+            saveSettings();
+        }
+
+        // Notification toggle functions
+        function togglePushNotifications() {
+            saveSettings();
+        }
+
+        function toggleNotifyLikes() {
+            saveSettings();
+        }
+
+        function toggleNotifyComments() {
+            saveSettings();
+        }
+
+        function toggleNotifyFollowers() {
+            saveSettings();
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('userId');
+                localStorage.removeItem('username');
+                window.location.href = '/';
+            }
+        }
+
+        // Delete account
+        async function deleteAccount() {
+            try {
+                const response = await fetch(`http://localhost:3000/api/settings/${currentUserId}/delete`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    localStorage.clear();
+                    alert('Account deleted successfully');
+                    window.location.href = '/';
+                } else {
+                    const error = await response.text();
+                    alert('Error deleting account: ' + error);
+                }
+            } catch (error) {
+                console.error('Error deleting account:', error);
+                alert('Error deleting account');
+            }
+        }
+
+        // Navigation
+        function goBack() {
+            window.history.back();
+        }
+
+        // Initialize
+        loadUserData();
+    </script>
+</body>
+</html>

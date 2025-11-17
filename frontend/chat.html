@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: white;
+            height: 100vh;
+            display: flex;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 1200px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Sidebar - Chat List */
+        .sidebar {
+            width: 300px;
+            background: #f8f9fa;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: #B39FFF;
+            color: white;
+        }
+
+        .sidebar-header h2 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .user-status {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .chat-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+
+        .chat-item:hover {
+            background: #e9ecef;
+        }
+
+        .chat-item.active {
+            background: #e3e7ff;
+        }
+
+        .chat-item.newmessage {
+            background: #B39FFF;
+            color: white;
+        }
+
+        .chat-item.newmessage:hover {
+            background: #9d7fff;
+        }
+
+        .chat-item.newmessage .chat-item-preview {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .chat-item.newmessage .chat-item-time {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .chat-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .chat-item-name {
+            font-weight: 600;
+        }
+
+        .chat-item-time {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .chat-item-preview {
+            font-size: 12px;
+            color: #666;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .unread-badge {
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            background: #B39FFF;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 12px;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        /* Main Chat Area */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background: white;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .typing-indicator {
+            font-size: 12px;
+            color: #B39FFF;
+            font-style: italic;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #fafbfc;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 15px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.sent {
+            flex-direction: row-reverse;
+        }
+
+        .message-content {
+            max-width: 60%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            position: relative;
+        }
+
+        .message.received .message-content {
+            background: white;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.sent .message-content {
+            background: #B39FFF;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-sender {
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .message-text {
+            word-wrap: break-word;
+        }
+
+        .message-image {
+            max-width: 100%;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .message-time {
+            font-size: 10px;
+            margin-top: 4px;
+            opacity: 0.7;
+        }
+
+        .view-once-badge {
+            background: #ff6b6b;
+            color: white;
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-left: 5px;
+        }
+
+        /* Input Area */
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 2px solid #f0f0f0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: #B39FFF;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-camera {
+            background: #9d7fff;
+            color: white;
+        }
+
+        .btn-camera:hover {
+            background: #8a66ff;
+            transform: scale(1.05);
+        }
+
+        .btn-send {
+            background: #B39FFF;
+            color: white;
+        }
+
+        .btn-send:hover {
+            background: #9d7fff;
+            transform: scale(1.05);
+        }
+
+        /* Webcam Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 90%;
+        }
+
+        #webcam-video {
+            width: 100%;
+            max-width: 640px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        #webcam-canvas {
+            display: none;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-capture {
+            background: #B39FFF;
+            color: white;
+        }
+
+        .btn-cancel {
+            background: #dc3545;
+            color: white;
+        }
+
+        .connection-status {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .connection-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .connection-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2 id="current-user">RelayHub</h2>
+                <div class="user-status">Online</div>
+            </div>
+            <div class="chat-list" id="chat-list">
+                <!-- Chat items will be dynamically added -->
+            </div>
+        </div>
+
+        <!-- Main Chat -->
+        <div class="chat-main">
+            <div class="chat-header">
+                <div>
+                    <div class="chat-title" id="chat-title">Select a chat</div>
+                    <div class="typing-indicator" id="typing-indicator"></div>
+                </div>
+                <div class="connection-status connected" id="connection-status">
+                    Connected
+                </div>
+            </div>
+
+            <div class="messages-container" id="messages-container">
+                <!-- Messages will be dynamically added -->
+            </div>
+
+            <div class="input-area">
+                <button class="btn btn-camera" id="camera-btn" title="Capture photo">📷</button>
+                <input
+                    type="text"
+                    class="input-field"
+                    id="message-input"
+                    placeholder="Type a message..."
+                    autocomplete="off"
+                />
+                <button class="btn btn-send" id="send-btn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Webcam Modal -->
+    <div class="modal" id="webcam-modal">
+        <div class="modal-content">
+            <h3>Take a Snap</h3>
+            <video id="webcam-video" autoplay playsinline></video>
+            <canvas id="webcam-canvas"></canvas>
+            <div class="modal-buttons">
+                <button class="btn btn-capture" id="capture-btn">📸 Capture</button>
+                <button class="btn btn-cancel" id="cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // WebSocket connection
+        let ws = null;
+        let currentUserId = null;
+        let currentChatRoom = null;
+        let typingTimeout = null;
+
+        // Get user info from localStorage (set after login)
+        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+        currentUserId = userData.id || 'test-user-id';
+
+        document.getElementById('current-user').textContent = userData.username || 'Guest';
+
+        // Initialize WebSocket
+        function connectWebSocket() {
+            ws = new WebSocket(`ws://127.0.0.1:3000/ws/${currentUserId}`);
+
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                document.getElementById('connection-status').textContent = 'Connected';
+                document.getElementById('connection-status').className = 'connection-status connected';
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket disconnected');
+                document.getElementById('connection-status').textContent = 'Disconnected';
+                document.getElementById('connection-status').className = 'connection-status disconnected';
+                // Reconnect after 3 seconds
+                setTimeout(connectWebSocket, 3000);
+            };
+
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                handleWebSocketMessage(message);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        // Handle incoming WebSocket messages
+        function handleWebSocketMessage(msg) {
+            switch(msg.type) {
+                case 'new_message':
+                    if (msg.chat_room_id === currentChatRoom) {
+                        appendMessage(msg, msg.sender_id !== currentUserId);
+                    }
+                    break;
+
+                case 'user_typing':
+                    if (msg.chat_room_id === currentChatRoom && msg.user_id !== currentUserId) {
+                        showTypingIndicator(msg.username);
+                    }
+                    break;
+
+                case 'user_stopped_typing':
+                    if (msg.chat_room_id === currentChatRoom) {
+                        hideTypingIndicator();
+                    }
+                    break;
+
+                case 'message_read':
+                case 'message_viewed':
+                    console.log('Message read/viewed:', msg);
+                    break;
+
+                case 'message_expired':
+                    removeMessage(msg.message_id);
+                    break;
+            }
+        }
+
+        // Send message via WebSocket
+        function sendMessage(content, messageType = 'text', mediaUrl = null, viewOnce = false, expiresInSeconds = null) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('Not connected to server');
+                return;
+            }
+
+            const message = {
+                type: 'send_message',
+                chat_room_id: currentChatRoom,
+                content: content,
+                message_type: messageType,
+                media_url: mediaUrl,
+                view_once: viewOnce,
+                expires_in_seconds: expiresInSeconds
+            };
+
+            ws.send(JSON.stringify(message));
+        }
+
+        // Send typing indicators
+        function sendTypingStart() {
+            if (ws && ws.readyState === WebSocket.OPEN && currentChatRoom) {
+                ws.send(JSON.stringify({
+                    type: 'typing_start',
+                    chat_room_id: currentChatRoom
+                }));
+            }
+        }
+
+        function sendTypingStop() {
+            if (ws && ws.readyState === WebSocket.OPEN && currentChatRoom) {
+                ws.send(JSON.stringify({
+                    type: 'typing_stop',
+                    chat_room_id: currentChatRoom
+                }));
+            }
+        }
+
+        // UI Functions
+        function appendMessage(msg, isReceived) {
+            const container = document.getElementById('messages-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isReceived ? 'received' : 'sent'}`;
+            messageDiv.dataset.messageId = msg.id;
+
+            let contentHTML = '';
+
+            if (msg.message_type === 'image') {
+                contentHTML = `
+                    <img src="${msg.media_url}" class="message-image" alt="Image message"
+                         onclick="viewImage('${msg.media_url}', ${msg.view_once}, '${msg.id}')">
+                `;
+            } else {
+                contentHTML = `<div class="message-text">${escapeHtml(msg.content)}</div>`;
+            }
+
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    ${isReceived ? `<div class="message-sender">${msg.sender_username}</div>` : ''}
+                    ${contentHTML}
+                    <div class="message-time">
+                        ${new Date(msg.created_at).toLocaleTimeString()}
+                        ${msg.view_once ? '<span class="view-once-badge">VIEW ONCE</span>' : ''}
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function viewImage(url, viewOnce, messageId) {
+            // Open image in new window or modal
+            window.open(url, '_blank');
+
+            // If view once, mark as viewed
+            if (viewOnce && ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'mark_viewed',
+                    message_id: messageId
+                }));
+            }
+        }
+
+        function removeMessage(messageId) {
+            const messageEl = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (messageEl) {
+                messageEl.remove();
+            }
+        }
+
+        function showTypingIndicator(username) {
+            document.getElementById('typing-indicator').textContent = `${username} is typing...`;
+        }
+
+        function hideTypingIndicator() {
+            document.getElementById('typing-indicator').textContent = '';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Webcam functionality
+        let videoStream = null;
+
+        document.getElementById('camera-btn').addEventListener('click', async () => {
+            const modal = document.getElementById('webcam-modal');
+            const video = document.getElementById('webcam-video');
+
+            modal.classList.add('active');
+
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 480 },
+                    audio: false
+                });
+                video.srcObject = videoStream;
+            } catch (err) {
+                alert('Could not access webcam: ' + err.message);
+                modal.classList.remove('active');
+            }
+        });
+
+        document.getElementById('capture-btn').addEventListener('click', async () => {
+            const video = document.getElementById('webcam-video');
+            const canvas = document.getElementById('webcam-canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas size to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Draw video frame to canvas
+            ctx.drawImage(video, 0, 0);
+
+            // Convert to base64
+            const imageData = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+
+            // Stop video stream
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+            }
+
+            // Close modal
+            document.getElementById('webcam-modal').classList.remove('active');
+
+            // Upload image
+            await uploadAndSendImage(imageData);
+        });
+
+        document.getElementById('cancel-btn').addEventListener('click', () => {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+            }
+            document.getElementById('webcam-modal').classList.remove('active');
+        });
+
+        async function uploadAndSendImage(base64Data) {
+            try {
+                const response = await fetch('http://127.0.0.1:3000/api/media/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image_data: base64Data,
+                        file_type: 'image/jpeg',
+                        expires_in_seconds: 86400 // 24 hours (can be changed for Snapchat-style)
+                    })
+                });
+
+                const result = await response.json();
+
+                // Send message with image URL (view_once: true for Snapchat-style)
+                sendMessage(null, 'image', result.url, true, 86400);
+
+            } catch (err) {
+                alert('Failed to upload image: ' + err.message);
+            }
+        }
+
+        // Text message sending
+        document.getElementById('send-btn').addEventListener('click', () => {
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+
+            if (text) {
+                sendMessage(text, 'text', null, false, null);
+                input.value = '';
+                sendTypingStop();
+            }
+        });
+
+        document.getElementById('message-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('send-btn').click();
+            }
+        });
+
+        // Typing indicator
+        document.getElementById('message-input').addEventListener('input', () => {
+            sendTypingStart();
+
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                sendTypingStop();
+            }, 2000);
+        });
+
+        // Initialize
+        connectWebSocket();
+
+        // For demo purposes, set a test chat room
+        currentChatRoom = 'test-chat-room-id';
+        document.getElementById('chat-title').textContent = 'Test Chat';
+    </script>
+</body>
+</html>

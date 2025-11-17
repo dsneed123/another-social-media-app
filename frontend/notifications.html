@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - relays.social</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #000;
+            color: #fff;
+            padding-bottom: 70px;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #000;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        /* Content */
+        .content {
+            margin-top: 60px;
+            padding: 0;
+        }
+
+        /* Notification Card */
+        .notification-card {
+            background: #111;
+            border-bottom: 1px solid #222;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: background 0.2s;
+        }
+
+        .notification-card:active {
+            background: #1a1a1a;
+        }
+
+        .notification-card.unread {
+            background: #1a1a2a;
+        }
+
+        .notification-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 600;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .notification-icon img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .notification-type-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 20px;
+            height: 20px;
+            background: #a855f7;
+            border: 2px solid #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .notification-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification-message {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .notification-message strong {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .follow-back-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: #a855f7;
+            color: #fff;
+        }
+
+        .follow-back-btn:active {
+            opacity: 0.8;
+        }
+
+        .follow-back-btn.following {
+            background: transparent;
+            border: 1px solid #333;
+        }
+
+        .follow-back-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: #333;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            color: #888;
+        }
+
+        /* Loading */
+        .loading {
+            padding: 40px 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #888;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #000;
+            border-top: 1px solid #333;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px;
+            color: #888;
+            text-decoration: none;
+            font-size: 11px;
+            transition: color 0.2s;
+            position: relative;
+        }
+
+        .nav-item i {
+            font-size: 24px;
+        }
+
+        .nav-item.active {
+            color: #a855f7;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 4px;
+            right: 25%;
+            background: #ff4444;
+            color: #fff;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: 600;
+            min-width: 18px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>Notifications</h1>
+    </div>
+
+    <!-- Content -->
+    <div class="content" id="notifications-container">
+        <div class="loading">Loading notifications...</div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="/basic-chat.html" class="nav-item">
+            <i class="bi bi-chat-dots"></i>
+            <span>Chats</span>
+        </a>
+        <a href="/stories.html" class="nav-item">
+            <i class="bi bi-play-circle"></i>
+            <span>Stories</span>
+        </a>
+        <a href="/discover.html" class="nav-item">
+            <i class="bi bi-search"></i>
+            <span>Discover</span>
+        </a>
+        <a href="/notifications.html" class="nav-item active">
+            <i class="bi bi-bell-fill"></i>
+            <span>Notifications</span>
+        </a>
+        <a href="/profile.html" class="nav-item">
+            <i class="bi bi-person"></i>
+            <span>Profile</span>
+        </a>
+    </div>
+
+    <script>
+        let currentUserId = null;
+        let followingList = new Set();
+
+        // Initialize
+        async function init() {
+            currentUserId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+            if (!currentUserId) {
+                window.location.href = '/';
+                return;
+            }
+
+            await loadFollowingList();
+            await loadNotifications();
+            
+            // Poll for new notifications every 60 seconds (less aggressive)
+            setInterval(async () => {
+                await loadNotifications(true); // Pass silent flag to avoid jarring updates
+            }, 60000);
+        }
+
+        // Load list of people user is following
+        async function loadFollowingList() {
+            try {
+                const response = await fetch(`http://localhost:3000/api/social/following/${currentUserId}/${currentUserId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    // API returns array directly, not wrapped in an object
+                    followingList = new Set(Array.isArray(data) ? data.map(f => f.id) : []);
+                }
+            } catch (error) {
+                console.error('Error loading following list:', error);
+                followingList = new Set(); // Initialize as empty set on error
+            }
+        }
+
+        // Load notifications
+        let lastNotificationIds = new Set();
+        
+        async function loadNotifications(silent = false) {
+            const container = document.getElementById('notifications-container');
+            
+            try {
+                const response = await fetch(`http://localhost:3000/api/notifications/${currentUserId}?limit=50`);
+                if (!response.ok) throw new Error('Failed to load notifications');
+
+                const data = await response.json();
+                const notifications = data.notifications || [];
+                
+                // Check if notifications have changed
+                const currentIds = new Set(notifications.map(n => n.id));
+                const hasChanges = notifications.length !== lastNotificationIds.size || 
+                                   [...currentIds].some(id => !lastNotificationIds.has(id));
+                
+                // If silent mode and no changes, skip update
+                if (silent && !hasChanges) {
+                    return;
+                }
+                
+                lastNotificationIds = currentIds;
+
+                if (notifications.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="bi bi-bell"></i>
+                            <h3>No Notifications Yet</h3>
+                            <p>When someone follows you, likes your stories, or comments, you'll see it here</p>
+                            <p style="font-size: 12px; color: #666; margin-top: 8px;">All your notification history will appear on this page</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = notifications.map(notification => {
+                    const timeAgo = getTimeAgo(notification.created_at);
+                    const icon = getNotificationIcon(notification.type);
+                    const isFollowNotification = notification.type === 'follow';
+                    const isFollowingBack = notification.from_user_id && followingList.has(notification.from_user_id);
+                    
+                    return `
+                        <div class="notification-card ${!notification.is_read ? 'unread' : ''}" onclick="markAsRead('${notification.id}', event)">
+                            <div class="notification-icon" onclick="event.stopPropagation(); ${notification.from_user_id ? 'viewProfile(\'' + notification.from_user_id + '\')' : 'return false;'}">
+                                ${notification.from_avatar_url ? 
+                                    `<img src="${notification.from_avatar_url}" alt="${notification.from_username}">` : 
+                                    (notification.from_username ? notification.from_username.charAt(0).toUpperCase() : '?')
+                                }
+                                <div class="notification-type-badge">
+                                    <i class="bi bi-${icon}"></i>
+                                </div>
+                            </div>
+                            <div class="notification-info" onclick="event.stopPropagation(); handleNotificationClick('${notification.type}', '${notification.story_id || ''}', '${notification.from_user_id || ''}')">
+                                <div class="notification-message">
+                                    ${notification.message || getDefaultMessage(notification)}
+                                </div>
+                                <div class="notification-time">${timeAgo}</div>
+                            </div>
+                            ${isFollowNotification && notification.from_user_id && !isFollowingBack ? `
+                                <button class="follow-back-btn" onclick="event.stopPropagation(); followBack('${notification.from_user_id}', '${escapeHtml(notification.from_username || '')}', this)">
+                                    Follow Back
+                                </button>
+                            ` : isFollowNotification && notification.from_user_id && isFollowingBack ? `
+                                <button class="follow-back-btn following" onclick="event.stopPropagation(); unfollowUser('${notification.from_user_id}', this)">
+                                    Following
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-exclamation-circle"></i>
+                        <h3>Error Loading Notifications</h3>
+                        <p>Please try again later</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Get notification icon based on type
+        function getNotificationIcon(type) {
+            const icons = {
+                'follow': 'person-plus',
+                'like': 'heart-fill',
+                'comment': 'chat-fill',
+                'reply': 'reply-fill',
+                'mention': 'at'
+            };
+            return icons[type] || 'bell-fill';
+        }
+
+        // Get default message if none provided
+        function getDefaultMessage(notification) {
+            const username = notification.from_username || 'Someone';
+            const messages = {
+                'follow': `<strong>${escapeHtml(username)}</strong> started following you`,
+                'like': `<strong>${escapeHtml(username)}</strong> liked your story`,
+                'comment': `<strong>${escapeHtml(username)}</strong> commented on your story`,
+                'reply': `<strong>${escapeHtml(username)}</strong> replied to your comment`,
+                'mention': `<strong>${escapeHtml(username)}</strong> mentioned you`
+            };
+            return messages[notification.type] || 'New notification';
+        }
+
+        // Handle notification click
+        function handleNotificationClick(type, storyId, fromUserId) {
+            if (type === 'follow' && fromUserId) {
+                viewProfile(fromUserId);
+            } else if ((type === 'like' || type === 'comment') && storyId) {
+                window.location.href = `/stories.html?story_id=${storyId}`;
+            }
+        }
+
+        // Mark notification as read
+        async function markAsRead(notificationId, event) {
+            try {
+                // Update UI immediately
+                if (event) {
+                    const card = event.target.closest('.notification-card');
+                    if (card) {
+                        card.classList.remove('unread');
+                    }
+                }
+                
+                await fetch(`http://localhost:3000/api/notifications/${currentUserId}/${notificationId}/read`, {
+                    method: 'POST'
+                });
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        }
+
+        // Mark all notifications as read
+        async function markAllAsRead() {
+            try {
+                // Update UI immediately
+                document.querySelectorAll('.notification-card.unread').forEach(card => {
+                    card.classList.remove('unread');
+                });
+                
+                await fetch(`http://localhost:3000/api/notifications/${currentUserId}/read-all`, {
+                    method: 'POST'
+                });
+            } catch (error) {
+                console.error('Error marking all notifications as read:', error);
+            }
+        }
+
+        // Follow back a user
+        async function followBack(userId, username, button) {
+            try {
+                // Disable button to prevent double clicks
+                button.disabled = true;
+                
+                const response = await fetch(`http://localhost:3000/api/social/follow/${currentUserId}/${userId}`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    // Update local following list
+                    followingList.add(userId);
+                    
+                    // Update button state
+                    button.textContent = 'Following';
+                    button.classList.add('following');
+                    button.onclick = () => unfollowUser(userId, button);
+                    button.disabled = false;
+                    
+                    // Reload following list to ensure consistency
+                    await loadFollowingList();
+                    
+                    console.log(`Now following ${username}`);
+                } else {
+                    button.disabled = false;
+                    alert('Failed to follow user');
+                }
+            } catch (error) {
+                console.error('Error following user:', error);
+                button.disabled = false;
+                alert('Failed to follow user');
+            }
+        }
+
+        // Unfollow a user
+        async function unfollowUser(userId, button) {
+            try {
+                // Disable button to prevent double clicks
+                button.disabled = true;
+                
+                const response = await fetch(`http://localhost:3000/api/social/unfollow/${currentUserId}/${userId}`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    // Update local following list
+                    followingList.delete(userId);
+                    
+                    // Update button state
+                    button.textContent = 'Follow Back';
+                    button.classList.remove('following');
+                    button.onclick = () => followBack(userId, '', button);
+                    button.disabled = false;
+                    
+                    // Reload following list to ensure consistency
+                    await loadFollowingList();
+                } else {
+                    button.disabled = false;
+                    alert('Failed to unfollow user');
+                }
+            } catch (error) {
+                console.error('Error unfollowing user:', error);
+                button.disabled = false;
+                alert('Failed to unfollow user');
+            }
+        }
+
+        // View profile
+        function viewProfile(userId) {
+            window.location.href = `/profile.html?user_id=${userId}`;
+        }
+
+        // Get time ago
+        function getTimeAgo(timestamp) {
+            if (!timestamp) return 'Recently';
+            
+            const now = new Date();
+            const then = new Date(timestamp);
+            const seconds = Math.floor((now - then) / 1000);
+
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+            if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+            return `${Math.floor(seconds / 604800)}w ago`;
+        }
+
+        // Utility
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>

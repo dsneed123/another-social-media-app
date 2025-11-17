@@ -1,0 +1,73 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # Allow manual trigger from GitHub UI
+
+env:
+  REGISTRY: registry.digitalocean.com/relays
+  IMAGE_NAME: backend
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install doctl (DigitalOcean CLI)
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Log in to DigitalOcean Container Registry
+        run: doctl registry login --expiry-seconds 1200
+
+      - name: Build Docker image
+        run: |
+          docker build -f backend/Dockerfile.prod \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            .
+
+      - name: Push image to DigitalOcean Container Registry
+        run: |
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Deploy to DigitalOcean App Platform
+        run: |
+          doctl apps create-deployment ${{ secrets.DIGITALOCEAN_APP_ID }} --wait
+
+      - name: Run database migrations
+        run: |
+          # Wait for deployment to be live
+          sleep 30
+
+          # Trigger migration endpoint (you'll need to add this endpoint)
+          curl -X POST https://relays.social/api/admin/migrate \
+            -H "Authorization: Bearer ${{ secrets.ADMIN_TOKEN }}"
+
+      - name: Verify deployment
+        run: |
+          # Check health endpoint
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://relays.social/health)
+          if [ $response -eq 200 ]; then
+            echo "✅ Deployment successful! App is healthy."
+          else
+            echo "❌ Deployment may have issues. Health check returned: $response"
+            exit 1
+          fi
+
+      - name: Deployment summary
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "🎉 Successfully deployed to https://relays.social"
+            echo "📦 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          else
+            echo "❌ Deployment failed! Check the logs above."
+          fi

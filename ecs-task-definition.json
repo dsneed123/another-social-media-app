@@ -1,0 +1,81 @@
+{
+  "family": "relays-backend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "relays-backend",
+      "image": "<ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/relays-social/backend:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "RUST_LOG",
+          "value": "info"
+        },
+        {
+          "name": "PORT",
+          "value": "3000"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "DATABASE_URL",
+          "valueFrom": "arn:aws:ssm:us-east-1:<ACCOUNT_ID>:parameter/relays/DATABASE_URL"
+        },
+        {
+          "name": "REDIS_URL",
+          "valueFrom": "arn:aws:ssm:us-east-1:<ACCOUNT_ID>:parameter/relays/REDIS_URL"
+        },
+        {
+          "name": "AWS_ACCESS_KEY_ID",
+          "valueFrom": "arn:aws:ssm:us-east-1:<ACCOUNT_ID>:parameter/relays/AWS_ACCESS_KEY_ID"
+        },
+        {
+          "name": "AWS_SECRET_ACCESS_KEY",
+          "valueFrom": "arn:aws:ssm:us-east-1:<ACCOUNT_ID>:parameter/relays/AWS_SECRET_ACCESS_KEY"
+        },
+        {
+          "name": "CLOUDFLARE_R2_BUCKET",
+          "valueFrom": "arn:aws:ssm:us-east-1:<ACCOUNT_ID>:parameter/relays/CLOUDFLARE_R2_BUCKET"
+        },
+        {
+          "name": "CLOUDFLARE_R2_ENDPOINT",
+          "valueFrom": "arn:aws:ssm:us-east-1:<ACCOUNT_ID>:parameter/relays/CLOUDFLARE_R2_ENDPOINT"
+        },
+        {
+          "name": "CLOUDFLARE_ACCOUNT_ID",
+          "valueFrom": "arn:aws:ssm:us-east-1:<ACCOUNT_ID>:parameter/relays/CLOUDFLARE_ACCOUNT_ID"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/relays-backend",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group": "true"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "linuxParameters": {
+        "initProcessEnabled": true
+      }
+    }
+  ]
+}
