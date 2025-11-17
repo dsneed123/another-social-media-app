@@ -1,7 +1,7 @@
 # Production Dockerfile for relays.social backend
 
-# Use nightly for edition2024 support
-FROM rustlang/rust:nightly-slim AS builder
+# Stage 1: Build - Use Debian base that matches runtime
+FROM rust:1.75-bookworm AS builder
 
 WORKDIR /app
 
@@ -38,7 +38,7 @@ RUN echo "=== BUILD DEBUG INFO ===" && \
 ENV SQLX_OFFLINE=true
 RUN cargo build --release
 
-# Stage 2: Runtime
+# Stage 2: Runtime - Use same Debian version as builder
 FROM debian:bookworm-slim
 
 WORKDIR /app
