@@ -129,7 +129,10 @@ pub async fn get_popular_users(
     )
     .fetch_all(&*state.pool)
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    .map_err(|e| {
+        eprintln!("❌ Error fetching popular users: {:?}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
 
     let results = users
         .into_iter()
@@ -186,7 +189,10 @@ pub async fn get_suggested_users(
     )
     .fetch_all(&*state.pool)
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    .map_err(|e| {
+        eprintln!("❌ Error fetching suggested users: {:?}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
 
     let results = users
         .into_iter()

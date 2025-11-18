@@ -39,6 +39,9 @@ impl MediaService {
         // Check if using Cloudflare R2 (or other S3-compatible service)
         let s3_client = if let Ok(r2_endpoint) = std::env::var("R2_ENDPOINT") {
             println!("✓ Using Cloudflare R2 at {}", r2_endpoint);
+            println!("  AWS_REGION: {}", std::env::var("AWS_REGION").unwrap_or_else(|_| "not set".to_string()));
+            println!("  AWS_ACCESS_KEY_ID: {}", if std::env::var("AWS_ACCESS_KEY_ID").is_ok() { "set" } else { "NOT SET" });
+            println!("  AWS_SECRET_ACCESS_KEY: {}", if std::env::var("AWS_SECRET_ACCESS_KEY").is_ok() { "set" } else { "NOT SET" });
 
             // Configure S3 client with custom endpoint for R2
             let s3_config = aws_sdk_s3::config::Builder::from(&config)
@@ -58,6 +61,9 @@ impl MediaService {
 
         // Get public URL base (for R2 public buckets or custom domains)
         let public_url_base = std::env::var("R2_PUBLIC_URL").ok();
+
+        println!("✓ S3/R2 bucket: {}", bucket_name);
+        println!("✓ Public URL base: {}", public_url_base.as_ref().unwrap_or(&"not set".to_string()));
 
         Self {
             s3_client,
