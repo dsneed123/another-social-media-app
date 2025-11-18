@@ -999,6 +999,17 @@
             }
         };
 
+        ws.onclose = () => {
+            console.log("WebSocket closed, reconnecting in 3s...");
+            setTimeout(() => {
+                location.reload();
+            }, 3000);
+        };
+
+        ws.onerror = (error) => {
+            console.error("WebSocket error:", error);
+        };
+
         async function updateStreak(otherUserId) {
             try {
                 const res = await fetch(`${CONFIG.API_URL}/api/streaks/update/${userId}/${otherUserId}`, {
