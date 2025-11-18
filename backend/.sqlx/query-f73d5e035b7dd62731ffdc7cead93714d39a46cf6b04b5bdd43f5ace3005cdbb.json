@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT \n            p.id,\n            p.username,\n            p.display_name,\n            p.avatar_url,\n            p.bio,\n            p.follower_count as \"follower_count!\",\n            EXISTS(\n                SELECT 1 FROM follows \n                WHERE follower_id = $1 AND following_id = p.id\n            ) as \"is_following!\"\n        FROM popular_users p\n        WHERE p.id != $1\n        LIMIT $2\n        ",
+  "query": "\n        SELECT \n            u.id,\n            u.username,\n            u.display_name,\n            u.avatar_url,\n            u.bio,\n            COUNT(DISTINCT f.follower_id) as follower_count,\n            EXISTS(\n                SELECT 1 FROM follows \n                WHERE follower_id = $1 AND following_id = u.id\n            ) as \"is_following!\"\n        FROM users u\n        LEFT JOIN follows f ON u.id = f.following_id\n        WHERE u.id != $1\n        GROUP BY u.id\n        ORDER BY follower_count DESC, u.created_at DESC\n        LIMIT $2\n        ",
   "describe": {
     "columns": [
       {
@@ -30,7 +30,7 @@
       },
       {
         "ordinal": 5,
-        "name": "follower_count!",
+        "name": "follower_count",
         "type_info": "Int8"
       },
       {
@@ -46,14 +46,14 @@
       ]
     },
     "nullable": [
+      false,
+      false,
       true,
       true,
       true,
-      true,
-      true,
-      true,
+      null,
       null
     ]
   },
-  "hash": "d1f8ecc3616219d9641659560232fdfca718950179717edfb1dce9e8fe14e98b"
+  "hash": "f73d5e035b7dd62731ffdc7cead93714d39a46cf6b04b5bdd43f5ace3005cdbb"
 }
