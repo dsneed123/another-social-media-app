@@ -967,7 +967,7 @@
         
         console.log('Chat initialized with userId:', userId);
 
-        ws = new WebSocket(`ws://127.0.0.1:3000/ws/${userId}`);
+        ws = new WebSocket(`${CONFIG.WS_URL}/ws/${userId}`);
 
         ws.onopen = () => {
             loadChats();

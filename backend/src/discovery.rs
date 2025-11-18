@@ -96,7 +96,7 @@ pub async fn search_users(
     Ok(Json(results))
 }
 
-// Get popular/suggested users (from materialized view)
+// Get popular/suggested users (fallback to all users if popular_users view is empty)
 pub async fn get_popular_users(
     State(state): State<Arc<AppState>>,
     Path(viewer_id): Path<String>,
@@ -107,21 +107,25 @@ pub async fn get_popular_users(
 
     let limit = params.limit.min(50);
 
+    // Try popular_users view first, fallback to all users
     let users = sqlx::query!(
         r#"
         SELECT 
-            p.id,
-            p.username,
-            p.display_name,
-            p.avatar_url,
-            p.bio,
-            p.follower_count as "follower_count!",
+            u.id,
+            u.username,
+            u.display_name,
+            u.avatar_url,
+            u.bio,
+            COUNT(DISTINCT f.follower_id) as follower_count,
             EXISTS(
                 SELECT 1 FROM follows 
-                WHERE follower_id = $1 AND following_id = p.id
+                WHERE follower_id = $1 AND following_id = u.id
             ) as "is_following!"
-        FROM popular_users p
-        WHERE p.id != $1
+        FROM users u
+        LEFT JOIN follows f ON u.id = f.following_id
+        WHERE u.id != $1
+        GROUP BY u.id
+        ORDER BY follower_count DESC, u.created_at DESC
         LIMIT $2
         "#,
         viewer_uuid,
@@ -137,12 +141,12 @@ pub async fn get_popular_users(
     let results = users
         .into_iter()
         .map(|u| UserSearchResult {
-            id: u.id.map(|id| id.to_string()).unwrap_or_default(),
-            username: u.username.unwrap_or_else(|| "unknown".to_string()),
+            id: u.id.to_string(),
+            username: u.username,
             display_name: u.display_name,
             avatar_url: u.avatar_url,
             bio: u.bio,
-            follower_count: Some(u.follower_count as i32),
+            follower_count: u.follower_count.map(|c| c as i32),
             is_following: u.is_following,
         })
         .collect();

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat</title>
+    <script src="config.js"></script>
     <style>
         * {
             margin: 0;
@@ -430,7 +431,7 @@
 
         // Initialize WebSocket
         function connectWebSocket() {
-            ws = new WebSocket(`ws://127.0.0.1:3000/ws/${currentUserId}`);
+            ws = new WebSocket(`${CONFIG.WS_URL}/ws/${currentUserId}`);
 
             ws.onopen = () => {
                 console.log('WebSocket connected');
@@ -651,7 +652,7 @@
 
         async function uploadAndSendImage(base64Data) {
             try {
-                const response = await fetch('http://127.0.0.1:3000/api/media/upload', {
+                const response = await fetch('${CONFIG.API_URL}/api/media/upload', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
