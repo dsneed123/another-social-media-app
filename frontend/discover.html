@@ -403,7 +403,7 @@
         // Search users
         async function searchUsers(query) {
             try {
-                const response = await fetch(`http://localhost:3000/api/discovery/search/${currentUserId}?q=${encodeURIComponent(query)}&limit=20`);
+                const response = await fetch(`${CONFIG.API_URL}/api/discovery/search/${currentUserId}?q=${encodeURIComponent(query)}&limit=20`);
                 if (response.ok) {
                     const users = await response.json();
                     renderUsers(users, 'search-results');
@@ -421,7 +421,7 @@
             document.getElementById('popular-results').innerHTML = '<div class="loading">Loading...</div>';
             
             try {
-                const response = await fetch(`http://localhost:3000/api/discovery/popular/${currentUserId}?limit=50`);
+                const response = await fetch(`${CONFIG.API_URL}/api/discovery/popular/${currentUserId}?limit=50`);
                 if (response.ok) {
                     const users = await response.json();
                     renderUsers(users, 'popular-results');
@@ -439,7 +439,7 @@
             document.getElementById('suggested-results').innerHTML = '<div class="loading">Loading...</div>';
             
             try {
-                const response = await fetch(`http://localhost:3000/api/discovery/suggested/${currentUserId}?limit=50`);
+                const response = await fetch(`${CONFIG.API_URL}/api/discovery/suggested/${currentUserId}?limit=50`);
                 if (response.ok) {
                     const users = await response.json();
                     renderUsers(users, 'suggested-results');
@@ -486,7 +486,7 @@
             const endpoint = isFollowing ? 'unfollow' : 'follow';
 
             try {
-                const response = await fetch(`http://localhost:3000/api/social/${endpoint}/${currentUserId}/${userId}`, {
+                const response = await fetch(`${CONFIG.API_URL}/api/social/${endpoint}/${currentUserId}/${userId}`, {
                     method: 'POST'
                 });
 

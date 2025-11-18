@@ -670,7 +670,7 @@
             }
 
             try {
-                const response = await fetch(`http://localhost:3000/api/profile/${currentUserId}/${currentUserId}`);
+                const response = await fetch(`${CONFIG.API_URL}/api/profile/${currentUserId}/${currentUserId}`);
                 if (response.ok) {
                     const data = await response.json();
                     document.getElementById('current-username').textContent = data.username;
@@ -750,7 +750,7 @@
             }
 
             try {
-                const response = await fetch(`http://localhost:3000/api/settings/${currentUserId}/username`, {
+                const response = await fetch(`${CONFIG.API_URL}/api/settings/${currentUserId}/username`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: newUsername })
@@ -779,7 +779,7 @@
             }
 
             try {
-                const response = await fetch(`http://localhost:3000/api/settings/${currentUserId}/email`, {
+                const response = await fetch(`${CONFIG.API_URL}/api/settings/${currentUserId}/email`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: newEmail })
@@ -820,7 +820,7 @@
             }
 
             try {
-                const response = await fetch(`http://localhost:3000/api/settings/${currentUserId}/password`, {
+                const response = await fetch(`${CONFIG.API_URL}/api/settings/${currentUserId}/password`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
@@ -885,7 +885,7 @@
         // Delete account
         async function deleteAccount() {
             try {
-                const response = await fetch(`http://localhost:3000/api/settings/${currentUserId}/delete`, {
+                const response = await fetch(`${CONFIG.API_URL}/api/settings/${currentUserId}/delete`, {
                     method: 'DELETE'
                 });
 

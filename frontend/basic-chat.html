@@ -1000,7 +1000,7 @@
 
         async function updateStreak(otherUserId) {
             try {
-                const res = await fetch(`http://localhost:3000/api/streaks/update/${userId}/${otherUserId}`, {
+                const res = await fetch(`${CONFIG.API_URL}/api/streaks/update/${userId}/${otherUserId}`, {
                     method: 'POST'
                 });
                 const data = await res.json();
@@ -1027,7 +1027,7 @@
 
         async function loadChats() {
             try {
-                const res = await fetch(`http://localhost:3000/api/users/${userId}/chats`);
+                const res = await fetch(`${CONFIG.API_URL}/api/users/${userId}/chats`);
                 if (!res.ok) {
                     console.error('Failed to load chats');
                     return;
@@ -1121,7 +1121,7 @@
 
         async function loadStreak(otherUserId) {
             try {
-                const res = await fetch(`http://localhost:3000/api/streaks/${userId}/${otherUserId}`);
+                const res = await fetch(`${CONFIG.API_URL}/api/streaks/${userId}/${otherUserId}`);
                 const data = await res.json();
                 
                 if (data.success && data.streak.current_streak > 0) {
@@ -1143,7 +1143,7 @@
 
         async function loadMessages() {
             if (!chatId) return;
-            const res = await fetch(`http://localhost:3000/api/users/${userId}/chats/${chatId}/messages`);
+            const res = await fetch(`${CONFIG.API_URL}/api/users/${userId}/chats/${chatId}/messages`);
             const msgs = await res.json();
             msgs.reverse().forEach(msg => addMessage(msg, msg.sender_id !== userId));
         }
@@ -1265,7 +1265,7 @@
 
         async function markMessageViewed(messageId, messageDiv, contentElement) {
             try {
-                const response = await fetch(`http://localhost:3000/api/users/${userId}/messages/${messageId}/view`, {
+                const response = await fetch(`${CONFIG.API_URL}/api/users/${userId}/messages/${messageId}/view`, {
                     method: 'POST'
                 });
                 
@@ -1343,7 +1343,7 @@
 
         async function saveMessage(messageId, messageDiv) {
             try {
-                const response = await fetch(`http://localhost:3000/api/users/${userId}/messages/${messageId}/save`, {
+                const response = await fetch(`${CONFIG.API_URL}/api/users/${userId}/messages/${messageId}/save`, {
                     method: 'POST'
                 });
                 
@@ -1513,7 +1513,7 @@
 
             try {
                 // Load people the user is following
-                const response = await fetch(`http://localhost:3000/api/social/following/${userId}/${userId}`);
+                const response = await fetch(`${CONFIG.API_URL}/api/social/following/${userId}/${userId}`);
                 if (!response.ok) throw new Error('Failed to load friends');
 
                 const data = await response.json();
@@ -1593,7 +1593,7 @@
                 
                 console.log('Request body:', JSON.stringify(requestBody));
                 
-                const res = await fetch(`http://localhost:3000/api/chats`, {
+                const res = await fetch(`${CONFIG.API_URL}/api/chats`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(requestBody)

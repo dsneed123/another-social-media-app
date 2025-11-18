@@ -288,7 +288,7 @@
         // Load list of people user is following
         async function loadFollowingList() {
             try {
-                const response = await fetch(`http://localhost:3000/api/social/following/${currentUserId}/${currentUserId}`);
+                const response = await fetch(`${CONFIG.API_URL}/api/social/following/${currentUserId}/${currentUserId}`);
                 if (response.ok) {
                     const data = await response.json();
                     // API returns array directly, not wrapped in an object
@@ -307,7 +307,7 @@
             const container = document.getElementById('notifications-container');
             
             try {
-                const response = await fetch(`http://localhost:3000/api/notifications/${currentUserId}?limit=50`);
+                const response = await fetch(`${CONFIG.API_URL}/api/notifications/${currentUserId}?limit=50`);
                 if (!response.ok) throw new Error('Failed to load notifications');
 
                 const data = await response.json();
@@ -430,7 +430,7 @@
                     }
                 }
                 
-                await fetch(`http://localhost:3000/api/notifications/${currentUserId}/${notificationId}/read`, {
+                await fetch(`${CONFIG.API_URL}/api/notifications/${currentUserId}/${notificationId}/read`, {
                     method: 'POST'
                 });
             } catch (error) {
@@ -446,7 +446,7 @@
                     card.classList.remove('unread');
                 });
                 
-                await fetch(`http://localhost:3000/api/notifications/${currentUserId}/read-all`, {
+                await fetch(`${CONFIG.API_URL}/api/notifications/${currentUserId}/read-all`, {
                     method: 'POST'
                 });
             } catch (error) {
@@ -460,7 +460,7 @@
                 // Disable button to prevent double clicks
                 button.disabled = true;
                 
-                const response = await fetch(`http://localhost:3000/api/social/follow/${currentUserId}/${userId}`, {
+                const response = await fetch(`${CONFIG.API_URL}/api/social/follow/${currentUserId}/${userId}`, {
                     method: 'POST'
                 });
 
@@ -495,7 +495,7 @@
                 // Disable button to prevent double clicks
                 button.disabled = true;
                 
-                const response = await fetch(`http://localhost:3000/api/social/unfollow/${currentUserId}/${userId}`, {
+                const response = await fetch(`${CONFIG.API_URL}/api/social/unfollow/${currentUserId}/${userId}`, {
                     method: 'POST'
                 });
 

@@ -46,6 +46,8 @@ pub async fn create_story_multipart(
     State(state): State<Arc<AppState>>,
     mut multipart: Multipart,
 ) -> Result<Json<CreateStoryResponse>, StatusCode> {
+    println!("📸 Received story creation request");
+    
     let mut user_id: Option<Uuid> = None;
     let mut media_type: Option<String> = None;
     let mut caption: Option<String> = None;
@@ -75,10 +77,18 @@ pub async fn create_story_multipart(
         }
     }
 
-    let user_id = user_id.ok_or(StatusCode::BAD_REQUEST)?;
+    let user_id = user_id.ok_or_else(|| {
+        eprintln!("❌ Missing user_id in story creation");
+        StatusCode::BAD_REQUEST
+    })?;
     let media_type = media_type.unwrap_or_else(|| "image".to_string());
-    let file_data = file_data.ok_or(StatusCode::BAD_REQUEST)?;
+    let file_data = file_data.ok_or_else(|| {
+        eprintln!("❌ Missing file data in story creation");
+        StatusCode::BAD_REQUEST
+    })?;
     let filename = filename.unwrap_or_else(|| format!("story_{}.jpg", Uuid::new_v4()));
+
+    println!("📤 Uploading story for user {} ({})", user_id, filename);
 
     // Upload to S3
     let story_id = Uuid::new_v4();
@@ -92,7 +102,10 @@ pub async fn create_story_multipart(
         .body(byte_stream)
         .send()
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|e| {
+            eprintln!("❌ S3 upload failed: {:?}", e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
 
     // Construct public URL
     let media_url = if let Some(ref public_base) = state.media_service.public_url_base {
@@ -118,7 +131,12 @@ pub async fn create_story_multipart(
     )
     .execute(state.pool.as_ref())
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    .map_err(|e| {
+        eprintln!("❌ Database insert failed: {:?}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    println!("✅ Story created successfully: {}", story_id);
 
     Ok(Json(CreateStoryResponse {
         story_id,
