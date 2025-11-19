@@ -24,6 +24,7 @@ mod discovery;
 mod algorithm;
 mod streaks;
 mod notifications;
+mod admin;
 
 use redis_client::RedisClient;
 use media::MediaService;
@@ -66,6 +67,13 @@ async fn serve_stories() -> Html<String> {
 
 async fn serve_create_story() -> Html<String> {
     let html = tokio::fs::read_to_string("frontend/create-story.html")
+        .await
+        .unwrap_or_else(|_| "<h1>Error loading page</h1>".to_string());
+    Html(html)
+}
+
+async fn serve_admin_panel() -> Html<String> {
+    let html = tokio::fs::read_to_string("frontend/admin-panel.html")
         .await
         .unwrap_or_else(|_| "<h1>Error loading page</h1>".to_string());
     Html(html)
@@ -131,6 +139,7 @@ async fn main() {
         .route("/chat", get(serve_chat))
         .route("/stories", get(serve_stories))
         .route("/create-story", get(serve_create_story))
+        .route("/admin-panel", get(serve_admin_panel))
 
         // Auth endpoints
         .route("/api/signup", post(auth::signup))
@@ -212,6 +221,24 @@ async fn main() {
         .route("/api/notifications/:user_id/:notification_id/read", post(notifications::mark_notification_read))
         .route("/api/notifications/:user_id/read-all", post(notifications::mark_all_notifications_read))
         .route("/api/notifications/:user_id/:notification_id", axum::routing::delete(notifications::delete_notification))
+
+        // Admin endpoints (protected by AdminUser extractor)
+        .route("/api/admin/users", get(admin::list_users))
+        .route("/api/admin/users/:user_id/ban", post(admin::ban_user))
+        .route("/api/admin/users/:user_id/unban", post(admin::unban_user))
+        .route("/api/admin/users/:user_id/role", post(admin::change_user_role))
+        .route("/api/admin/users/:user_id", axum::routing::delete(admin::delete_user))
+        .route("/api/admin/logs", get(admin::get_admin_logs))
+        .route("/api/admin/analytics", get(admin::get_analytics))
+        .route("/api/admin/ads", get(admin::list_ads))
+        .route("/api/admin/ads", post(admin::create_ad))
+        .route("/api/admin/ads/:ad_id", axum::routing::patch(admin::update_ad))
+        .route("/api/admin/ads/:ad_id", axum::routing::delete(admin::delete_ad))
+
+        // Public ad endpoints (for showing ads to users)
+        .route("/api/ads/next/:user_id", get(admin::get_next_ad))
+        .route("/api/ads/:ad_id/impression/:user_id", post(admin::record_ad_impression))
+        .route("/api/ads/:ad_id/click/:user_id", post(admin::record_ad_click))
 
         // Health check endpoint
         .route("/health", get(health_check))

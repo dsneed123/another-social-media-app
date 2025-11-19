@@ -226,14 +226,26 @@ pub async fn upload_multipart(
     State(state): State<Arc<crate::AppState>>,
     mut multipart: Multipart,
 ) -> Result<Json<UploadResponse>, StatusCode> {
+    println!("📤 Received multipart upload request");
     let user_id = Uuid::new_v4(); // TODO: Get from auth
 
-    while let Some(field) = multipart.next_field().await.unwrap() {
+    while let Ok(Some(field)) = multipart.next_field().await {
         let name = field.name().unwrap_or("").to_string();
+        println!("📎 Processing field: {}", name);
 
         if name == "file" {
             let content_type = field.content_type().unwrap_or("image/jpeg").to_string();
-            let data = field.bytes().await.unwrap();
+            println!("📷 File content type: {}", content_type);
+
+            let data = match field.bytes().await {
+                Ok(bytes) => bytes,
+                Err(e) => {
+                    eprintln!("❌ Failed to read file data: {}", e);
+                    return Err(StatusCode::BAD_REQUEST);
+                }
+            };
+
+            println!("📦 File size: {} bytes", data.len());
 
             // Convert to base64 for processing
             let base64_data = general_purpose::STANDARD.encode(&data);
@@ -241,11 +253,16 @@ pub async fn upload_multipart(
             let result = state.media_service
                 .upload_base64_image(user_id, &base64_data, &content_type, None)
                 .await
-                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+                .map_err(|e| {
+                    eprintln!("❌ Upload error: {}", e);
+                    StatusCode::INTERNAL_SERVER_ERROR
+                })?;
 
+            println!("✅ Upload successful: {}", result.url);
             return Ok(Json(result));
         }
     }
 
+    eprintln!("❌ No file field found in multipart data");
     Err(StatusCode::BAD_REQUEST)
 }

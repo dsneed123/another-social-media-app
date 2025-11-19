@@ -27,6 +27,14 @@ pub struct Story {
     pub username: Option<String>,
     pub is_viewed: Option<bool>,
     pub is_liked: Option<bool>,
+
+    // Ad-specific fields
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub is_ad: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ad_title: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ad_link: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -150,27 +158,24 @@ pub async fn get_user_stories(
     State(state): State<Arc<AppState>>,
     Path(user_id): Path<Uuid>,
 ) -> Result<Json<StoriesResponse>, StatusCode> {
-    let stories = sqlx::query_as!(
-        Story,
+    let stories = sqlx::query!(
         r#"
-        SELECT 
+        SELECT
             s.id,
             s.user_id,
             s.media_url,
             s.media_type,
             s.thumbnail_url,
             s.caption,
-            s.view_count as "view_count?",
-            s.like_count as "like_count?",
-            s.comment_count as "comment_count?",
+            s.view_count,
+            s.like_count,
+            s.comment_count,
             s.created_at,
             s.expires_at,
-            u.username,
-            NULL::BOOLEAN as "is_viewed?",
-            NULL::BOOLEAN as "is_liked?"
+            u.username
         FROM stories s
         JOIN users u ON s.user_id = u.id
-        WHERE s.user_id = $1 
+        WHERE s.user_id = $1
         AND s.expires_at > NOW()
         ORDER BY s.created_at DESC
         "#,
@@ -178,7 +183,28 @@ pub async fn get_user_stories(
     )
     .fetch_all(state.pool.as_ref())
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+    .into_iter()
+    .map(|row| Story {
+        id: row.id,
+        user_id: row.user_id,
+        media_url: row.media_url,
+        media_type: row.media_type,
+        thumbnail_url: row.thumbnail_url,
+        caption: row.caption,
+        view_count: row.view_count,
+        like_count: row.like_count,
+        comment_count: row.comment_count,
+        created_at: row.created_at,
+        expires_at: row.expires_at,
+        username: Some(row.username),
+        is_viewed: None,
+        is_liked: None,
+        is_ad: None,
+        ad_title: None,
+        ad_link: None,
+    })
+    .collect();
 
     Ok(Json(StoriesResponse { stories }))
 }
@@ -188,29 +214,29 @@ pub async fn get_feed_stories(
     State(state): State<Arc<AppState>>,
     Path(viewer_id): Path<Uuid>,
 ) -> Result<Json<StoriesResponse>, StatusCode> {
-    let stories = sqlx::query_as!(
-        Story,
+    // Fetch regular stories
+    let mut stories = sqlx::query!(
         r#"
-        SELECT 
+        SELECT
             s.id,
             s.user_id,
             s.media_url,
             s.media_type,
             s.thumbnail_url,
             s.caption,
-            s.view_count as "view_count?",
-            s.like_count as "like_count?",
-            s.comment_count as "comment_count?",
+            s.view_count,
+            s.like_count,
+            s.comment_count,
             s.created_at,
             s.expires_at,
             u.username,
-            CASE WHEN sv.viewer_id IS NOT NULL THEN TRUE ELSE FALSE END as "is_viewed?",
-            EXISTS(SELECT 1 FROM story_likes sl WHERE sl.story_id = s.id AND sl.user_id = $1) as "is_liked?"
+            CASE WHEN sv.viewer_id IS NOT NULL THEN TRUE ELSE FALSE END as is_viewed,
+            EXISTS(SELECT 1 FROM story_likes sl WHERE sl.story_id = s.id AND sl.user_id = $1) as is_liked
         FROM stories s
         JOIN users u ON s.user_id = u.id
         LEFT JOIN story_views sv ON s.id = sv.story_id AND sv.viewer_id = $1
         WHERE s.expires_at > NOW()
-        ORDER BY 
+        ORDER BY
             CASE WHEN sv.viewer_id IS NULL THEN 0 ELSE 1 END,
             s.created_at DESC
         LIMIT 50
@@ -219,7 +245,92 @@ pub async fn get_feed_stories(
     )
     .fetch_all(state.pool.as_ref())
     .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+    .into_iter()
+    .map(|row| Story {
+        id: row.id,
+        user_id: row.user_id,
+        media_url: row.media_url,
+        media_type: row.media_type,
+        thumbnail_url: row.thumbnail_url,
+        caption: row.caption,
+        view_count: row.view_count,
+        like_count: row.like_count,
+        comment_count: row.comment_count,
+        created_at: row.created_at,
+        expires_at: row.expires_at,
+        username: Some(row.username),
+        is_viewed: row.is_viewed,
+        is_liked: row.is_liked,
+        is_ad: None,
+        ad_title: None,
+        ad_link: None,
+    })
+    .collect::<Vec<Story>>();
+
+    // Fetch active ads that this user hasn't seen yet
+    let ads = sqlx::query!(
+        r#"
+        SELECT
+            a.id,
+            a.created_by,
+            a.title,
+            a.description,
+            a.image_url,
+            a.link_url,
+            a.created_at
+        FROM advertisements a
+        LEFT JOIN ad_impressions ai ON a.id = ai.ad_id AND ai.user_id = $1
+        WHERE a.status = 'active'
+            AND a.current_impressions < a.target_impressions
+            AND (a.expires_at IS NULL OR a.expires_at > NOW())
+            AND ai.id IS NULL
+        ORDER BY RANDOM()
+        LIMIT 10
+        "#,
+        viewer_id
+    )
+    .fetch_all(state.pool.as_ref())
+    .await
     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Inject ads into feed every 5 stories
+    if !ads.is_empty() {
+        let mut result = Vec::new();
+        let mut ad_index = 0;
+
+        for (i, story) in stories.into_iter().enumerate() {
+            result.push(story);
+
+            // Insert an ad after every 2 stories (was 5, reduced for testing)
+            if (i + 1) % 2 == 0 && ad_index < ads.len() {
+                let ad = &ads[ad_index];
+                let ad_story = Story {
+                    id: ad.id,
+                    user_id: ad.created_by,
+                    media_url: ad.image_url.clone().unwrap_or_default(),
+                    media_type: "image".to_string(),
+                    thumbnail_url: ad.image_url.clone(),
+                    caption: ad.description.clone(),
+                    view_count: None,
+                    like_count: None,
+                    comment_count: None,
+                    created_at: ad.created_at,
+                    expires_at: Utc::now().naive_utc() + chrono::Duration::days(1),
+                    username: Some("Sponsored".to_string()),
+                    is_viewed: None,
+                    is_liked: None,
+                    is_ad: Some(true),
+                    ad_title: Some(ad.title.clone()),
+                    ad_link: ad.link_url.clone(),
+                };
+                result.push(ad_story);
+                ad_index += 1;
+            }
+        }
+
+        stories = result;
+    }
 
     Ok(Json(StoriesResponse { stories }))
 }
