@@ -1319,26 +1319,36 @@ pub async fn create_ad_public(
     headers: axum::http::HeaderMap,
     Json(input): Json<PublicCreateAdInput>,
 ) -> Result<Json<PublicCreateAdResponse>, (StatusCode, String)> {
-    // Extract user ID from JWT token
+
+    // Debug: print raw Authorization header
     let auth_header = headers
         .get(header::AUTHORIZATION)
         .and_then(|v| v.to_str().ok())
         .ok_or((StatusCode::UNAUTHORIZED, "Missing authorization header".to_string()))?;
+    println!("[DEBUG] Authorization header: {}", auth_header);
 
     let token = auth_header
         .strip_prefix("Bearer ")
         .ok_or((StatusCode::UNAUTHORIZED, "Invalid authorization format".to_string()))?;
+    println!("[DEBUG] JWT token: {}", token);
 
     let jwt_secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| "secret".to_string());
-    let token_data = decode::<Claims>(
+    let token_data = match decode::<Claims>(
         token,
         &DecodingKey::from_secret(jwt_secret.as_bytes()),
         &Validation::default(),
-    )
-    .map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid token".to_string()))?;
+    ) {
+        Ok(data) => {
+            println!("[DEBUG] Decoded claims: sub={}, exp={}", data.claims.sub, data.claims.exp);
+            data
+        },
+        Err(e) => {
+            eprintln!("[ERROR] JWT decode error: {:?}", e);
+            return Err((StatusCode::UNAUTHORIZED, format!("Invalid token: {:?}", e)));
+        }
+    };
 
     let user_id = token_data.claims.sub;
-
     println!("📢 Public ad creation: {} by user {}", input.title, user_id);
 
     // Create ad with pending_payment status

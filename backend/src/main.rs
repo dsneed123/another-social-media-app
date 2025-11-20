@@ -7,7 +7,8 @@ use axum::{
 };
 use std::sync::Arc;
 use tokio::net::TcpListener;
-use tower_http::cors::CorsLayer;
+use tower_http::cors::{CorsLayer, Any};
+use http::HeaderValue;
 use tower_http::services::ServeDir;
 use dashmap::DashMap;
 
@@ -265,7 +266,12 @@ async fn main() {
         .route("/ws/:user_id", get(websocket::ws_handler))
 
         .layer(DefaultBodyLimit::max(50 * 1024 * 1024)) // 50MB limit for uploads
-        .layer(CorsLayer::permissive())
+        .layer(
+            CorsLayer::new()
+                .allow_origin([HeaderValue::from_static("https://relays.social")])
+                .allow_methods(Any)
+                .allow_headers(Any)
+        )
         .with_state(state)
         // Serve static files from frontend directory as fallback
         .fallback_service(ServeDir::new("frontend"));
