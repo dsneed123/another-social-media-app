@@ -1178,8 +1178,10 @@
         async function loadMessages() {
             if (!chatId) return;
             const res = await fetch(`${CONFIG.API_URL}/api/users/${userId}/chats/${chatId}/messages`);
-            const msgs = await res.json();
-            msgs.reverse().forEach(msg => addMessage(msg, msg.sender_id !== userId));
+            let msgs = await res.json();
+            // Sort by most recent (descending)
+            msgs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            msgs.forEach(msg => addMessage(msg, msg.sender_id !== userId));
         }
 
         function addMessage(msg, isReceived) {
@@ -1191,6 +1193,12 @@
             }
             messageDiv.dataset.messageId = msg.id;
 
+            // Highlight unopened (unread) messages
+            if (isReceived && !msg.is_viewed) {
+                messageDiv.style.borderLeft = '4px solid #ff4444';
+                messageDiv.style.background = '#fffbe6';
+            }
+
             const contentWrapper = document.createElement('div');
             contentWrapper.className = 'message-content-wrapper';
 
@@ -1198,7 +1206,6 @@
                 const img = document.createElement('img');
                 img.src = msg.media_url;
                 img.className = 'message-image';
-                
                 // Mark as viewed when clicked (for view_once messages)
                 if (msg.view_once && !msg.is_viewed && isReceived) {
                     img.classList.add('blurred');
@@ -1206,13 +1213,11 @@
                     img.style.cursor = 'pointer';
                     img.onclick = () => markMessageViewed(msg.id, messageDiv, img);
                 }
-                
                 contentWrapper.appendChild(img);
             } else {
                 const bubble = document.createElement('div');
                 bubble.className = 'message-bubble';
                 bubble.textContent = msg.content;
-                
                 // Mark as viewed when clicked for view_once text messages
                 if (msg.view_once && !msg.is_viewed && isReceived) {
                     bubble.classList.add('blurred');
@@ -1220,28 +1225,24 @@
                     bubble.style.cursor = 'pointer';
                     bubble.onclick = () => markMessageViewed(msg.id, messageDiv, bubble);
                 }
-                
                 contentWrapper.appendChild(bubble);
             }
 
             // Add indicators with enhanced styling
             const indicators = document.createElement('div');
             indicators.className = 'message-indicators';
-            
             if (msg.view_once && !msg.is_viewed) {
                 const viewOnce = document.createElement('span');
                 viewOnce.className = 'view-once-badge';
                 viewOnce.innerHTML = '👁️ View once';
                 indicators.appendChild(viewOnce);
             }
-            
             if (msg.is_saved) {
                 const saved = document.createElement('span');
                 saved.className = 'message-saved-badge';
                 saved.innerHTML = '💾 Saved';
                 indicators.appendChild(saved);
             }
-
             // Add save button (long press or right click)
             if (!msg.is_saved && !isReceived) {
                 contentWrapper.addEventListener('contextmenu', (e) => {
@@ -1249,12 +1250,10 @@
                     showMessageContextMenu(e, msg.id, messageDiv);
                 });
             }
-
             messageDiv.appendChild(contentWrapper);
             if (indicators.children.length > 0) {
                 messageDiv.appendChild(indicators);
             }
-            
             container.appendChild(messageDiv);
             container.scrollTop = container.scrollHeight;
         }
