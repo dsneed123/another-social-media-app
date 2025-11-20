@@ -1494,8 +1494,8 @@ pub async fn approve_ad(
 
     // Log admin action
     sqlx::query!(
-        "INSERT INTO admin_logs (admin_id, action, target_type, target_id) VALUES ($1, 'approve_ad', 'advertisement', $2)",
-        _admin.user_id,
+        "INSERT INTO admin_logs (admin_id, action, target_resource_type, target_resource_id) VALUES ($1, 'approve_ad', 'advertisement', $2)",
+        _admin.0.id,
         ad_id
     )
     .execute(&*state.pool)
@@ -1522,8 +1522,8 @@ pub async fn reject_ad(
 
     // Log admin action
     sqlx::query!(
-        "INSERT INTO admin_logs (admin_id, action, target_type, target_id) VALUES ($1, 'reject_ad', 'advertisement', $2)",
-        _admin.user_id,
+        "INSERT INTO admin_logs (admin_id, action, target_resource_type, target_resource_id) VALUES ($1, 'reject_ad', 'advertisement', $2)",
+        _admin.0.id,
         ad_id
     )
     .execute(&*state.pool)
@@ -1560,7 +1560,7 @@ pub async fn get_ad_location_analytics(
             NULLIF(city, '') as city,
             impressions as "impressions!",
             clicks as "clicks!",
-            ctr as "ctr!"
+            ctr::DOUBLE PRECISION as "ctr!"
         FROM ad_performance_by_location
         WHERE ad_id = $1
         ORDER BY impressions DESC
@@ -1600,15 +1600,15 @@ pub async fn get_ad_demographics_analytics(
             user_gender as gender,
             COUNT(*) as "impressions!",
             COUNT(*) FILTER (WHERE clicked = true) as "clicks!",
-            CASE
+            (CASE
                 WHEN COUNT(*) > 0
                 THEN (COUNT(*) FILTER (WHERE clicked = true)::DECIMAL / COUNT(*)) * 100
                 ELSE 0
-            END as "ctr!"
+            END)::DOUBLE PRECISION as "ctr!"
         FROM ad_impressions
         WHERE ad_id = $1
         GROUP BY device_type, user_age_range, user_gender
-        ORDER BY impressions DESC
+        ORDER BY COUNT(*) DESC
         "#,
         ad_id
     )
