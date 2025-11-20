@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT get_age_range($1::DATE)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "get_age_range",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Date"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "882b09c71735f6e4f7cd73ada58b53897b67d2a0ec5a273a18bd2648550bf8c9"
+}

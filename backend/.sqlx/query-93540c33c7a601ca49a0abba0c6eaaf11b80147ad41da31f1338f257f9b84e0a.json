@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO ad_performance_by_location (ad_id, country, city, clicks)\n            VALUES ($1, $2, COALESCE($3, ''), 1)\n            ON CONFLICT (ad_id, country, city) DO UPDATE\n            SET clicks = ad_performance_by_location.clicks + 1,\n                ctr = CASE\n                    WHEN ad_performance_by_location.impressions > 0\n                    THEN ((ad_performance_by_location.clicks + 1)::DECIMAL / ad_performance_by_location.impressions) * 100\n                    ELSE 0\n                END,\n                last_updated = NOW()\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "93540c33c7a601ca49a0abba0c6eaaf11b80147ad41da31f1338f257f9b84e0a"
+}

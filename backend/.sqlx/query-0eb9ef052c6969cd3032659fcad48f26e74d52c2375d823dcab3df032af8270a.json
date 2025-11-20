@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                        UPDATE advertisements\n                        SET status = 'pending_approval', paid_at = NOW()\n                        WHERE id = $1\n                        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0eb9ef052c6969cd3032659fcad48f26e74d52c2375d823dcab3df032af8270a"
+}

@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            country,\n            NULLIF(city, '') as city,\n            impressions as \"impressions!\",\n            clicks as \"clicks!\",\n            ctr::DOUBLE PRECISION as \"ctr!\"\n        FROM ad_performance_by_location\n        WHERE ad_id = $1\n        ORDER BY impressions DESC\n        LIMIT 50\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "country",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "city",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "impressions!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "clicks!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "ctr!",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "9e3b5f81b8c288e72c14dc6a28165f47ff9ca1b95e15b4de8fe8a64badb1d164"
+}

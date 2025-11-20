@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT birthdate, gender\n        FROM users\n        WHERE id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "birthdate",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 1,
+        "name": "gender",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "544ec6e21e32efefbcba217e3a13619aab4749dedffe9e01a4dd7b460705fb54"
+}

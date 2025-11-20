@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE advertisements SET status = 'active', start_date = NOW() WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f0296bd6dad7850727ab06a5da29545e5057059267ee5658c26d03be4d4fc7f9"
+}

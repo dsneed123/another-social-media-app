@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            device_type,\n            user_age_range as age_range,\n            user_gender as gender,\n            COUNT(*) as \"impressions!\",\n            COUNT(*) FILTER (WHERE clicked = true) as \"clicks!\",\n            (CASE\n                WHEN COUNT(*) > 0\n                THEN (COUNT(*) FILTER (WHERE clicked = true)::DECIMAL / COUNT(*)) * 100\n                ELSE 0\n            END)::DOUBLE PRECISION as \"ctr!\"\n        FROM ad_impressions\n        WHERE ad_id = $1\n        GROUP BY device_type, user_age_range, user_gender\n        ORDER BY COUNT(*) DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "device_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "age_range",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "gender",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "impressions!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "clicks!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "ctr!",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "66c4d1b749f647d96d9ac23dd130d372256061482e74ad3e4923b0461821c1a1"
+}

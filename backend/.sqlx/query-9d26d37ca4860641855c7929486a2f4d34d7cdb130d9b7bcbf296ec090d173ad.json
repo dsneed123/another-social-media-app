@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO admin_logs (admin_id, action, target_resource_type, target_resource_id) VALUES ($1, 'reject_ad', 'advertisement', $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9d26d37ca4860641855c7929486a2f4d34d7cdb130d9b7bcbf296ec090d173ad"
+}
