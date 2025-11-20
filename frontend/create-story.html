@@ -810,7 +810,9 @@
 
                 // Upload to server with story metadata
                 const formData = new FormData();
-                formData.append('file', finalBlob, isVideo ? 'story.mp4' : 'story.jpg');
+                // Use timestamp to ensure unique filenames for each story
+                const timestamp = Date.now();
+                formData.append('file', finalBlob, isVideo ? `story_${timestamp}.mp4` : `story_${timestamp}.jpg`);
                 formData.append('user_id', userId);
                 formData.append('media_type', isVideo ? 'video' : 'image');
                 

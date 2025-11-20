@@ -214,7 +214,7 @@ pub async fn get_feed_stories(
     State(state): State<Arc<AppState>>,
     Path(viewer_id): Path<Uuid>,
 ) -> Result<Json<StoriesResponse>, StatusCode> {
-    // Fetch regular stories
+    // Fetch regular stories (excluding already viewed ones)
     let mut stories = sqlx::query!(
         r#"
         SELECT
@@ -230,15 +230,14 @@ pub async fn get_feed_stories(
             s.created_at,
             s.expires_at,
             u.username,
-            CASE WHEN sv.viewer_id IS NOT NULL THEN TRUE ELSE FALSE END as is_viewed,
+            FALSE as is_viewed,
             EXISTS(SELECT 1 FROM story_likes sl WHERE sl.story_id = s.id AND sl.user_id = $1) as is_liked
         FROM stories s
         JOIN users u ON s.user_id = u.id
         LEFT JOIN story_views sv ON s.id = sv.story_id AND sv.viewer_id = $1
         WHERE s.expires_at > NOW()
-        ORDER BY
-            CASE WHEN sv.viewer_id IS NULL THEN 0 ELSE 1 END,
-            s.created_at DESC
+          AND sv.viewer_id IS NULL
+        ORDER BY s.created_at DESC
         LIMIT 50
         "#,
         viewer_id

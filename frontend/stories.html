@@ -843,6 +843,35 @@
                 const data = await response.json();
                 stories = data.stories;
 
+                // Fetch and inject ads into the feed
+                try {
+                    const adResponse = await fetch(`/api/ads/next/${currentUserId}`);
+                    if (adResponse.ok) {
+                        const ad = await adResponse.json();
+                        if (ad && ad.id) {
+                            // Inject ad after 3rd story (or at index 3)
+                            const adStory = {
+                                id: ad.id,
+                                is_ad: true,
+                                ad_data: ad,
+                                media_url: ad.image_url,
+                                media_type: 'image',
+                                username: 'Sponsored',
+                                caption: ad.description,
+                                created_at: new Date().toISOString()
+                            };
+
+                            if (stories.length >= 3) {
+                                stories.splice(3, 0, adStory);
+                            } else {
+                                stories.push(adStory);
+                            }
+                        }
+                    }
+                } catch (adError) {
+                    console.error('Error loading ad:', adError);
+                }
+
                 if (stories.length === 0) {
                     document.getElementById('feed').innerHTML = `
                         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: #999;">
@@ -870,55 +899,124 @@
                 videoItem.className = 'video-item';
                 videoItem.dataset.storyId = story.id;
 
-                const mediaElement = story.media_type === 'video' 
-                    ? `<video class="video-placeholder" src="${story.media_url}" loop muted></video>`
-                    : `<img class="video-placeholder" src="${story.media_url}" alt="Story">`;
+                if (story.is_ad) {
+                    // Render ad story
+                    const mediaElement = story.media_url
+                        ? `<img class="video-placeholder" src="${story.media_url}" alt="Ad">`
+                        : `<div class="video-placeholder" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>`;
 
-                videoItem.innerHTML = `
-                    ${mediaElement}
+                    videoItem.innerHTML = `
+                        ${mediaElement}
 
-                    <div class="video-info">
-                        <div class="video-username">
-                            @${story.username || 'user'}
+                        <div class="video-info">
+                            <div class="video-username" style="display: flex; align-items: center; gap: 8px;">
+                                <i class="bi bi-badge-ad" style="color: #B39FFF;"></i>
+                                <span style="color: #B39FFF;">Sponsored</span>
+                            </div>
+                            <div class="video-caption" style="font-size: 18px; font-weight: 600; margin: 10px 0;">
+                                ${escapeHtml(story.ad_data.title)}
+                            </div>
+                            ${story.caption ? `<div class="video-caption">${escapeHtml(story.caption)}</div>` : ''}
+                            ${story.ad_data.link_url ? `
+                                <button onclick='handleAdClick("${story.id}", "${story.ad_data.link_url}")'
+                                        style="background: #B39FFF; color: #000; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 15px;">
+                                    Learn More <i class="bi bi-box-arrow-up-right" style="margin-left: 6px;"></i>
+                                </button>
+                            ` : ''}
                         </div>
-                        ${story.caption ? `<div class="video-caption">${escapeHtml(story.caption)}</div>` : ''}
-                        <div class="video-music">
-                            <i class="bi bi-clock"></i>
-                            ${getTimeAgo(story.created_at)}
-                            ${story.view_count > 0 ? `<span style="margin-left: 12px;"><i class="bi bi-eye"></i> ${story.view_count}</span>` : ''}
+
+                        <div class="side-actions">
+                            <div class="profile-avatar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <i class="bi bi-megaphone"></i>
+                            </div>
                         </div>
-                    </div>
+                    `;
+                } else {
+                    // Render regular story
+                    const mediaElement = story.media_type === 'video'
+                        ? `<video class="video-placeholder" src="${story.media_url}" loop muted></video>`
+                        : `<img class="video-placeholder" src="${story.media_url}" alt="Story">`;
 
-                    <div class="side-actions">
-                        <div class="profile-avatar" onclick="viewProfile('${story.user_id}', '${story.username}')">${(story.username || 'U')[0].toUpperCase()}</div>
-                        
-                        <button class="action-btn ${story.is_liked ? 'liked' : ''}" onclick="toggleStoryLike(this, '${story.id}')">
-                            <i class="bi bi-heart${story.is_liked ? '-fill' : ''}"></i>
-                            <span class="action-count">${story.like_count || 0}</span>
-                        </button>
+                    videoItem.innerHTML = `
+                        ${mediaElement}
 
-                        <button class="action-btn" onclick="openComments('${story.id}', ${story.comment_count || 0})">
-                            <i class="bi bi-chat"></i>
-                            <span class="action-count">${story.comment_count || 0}</span>
-                        </button>
+                        <div class="video-info">
+                            <div class="video-username">
+                                @${story.username || 'user'}
+                            </div>
+                            ${story.caption ? `<div class="video-caption">${escapeHtml(story.caption)}</div>` : ''}
+                            <div class="video-music">
+                                <i class="bi bi-clock"></i>
+                                ${getTimeAgo(story.created_at)}
+                                ${story.view_count > 0 ? `<span style="margin-left: 12px;"><i class="bi bi-eye"></i> ${story.view_count}</span>` : ''}
+                            </div>
+                        </div>
 
-                        <button class="action-btn" onclick="shareStory('${story.id}')">
-                            <i class="bi bi-share"></i>
-                        </button>
+                        <div class="side-actions">
+                            <div class="profile-avatar" onclick="viewProfile('${story.user_id}', '${story.username}')">${(story.username || 'U')[0].toUpperCase()}</div>
 
-                        <button class="action-btn" onclick="viewProfile('${story.user_id}', '${story.username}')">
-                            <i class="bi bi-person-circle"></i>
-                        </button>
-                    </div>
-                `;
+                            <button class="action-btn ${story.is_liked ? 'liked' : ''}" onclick="toggleStoryLike(this, '${story.id}')">
+                                <i class="bi bi-heart${story.is_liked ? '-fill' : ''}"></i>
+                                <span class="action-count">${story.like_count || 0}</span>
+                            </button>
+
+                            <button class="action-btn" onclick="openComments('${story.id}', ${story.comment_count || 0})">
+                                <i class="bi bi-chat"></i>
+                                <span class="action-count">${story.comment_count || 0}</span>
+                            </button>
+
+                            <button class="action-btn" onclick="shareStory('${story.id}')">
+                                <i class="bi bi-share"></i>
+                            </button>
+
+                            <button class="action-btn" onclick="viewProfile('${story.user_id}', '${story.username}')">
+                                <i class="bi bi-person-circle"></i>
+                            </button>
+                        </div>
+                    `;
+                }
 
                 feed.appendChild(videoItem);
             });
 
-            // Mark first story as viewed
+            // Set up Intersection Observer to track story views as user scrolls
+            setupStoryViewTracking();
+
+            // Mark first story as viewed immediately
             if (stories.length > 0) {
                 markStoryViewed(stories[0].id);
             }
+        }
+
+        // Track which stories have been viewed already in this session
+        const viewedInSession = new Set();
+
+        // Setup intersection observer to track story views
+        function setupStoryViewTracking() {
+            const options = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.5 // Story is considered viewed when 50% visible
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+                        const storyId = entry.target.dataset.storyId;
+
+                        // Only mark as viewed once per session
+                        if (storyId && !viewedInSession.has(storyId)) {
+                            viewedInSession.add(storyId);
+                            markStoryViewed(storyId);
+                        }
+                    }
+                });
+            }, options);
+
+            // Observe all story items
+            document.querySelectorAll('.video-item').forEach(item => {
+                observer.observe(item);
+            });
         }
 
         // Load story circles at top (for friends' stories)
@@ -956,11 +1054,41 @@
         // Mark story as viewed
         async function markStoryViewed(storyId) {
             try {
-                await fetch(`/api/stories/${storyId}/view/${currentUserId}`, {
-                    method: 'POST'
-                });
+                // Find the story to check if it's an ad
+                const story = stories.find(s => s.id === storyId);
+
+                if (story && story.is_ad) {
+                    // Record ad impression
+                    await fetch(`/api/ads/${storyId}/impression/${currentUserId}`, {
+                        method: 'POST'
+                    });
+                    console.log('Ad impression recorded:', storyId);
+                } else {
+                    // Regular story view
+                    await fetch(`/api/stories/${storyId}/view/${currentUserId}`, {
+                        method: 'POST'
+                    });
+                }
             } catch (error) {
                 console.error('Error marking story viewed:', error);
+            }
+        }
+
+        // Handle ad click
+        async function handleAdClick(adId, linkUrl) {
+            try {
+                // Record ad click
+                await fetch(`/api/ads/${adId}/click/${currentUserId}`, {
+                    method: 'POST'
+                });
+                console.log('Ad click recorded:', adId);
+
+                // Open link in new tab
+                window.open(linkUrl, '_blank');
+            } catch (error) {
+                console.error('Error recording ad click:', error);
+                // Still open the link even if tracking fails
+                window.open(linkUrl, '_blank');
             }
         }
 

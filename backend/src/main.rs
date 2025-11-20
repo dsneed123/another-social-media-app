@@ -3,6 +3,7 @@ use axum::{
     routing::{post, get},
     response::Html,
     Json,
+    extract::DefaultBodyLimit,
 };
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -153,11 +154,11 @@ async fn main() {
         .route("/api/users/:user_id/messages/:message_id/save", post(chat::save_message))
         .route("/api/users/:user_id/messages/:message_id/unsave", axum::routing::delete(chat::unsave_message))
 
-        // Media upload endpoints
+        // Media upload endpoints (with increased body limit for file uploads)
         .route("/api/media/upload", post(media::upload_image))
         .route("/api/media/upload-multipart", post(media::upload_multipart))
 
-        // Stories endpoints
+        // Stories endpoints (also needs increased limit for media uploads)
         .route("/api/stories/create", post(stories::create_story_multipart))
         .route("/api/stories/user/:user_id", get(stories::get_user_stories))
         .route("/api/stories/feed/:viewer_id", get(stories::get_feed_stories))
@@ -246,6 +247,7 @@ async fn main() {
         // WebSocket endpoint
         .route("/ws/:user_id", get(websocket::ws_handler))
 
+        .layer(DefaultBodyLimit::max(50 * 1024 * 1024)) // 50MB limit for uploads
         .layer(CorsLayer::permissive())
         .with_state(state)
         // Serve static files from frontend directory as fallback
