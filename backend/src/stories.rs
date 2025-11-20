@@ -94,7 +94,9 @@ pub async fn create_story_multipart(
         eprintln!("❌ Missing file data in story creation");
         StatusCode::BAD_REQUEST
     })?;
-    let filename = filename.unwrap_or_else(|| format!("story_{}.jpg", Uuid::new_v4()));
+    // Always generate a unique filename to prevent overwriting
+    let unique_filename = format!("story_{}.jpg", Uuid::new_v4());
+    let filename = unique_filename;
 
     println!("📤 Uploading story for user {} ({})", user_id, filename);
 
