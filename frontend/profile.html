@@ -924,15 +924,23 @@
                     const data = await response.json();
                     const stories = data.stories || [];
                     if (stories.length > 0) {
-                        gridEl.innerHTML = stories.map(story => `
-                            <div class="grid-item" onclick="viewStory(${story.id})">
-                                <img src="${escapeHtml(story.media_url)}" alt="Story">
-                                <div class="views">
-                                    <i class="bi bi-eye-fill"></i>
-                                    ${story.view_count || 0}
+                        gridEl.innerHTML = stories.map(story => {
+                            let mediaTag;
+                            if (story.media_type === 'video') {
+                                mediaTag = `<video src="${escapeHtml(story.media_url)}" autoplay muted playsinline loop class="story-grid-video"></video>`;
+                            } else {
+                                mediaTag = `<img src="${escapeHtml(story.media_url)}" alt="Story" class="story-grid-image">`;
+                            }
+                            return `
+                                <div class="grid-item" onclick="viewStory(${story.id})">
+                                    ${mediaTag}
+                                    <div class="views">
+                                        <i class="bi bi-eye-fill"></i>
+                                        ${story.view_count || 0}
+                                    </div>
                                 </div>
-                            </div>
-                        `).join('');
+                            `;
+                        }).join('');
                     } else {
                         gridEl.innerHTML = `
                             <div class="empty-state">

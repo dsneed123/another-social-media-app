@@ -189,11 +189,14 @@
             align-items: center;
             justify-content: center;
             background: #000;
+            overflow: hidden;
         }
 
         .video-placeholder {
             width: 100%;
             height: 100%;
+            max-width: 100vw;
+            max-height: 100vh;
             object-fit: cover;
             image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges;
@@ -201,6 +204,13 @@
 
         video.video-placeholder {
             image-rendering: auto;
+        
+
+        /* For odd aspect ratios, use object-fit: contain */
+        .video-placeholder.contain-fit {
+            object-fit: contain !important;
+            background: #111;
+        }
         }
 
         .placeholder-gradient {
@@ -902,10 +912,36 @@
             const feed = document.getElementById('feed');
             feed.innerHTML = '';
 
+
             stories.forEach((story, index) => {
                 const videoItem = document.createElement('div');
                 videoItem.className = 'video-item';
                 videoItem.dataset.storyId = story.id;
+
+                // Helper to determine if aspect ratio is extreme
+                function isExtremeAspect(mediaUrl, type) {
+                    // Only check for images/videos
+                    // We'll use a temporary element to check aspect ratio
+                    return new Promise(resolve => {
+                        if (type === 'video') {
+                            const vid = document.createElement('video');
+                            vid.src = mediaUrl;
+                            vid.addEventListener('loadedmetadata', () => {
+                                const ar = vid.videoWidth / vid.videoHeight;
+                                resolve(ar < 0.5 || ar > 2.0);
+                            });
+                            vid.addEventListener('error', () => resolve(false));
+                        } else {
+                            const img = document.createElement('img');
+                            img.src = mediaUrl;
+                            img.onload = () => {
+                                const ar = img.naturalWidth / img.naturalHeight;
+                                resolve(ar < 0.5 || ar > 2.0);
+                            };
+                            img.onerror = () => resolve(false);
+                        }
+                    });
+                }
 
                 if (story.is_ad) {
                     // Render ad story
@@ -939,11 +975,24 @@
                             </div>
                         </div>
                     `;
+
+                    // After adding, check aspect ratio and adjust fit if needed
+                    if (story.media_url) {
+                        isExtremeAspect(story.media_url, 'image').then(extreme => {
+                            if (extreme) {
+                                const img = videoItem.querySelector('img.video-placeholder');
+                                if (img) img.classList.add('contain-fit');
+                            }
+                        });
+                    }
                 } else {
                     // Render regular story
-                    const mediaElement = story.media_type === 'video'
-                        ? `<video class="video-placeholder" src="${story.media_url}" loop muted autoplay playsinline></video>`
-                        : `<img class="video-placeholder" src="${story.media_url}" alt="Story">`;
+                    let mediaElement;
+                    if (story.media_type === 'video') {
+                        mediaElement = `<video class="video-placeholder" src="${story.media_url}" loop muted autoplay playsinline></video>`;
+                    } else {
+                        mediaElement = `<img class="video-placeholder" src="${story.media_url}" alt="Story">`;
+                    }
 
                     videoItem.innerHTML = `
                         ${mediaElement}
@@ -982,6 +1031,24 @@
                             </button>
                         </div>
                     `;
+
+                    // After adding, check aspect ratio and adjust fit if needed
+                    if (story.media_url) {
+                        isExtremeAspect(story.media_url, story.media_type).then(extreme => {
+                            const el = videoItem.querySelector(story.media_type === 'video' ? 'video.video-placeholder' : 'img.video-placeholder');
+                            if (extreme && el) el.classList.add('contain-fit');
+                            // Force autoplay for videos
+                            if (story.media_type === 'video' && el) {
+                                el.muted = true;
+                                el.autoplay = true;
+                                el.playsInline = true;
+                                el.setAttribute('muted', '');
+                                el.setAttribute('autoplay', '');
+                                el.setAttribute('playsinline', '');
+                                el.play().catch(() => {});
+                            }
+                        });
+                    }
                 }
 
                 feed.appendChild(videoItem);
