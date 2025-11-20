@@ -966,7 +966,7 @@
             const link = document.getElementById('linkInput').value;
 
             try {
-                const response = await fetch('/api/profile/update', {
+                const response = await fetch(`/api/profile/${currentUserId}/update`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
