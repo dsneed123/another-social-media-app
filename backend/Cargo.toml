@@ -24,5 +24,5 @@ base64 = "0.21"
 image = "0.24"
 tower = "0.4"
 dashmap = "5.5"
-stripe-rust = { version = "0.26", features = ["async", "webhook-events"] }
+stripe-rust = { version = "0.12", features = ["async"] }
 reqwest = { version = "0.11", features = ["json"] }
