@@ -2,11 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/jpeg" href="/logo.jpg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#a855f7">
     <title>relays.social - Share Moments That Matter</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Share ephemeral stories, chat with friends in real-time, and connect authentically on relays.social. Privacy-first social media with disappearing content.">
+    <meta name="keywords" content="social media, stories, ephemeral content, chat, messaging, privacy, snapchat alternative">
+    <meta name="author" content="relays.social">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://relays.social/">
+    <meta property="og:title" content="relays.social - Share Moments That Matter">
+    <meta property="og:description" content="Share ephemeral stories, chat with friends in real-time, and connect authentically. Privacy-first social media with disappearing content.">
+    <meta property="og:image" content="https://relays.social/logo.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://relays.social/">
+    <meta property="twitter:title" content="relays.social - Share Moments That Matter">
+    <meta property="twitter:description" content="Share ephemeral stories, chat with friends in real-time, and connect authentically. Privacy-first social media.">
+    <meta property="twitter:image" content="https://relays.social/logo.jpg">
+
     <link rel="icon" type="image/x-icon" href="/logo.jpg">
     <link rel="apple-touch-icon" href="/logo.jpg">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -697,11 +718,11 @@
 
             <div class="stats">
                 <div class="stat">
-                    <div class="stat-number">10K+</div>
+                    <div class="stat-number" id="user-count">...</div>
                     <div class="stat-label">Active Users</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-number">1M+</div>
+                    <div class="stat-number" id="story-count">...</div>
                     <div class="stat-label">Stories Shared</div>
                 </div>
                 <div class="stat">
@@ -741,7 +762,7 @@
                     <i class="bi bi-shield-lock-fill"></i>
                 </div>
                 <h3>Privacy First</h3>
-                <p>Your data stays yours. No ads, no tracking, no algorithms feeding on your information. Just pure connection.</p>
+                <p>Your data stays yours. No tracking, no algorithms feeding on your information. Optional ads let creators promote their content.</p>
             </div>
 
             <div class="feature-card">
@@ -758,6 +779,14 @@
                 </div>
                 <h3>Discover Content</h3>
                 <p>Explore trending stories, find new creators, and discover communities that match your interests.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-megaphone-fill"></i>
+                </div>
+                <h3>Promote Your Content</h3>
+                <p>Reach more people with targeted advertisements. Grow your audience and connect with users who share your interests.</p>
             </div>
 
             <div class="feature-card">
@@ -957,6 +986,67 @@
                 btn.disabled = false;
             }
         }
+
+        // Fetch and display actual stats
+        async function loadUserStats() {
+            try {
+                // Try to fetch user count
+                const userResponse = await fetch(`${CONFIG.API_URL}/api/stats/user-count`);
+                if (userResponse.ok) {
+                    const userData = await userResponse.json();
+                    const userCount = userData.count || userData.user_count || 0;
+
+                    // Format the number nicely
+                    let displayCount;
+                    if (userCount >= 1000) {
+                        displayCount = Math.floor(userCount / 100) * 100 + '+';
+                    } else {
+                        displayCount = userCount.toString();
+                    }
+
+                    // Update the user count display
+                    const userCountEl = document.getElementById('user-count');
+                    if (userCountEl) {
+                        userCountEl.textContent = displayCount;
+                    }
+                } else {
+                    document.getElementById('user-count').textContent = '0';
+                }
+
+                // Try to fetch story count
+                const storyResponse = await fetch(`${CONFIG.API_URL}/api/stats/story-count`);
+                if (storyResponse.ok) {
+                    const storyData = await storyResponse.json();
+                    const storyCount = storyData.count || storyData.story_count || 0;
+
+                    // Format the number nicely
+                    let displayStoryCount;
+                    if (storyCount >= 1000000) {
+                        displayStoryCount = (Math.floor(storyCount / 100000) / 10).toFixed(1) + 'M+';
+                    } else if (storyCount >= 1000) {
+                        displayStoryCount = (Math.floor(storyCount / 100) / 10).toFixed(1) + 'K+';
+                    } else {
+                        displayStoryCount = storyCount.toString();
+                    }
+
+                    // Update the story count display
+                    const storyCountEl = document.getElementById('story-count');
+                    if (storyCountEl) {
+                        storyCountEl.textContent = displayStoryCount;
+                    }
+                } else {
+                    document.getElementById('story-count').textContent = '0';
+                }
+            } catch (error) {
+                console.log('Could not load stats:', error);
+                // Show 0 if fetch fails
+                document.getElementById('user-count').textContent = '0';
+                document.getElementById('story-count').textContent = '0';
+            }
+        }
+
+        // Load stats on page load
+        loadUserStats();
 
         // Register service worker for PWA
         if ('serviceWorker' in navigator) {

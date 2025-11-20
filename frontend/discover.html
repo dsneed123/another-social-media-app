@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/jpeg" href="/logo.jpg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Discover - relays.social</title>
+    <meta name="description" content="Discover new people and trending content on relays.social.">
+    <meta name="robots" content="noindex">
     <script src="config.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
@@ -267,38 +270,96 @@
             bottom: 0;
             left: 0;
             right: 0;
-            width: 100%;
-            max-width: 100vw;
-            height: 60px;
-            background: #000;
-            border-top: 1px solid #333;
+            background: linear-gradient(180deg, transparent, rgba(0,0,0,0.95) 20%, #000);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(179, 159, 255, 0.1);
             display: flex;
             justify-content: space-around;
-            align-items: center;
-            z-index: 100;
-            box-sizing: border-box;
+            padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+            z-index: 50;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
         }
 
         .nav-item {
+            background: none;
+            border: none;
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 4px;
             padding: 8px;
-            min-height: 44px;
-            color: #888;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.5);
+            transition: all 0.2s ease;
+            border-radius: 12px;
+            position: relative;
             text-decoration: none;
-            font-size: 11px;
-            transition: color 0.2s;
-        }
-
-        .nav-item i {
-            font-size: 24px;
         }
 
         .nav-item.active {
-            color: #a855f7;
+            color: #B39FFF;
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 32px;
+            height: 3px;
+            background: linear-gradient(90deg, #B39FFF, #9d7fee);
+            border-radius: 0 0 3px 3px;
+            box-shadow: 0 2px 8px rgba(179, 159, 255, 0.5);
+        }
+
+        .nav-item:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-item:active {
+            transform: scale(0.95);
+        }
+
+        .nav-item i {
+            font-size: 22px;
+        }
+
+        .nav-item span {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        /* Desktop - Mobile App Style */
+        @media (min-width: 768px) {
+            body {
+                max-width: 480px;
+                margin: 0 auto;
+                background: #1a1a1a;
+                box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+            }
+
+            .header {
+                max-width: 480px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            .tabs {
+                max-width: 480px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            .bottom-nav {
+                max-width: 480px;
+                left: 50%;
+                transform: translateX(-50%);
+                border-radius: 0;
+            }
         }
     </style>
 </head>
@@ -342,28 +403,32 @@
     </div>
 
     <!-- Bottom Navigation -->
-    <div class="bottom-nav">
+    <nav class="bottom-nav">
         <a href="/basic-chat.html" class="nav-item">
-            <i class="bi bi-chat-dots"></i>
+            <i class="bi bi-chat-dots-fill"></i>
             <span>Chats</span>
         </a>
         <a href="/stories.html" class="nav-item">
-            <i class="bi bi-play-circle"></i>
+            <i class="bi bi-camera-fill"></i>
             <span>Stories</span>
         </a>
         <a href="/discover.html" class="nav-item active">
-            <i class="bi bi-search"></i>
+            <i class="bi bi-compass-fill"></i>
             <span>Discover</span>
         </a>
         <a href="/notifications.html" class="nav-item">
-            <i class="bi bi-bell"></i>
-            <span>Notifications</span>
+            <i class="bi bi-bell-fill"></i>
+            <span>Alerts</span>
         </a>
         <a href="/profile.html" class="nav-item">
-            <i class="bi bi-person"></i>
+            <i class="bi bi-person-fill"></i>
             <span>Profile</span>
         </a>
-    </div>
+        <a href="/settings.html" class="nav-item">
+            <i class="bi bi-gear-fill"></i>
+            <span>Settings</span>
+        </a>
+    </nav>
 
     <script>
         let currentUserId = null;

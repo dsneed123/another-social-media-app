@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/jpeg" href="/logo.jpg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Advertise on Relays.Social</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -589,11 +590,26 @@
             }
         });
 
-        // Redirect to login if not authenticated or token is missing
-        if (!currentUserId || !authToken) {
-            console.warn('User not authenticated or token missing. Redirecting to login...');
-            alert('Please log in to create an advertisement.');
-            window.location.href = '/start.html';
+        // Check authentication on page load
+        function checkAuth() {
+            const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+
+            if (!userId || !token) {
+                console.warn('User not authenticated. Redirecting to login...');
+                // Save return URL for after login
+                sessionStorage.setItem('returnUrl', window.location.pathname);
+                setTimeout(() => {
+                    window.location.href = '/start.html?redirect=advertise';
+                }, 100);
+                return false;
+            }
+            return true;
+        }
+
+        // Verify auth on load
+        if (!checkAuth()) {
+            document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><p>Redirecting to login...</p></div>';
         }
     </script>
 </body>

@@ -49,7 +49,7 @@
             font-weight: 600;
         }
 
-        .back-btn {
+        .header-btn {
             background: none;
             border: none;
             color: #fff;
@@ -238,7 +238,7 @@
             z-index: 100;
         }
 
-        .nav-item {
+        .bottom-nav button {
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -249,13 +249,16 @@
             text-decoration: none;
             font-size: 11px;
             transition: color 0.2s;
+            background: none;
+            border: none;
+            cursor: pointer;
         }
 
-        .nav-item i {
+        .bottom-nav button i {
             font-size: 24px;
         }
 
-        .nav-item.active {
+        .bottom-nav button.active {
             color: #a855f7;
         }
 
@@ -364,11 +367,10 @@
 <body>
     <!-- Header -->
     <div class="header">
-        <button class="back-btn" onclick="goBack()">
-            <i class="bi bi-chevron-left"></i>
-        </button>
         <h1>Settings</h1>
-        <div style="width: 40px;"></div>
+        <button class="header-btn" onclick="goBack()">
+            <i class="bi bi-arrow-left"></i>
+        </button>
     </div>
 
     <!-- Content -->
@@ -573,32 +575,32 @@
     </div>
 
     <!-- Bottom Navigation -->
-    <div class="bottom-nav">
-        <a href="/basic-chat.html" class="nav-item">
-            <i class="bi bi-chat-dots"></i>
-            <span>Chats</span>
-        </a>
-        <a href="/stories.html" class="nav-item">
-            <i class="bi bi-play-circle"></i>
-            <span>Stories</span>
-        </a>
-        <a href="/discover.html" class="nav-item">
-            <i class="bi bi-search"></i>
-            <span>Discover</span>
-        </a>
-        <a href="/notifications.html" class="nav-item">
-            <i class="bi bi-bell"></i>
-            <span>Notifications</span>
-        </a>
-        <a href="/profile.html" class="nav-item">
-            <i class="bi bi-person"></i>
-            <span>Profile</span>
-        </a>
-        <a href="/settings.html" class="nav-item active">
+    <nav class="bottom-nav">
+        <button onclick="navigateTo('chats')">
+            <i class="bi bi-chat-dots-fill"></i>
+            <span class="label">Chats</span>
+        </button>
+        <button onclick="navigateTo('stories')">
+            <i class="bi bi-camera-fill"></i>
+            <span class="label">Stories</span>
+        </button>
+        <button onclick="navigateTo('discover')">
+            <i class="bi bi-compass-fill"></i>
+            <span class="label">Discover</span>
+        </button>
+        <button onclick="navigateTo('notifications')">
+            <i class="bi bi-bell-fill"></i>
+            <span class="label">Alerts</span>
+        </button>
+        <button onclick="navigateTo('profile')">
+            <i class="bi bi-person-fill"></i>
+            <span class="label">Profile</span>
+        </button>
+        <button class="active" onclick="navigateTo('settings')">
             <i class="bi bi-gear-fill"></i>
-            <span>Settings</span>
-        </a>
-    </div>
+            <span class="label">Settings</span>
+        </button>
+    </nav>
 
     <!-- Edit Username Modal -->
     <div class="modal" id="username-modal">
@@ -917,6 +919,10 @@
         // Navigation
         function goBack() {
             window.history.back();
+        }
+
+        function navigateTo(page) {
+            window.location.href = `/${page}.html`;
         }
 
         // Initialize
