@@ -1193,11 +1193,7 @@
             }
             messageDiv.dataset.messageId = msg.id;
 
-            // Highlight unopened (unread) messages
-            if (isReceived && !msg.is_viewed) {
-                messageDiv.style.borderLeft = '4px solid #ff4444';
-                messageDiv.style.background = '#fffbe6';
-            }
+            // No highlight for unread messages
 
             const contentWrapper = document.createElement('div');
             contentWrapper.className = 'message-content-wrapper';

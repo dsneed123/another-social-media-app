@@ -415,6 +415,7 @@
         const API_URL = CONFIG.API_URL;
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         const currentUserId = currentUser.id;
+        const authToken = localStorage.getItem('token');
 
         let selectedPlan = null;
         let stripe = null;
@@ -489,6 +490,15 @@
             submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
 
             try {
+                // Check token again before proceeding
+                if (!authToken) {
+                    alert('Authentication required. Please log in again.');
+                    window.location.href = '/start.html';
+                    return;
+                }
+
+                console.log('Creating ad with authentication...');
+
                 // Upload image first
                 const imageFile = document.getElementById('adImage').files[0];
                 const formData = new FormData();
@@ -521,12 +531,22 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${authToken}`
                     },
                     body: JSON.stringify(adData)
                 });
 
-                if (!createResponse.ok) throw new Error('Failed to create ad');
+                if (!createResponse.ok) {
+                    if (createResponse.status === 401) {
+                        // Token is invalid or expired
+                        alert('Your session has expired. Please log in again.');
+                        localStorage.clear();
+                        window.location.href = '/start.html';
+                        return;
+                    }
+                    const errorData = await createResponse.json().catch(() => ({ message: 'Failed to create ad' }));
+                    throw new Error(errorData.message || 'Failed to create ad');
+                }
 
                 const adResult = await createResponse.json();
 
@@ -535,11 +555,20 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${authToken}`
                     }
                 });
 
-                if (!checkoutResponse.ok) throw new Error('Failed to create checkout session');
+                if (!checkoutResponse.ok) {
+                    if (checkoutResponse.status === 401) {
+                        alert('Your session has expired. Please log in again.');
+                        localStorage.clear();
+                        window.location.href = '/start.html';
+                        return;
+                    }
+                    const errorData = await checkoutResponse.json().catch(() => ({ message: 'Failed to create checkout session' }));
+                    throw new Error(errorData.message || 'Failed to create checkout session');
+                }
 
                 const { session_id } = await checkoutResponse.json();
 
@@ -560,8 +589,10 @@
             }
         });
 
-        // Redirect to login if not authenticated
-        if (!currentUserId) {
+        // Redirect to login if not authenticated or token is missing
+        if (!currentUserId || !authToken) {
+            console.warn('User not authenticated or token missing. Redirecting to login...');
+            alert('Please log in to create an advertisement.');
             window.location.href = '/start.html';
         }
     </script>
