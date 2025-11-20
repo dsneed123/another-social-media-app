@@ -92,10 +92,15 @@ pub async fn ws_handler(
 
 async fn handle_socket(socket: WebSocket, user_id: Uuid, state: Arc<AppState>) {
     let (mut sender, mut receiver) = socket.split();
-    let (tx, mut rx) = broadcast::channel(100);
 
-    // Register connection
-    state.connections.insert(user_id, tx.clone());
+    // Only create a new broadcast channel if one does not exist
+    let tx = state.connections.entry(user_id).or_insert_with(|| {
+        let (tx, _) = broadcast::channel(100);
+        tx
+    }).clone();
+    let mut rx = tx.subscribe();
+
+    tracing::info!("WebSocket connected: {}", user_id);
 
     // Set user online in Redis
     {
@@ -107,6 +112,7 @@ async fn handle_socket(socket: WebSocket, user_id: Uuid, state: Arc<AppState>) {
     let mut send_task = tokio::spawn(async move {
         while let Ok(msg) = rx.recv().await {
             if sender.send(Message::Text(msg)).await.is_err() {
+                tracing::warn!("WebSocket send error for user {}", user_id);
                 break;
             }
         }
@@ -119,20 +125,32 @@ async fn handle_socket(socket: WebSocket, user_id: Uuid, state: Arc<AppState>) {
 
     let mut recv_task = tokio::spawn(async move {
         while let Some(Ok(Message::Text(text))) = receiver.next().await {
-            if let Ok(ws_msg) = serde_json::from_str::<WsMessage>(&text) {
-                handle_ws_message(ws_msg, user_id, &pool, &redis, &connections).await;
+            match serde_json::from_str::<WsMessage>(&text) {
+                Ok(ws_msg) => {
+                    handle_ws_message(ws_msg, user_id, &pool, &redis, &connections).await;
+                }
+                Err(e) => {
+                    tracing::error!("Failed to parse WsMessage: {}", e);
+                }
             }
         }
     });
 
     // Wait for either task to finish
     tokio::select! {
-        _ = (&mut send_task) => recv_task.abort(),
-        _ = (&mut recv_task) => send_task.abort(),
+        _ = (&mut send_task) => {
+            tracing::info!("Send task ended for user {}", user_id);
+            recv_task.abort()
+        },
+        _ = (&mut recv_task) => {
+            tracing::info!("Recv task ended for user {}", user_id);
+            send_task.abort()
+        },
     };
 
     // Clean up connection
     state.connections.remove(&user_id);
+    tracing::info!("WebSocket disconnected: {}", user_id);
     {
         let mut redis = state.redis.lock().await;
         let _ = redis.set_user_offline(user_id).await;
@@ -195,7 +213,7 @@ async fn handle_ws_message(
                 .await
                 .unwrap();
 
-                // Broadcast to all chat members
+                // Broadcast to all chat members (including sender)
                 let broadcast_msg = WsMessage::NewMessage {
                     id: record.id,
                     chat_room_id,
@@ -220,6 +238,8 @@ async fn handle_ws_message(
                         let _ = redis_guard.increment_unread(member.user_id, chat_room_id).await;
                     }
                 }
+            } else if let Err(e) = result {
+                tracing::error!("Failed to insert message: {}", e);
             }
         }
 
@@ -234,11 +254,10 @@ async fn handle_ws_message(
                 .fetch_one(pool.as_ref())
                 .await
             {
-                // Broadcast typing indicator to chat members
+                // Broadcast typing indicator to chat members (including sender)
                 let members = sqlx::query!(
-                    "SELECT user_id FROM chat_members WHERE chat_room_id = $1 AND user_id != $2",
-                    chat_room_id,
-                    user_id
+                    "SELECT user_id FROM chat_members WHERE chat_room_id = $1",
+                    chat_room_id
                 )
                 .fetch_all(pool.as_ref())
                 .await
@@ -268,9 +287,8 @@ async fn handle_ws_message(
 
             // Broadcast stopped typing to chat members
             let members = sqlx::query!(
-                "SELECT user_id FROM chat_members WHERE chat_room_id = $1 AND user_id != $2",
-                chat_room_id,
-                user_id
+                "SELECT user_id FROM chat_members WHERE chat_room_id = $1",
+                chat_room_id
             )
             .fetch_all(pool.as_ref())
             .await
@@ -328,6 +346,8 @@ async fn handle_ws_message(
                         let _ = conn.send(msg_json);
                     }
                 }
+            } else if let Err(e) = result {
+                tracing::error!("Failed to insert read receipt: {}", e);
             }
         }
 
@@ -363,7 +383,7 @@ async fn handle_ws_message(
                         let _ = conn.send(msg_json);
                     }
 
-                    // If view_once, delete the message
+                    // If view_once, delete the message and notify all participants
                     if msg.view_once {
                         let _ = sqlx::query!(
                             "UPDATE messages SET deleted_at = NOW() WHERE id = $1",
@@ -372,11 +392,27 @@ async fn handle_ws_message(
                         .execute(pool.as_ref())
                         .await;
 
-                        // Notify all participants that message expired
-                        let _expired_msg = WsMessage::MessageExpired { message_id };
-                        // Broadcast to chat members (implementation similar to above)
+                        let expired_msg = WsMessage::MessageExpired { message_id };
+                        let expired_json = serde_json::to_string(&expired_msg).unwrap();
+
+                        // Get all members of the chat room
+                        if let Ok(members) = sqlx::query!(
+                            "SELECT user_id FROM chat_members WHERE chat_room_id = (SELECT chat_room_id FROM messages WHERE id = $1)",
+                            message_id
+                        )
+                        .fetch_all(pool.as_ref())
+                        .await
+                        {
+                            for member in members {
+                                if let Some(conn) = connections.get(&member.user_id) {
+                                    let _ = conn.send(expired_json.clone());
+                                }
+                            }
+                        }
                     }
                 }
+            } else if let Err(e) = result {
+                tracing::error!("Failed to insert view record: {}", e);
             }
         }
 
