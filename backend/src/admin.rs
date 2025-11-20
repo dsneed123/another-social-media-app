@@ -169,8 +169,8 @@ pub async fn list_users(
                     u.id, u.username, u.email, u.role, u.display_name,
                     u.follower_count, u.following_count, u.story_count,
                     u.created_at,
-                    EXISTS(SELECT 1 FROM user_bans WHERE user_id = u.id AND is_active = true) as "is_banned!",
-                    (SELECT reason FROM user_bans WHERE user_id = u.id AND is_active = true LIMIT 1) as ban_reason
+                    EXISTS(SELECT 1 FROM user_bans WHERE user_id = u.id AND active = true) as "is_banned!",
+                    (SELECT reason FROM user_bans WHERE user_id = u.id AND active = true LIMIT 1) as ban_reason
                 FROM users u
                 WHERE (u.username ILIKE $1 OR u.email ILIKE $1) AND u.role = $2
                 ORDER BY u.created_at DESC
