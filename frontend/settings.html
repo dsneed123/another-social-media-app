@@ -13,6 +13,11 @@
             box-sizing: border-box;
         }
 
+        html, body {
+            max-width: 100vw;
+            overflow-x: hidden;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: #000;
@@ -26,6 +31,8 @@
             top: 0;
             left: 0;
             right: 0;
+            width: 100%;
+            max-width: 100vw;
             height: 60px;
             background: #000;
             border-bottom: 1px solid #333;
@@ -34,6 +41,7 @@
             justify-content: space-between;
             padding: 0 20px;
             z-index: 100;
+            box-sizing: border-box;
         }
 
         .header h1 {
@@ -48,6 +56,8 @@
             font-size: 24px;
             cursor: pointer;
             padding: 8px;
+            min-width: 44px;
+            min-height: 44px;
         }
 
         /* Main Content */
