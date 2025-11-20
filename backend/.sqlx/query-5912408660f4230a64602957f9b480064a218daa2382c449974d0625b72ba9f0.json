@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT u.id, u.username, u.email, u.role,\n                   EXISTS(SELECT 1 FROM user_bans WHERE user_id = u.id AND is_active = true) as \"is_banned!\"\n            FROM users u\n            WHERE u.id = $1\n            ",
+  "query": "\n            SELECT u.id, u.username, u.email, u.role,\n                   EXISTS(SELECT 1 FROM user_bans WHERE user_id = u.id AND active = true) as \"is_banned!\"\n            FROM users u\n            WHERE u.id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -42,5 +42,5 @@
       null
     ]
   },
-  "hash": "2e28bc880dc4bdce501f6e3be4c0cd946448f336189a0a9f570ad36eaa71c086"
+  "hash": "5912408660f4230a64602957f9b480064a218daa2382c449974d0625b72ba9f0"
 }

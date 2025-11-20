@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT\n                u.id, u.username, u.email, u.role, u.display_name,\n                u.follower_count, u.following_count, u.story_count,\n                u.created_at as \"created_at: _\",\n                EXISTS(SELECT 1 FROM user_bans WHERE user_id = u.id AND is_active = true) as \"is_banned!\",\n                (SELECT reason FROM user_bans WHERE user_id = u.id AND is_active = true LIMIT 1) as ban_reason\n            FROM users u\n            ORDER BY u.created_at DESC\n            LIMIT $1 OFFSET $2\n            ",
+  "query": "\n                SELECT\n                    u.id, u.username, u.email, u.role, u.display_name,\n                    u.follower_count, u.following_count, u.story_count,\n                    u.created_at,\n                    EXISTS(SELECT 1 FROM user_bans WHERE user_id = u.id AND active = true) as \"is_banned!\",\n                    (SELECT reason FROM user_bans WHERE user_id = u.id AND active = true LIMIT 1) as ban_reason\n                FROM users u\n                WHERE u.username ILIKE $1 OR u.email ILIKE $1\n                ORDER BY u.created_at DESC\n                LIMIT $2 OFFSET $3\n                ",
   "describe": {
     "columns": [
       {
@@ -45,7 +45,7 @@
       },
       {
         "ordinal": 8,
-        "name": "created_at: _",
+        "name": "created_at",
         "type_info": "Timestamp"
       },
       {
@@ -61,6 +61,7 @@
     ],
     "parameters": {
       "Left": [
+        "Text",
         "Int8",
         "Int8"
       ]
@@ -79,5 +80,5 @@
       null
     ]
   },
-  "hash": "822b04ab8a0ce44ab3bd0d1de6a3891e4019489e9c7500150bfaca3c203e9172"
+  "hash": "b497fd578f87add7e40cac17c3acab79f2fe7e71a593d187baa852ef489bc532"
 }

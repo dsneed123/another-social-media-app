@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT\n                    u.id, u.username, u.email, u.role, u.display_name,\n                    u.follower_count, u.following_count, u.story_count,\n                    u.created_at,\n                    EXISTS(SELECT 1 FROM user_bans WHERE user_id = u.id AND is_active = true) as \"is_banned!\",\n                    (SELECT reason FROM user_bans WHERE user_id = u.id AND is_active = true LIMIT 1) as ban_reason\n                FROM users u\n                WHERE u.username ILIKE $1 OR u.email ILIKE $1\n                ORDER BY u.created_at DESC\n                LIMIT $2 OFFSET $3\n                ",
+  "query": "\n            SELECT\n                u.id, u.username, u.email, u.role, u.display_name,\n                u.follower_count, u.following_count, u.story_count,\n                u.created_at,\n                EXISTS(SELECT 1 FROM user_bans WHERE user_id = u.id AND active = true) as \"is_banned!\",\n                (SELECT reason FROM user_bans WHERE user_id = u.id AND active = true LIMIT 1) as ban_reason\n            FROM users u\n            WHERE u.role = $1\n            ORDER BY u.created_at DESC\n            LIMIT $2 OFFSET $3\n            ",
   "describe": {
     "columns": [
       {
@@ -80,5 +80,5 @@
       null
     ]
   },
-  "hash": "3bfa29ec932bee6759ef6c0f331a27f2d73665fc6d1c69abe6250dce94f9de75"
+  "hash": "1073c43e041a1bb9283cb553a4942d423bfcc767343b130efd67fdff39960543"
 }
