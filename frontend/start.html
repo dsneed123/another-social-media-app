@@ -24,94 +24,212 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #c471f5);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
             color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background blobs */
+        body::before,
+        body::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: float 20s infinite;
+        }
+
+        body::before {
+            width: 300px;
+            height: 300px;
+            background: rgba(179, 159, 255, 0.4);
+            top: -100px;
+            left: -100px;
+            animation-delay: -5s;
+        }
+
+        body::after {
+            width: 400px;
+            height: 400px;
+            background: rgba(240, 147, 251, 0.3);
+            bottom: -150px;
+            right: -150px;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
         }
 
         .container {
             width: 100%;
-            max-width: 400px;
+            max-width: 440px;
+            position: relative;
+            z-index: 1;
         }
 
         .logo-container {
             text-align: center;
-            margin-bottom: 40px;
-            animation: fadeInDown 0.8s ease;
+            margin-bottom: 32px;
+            animation: fadeInDown 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .logo {
-            width: 100px;
-            height: 100px;
-            border-radius: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            width: 88px;
+            height: 88px;
+            border-radius: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 8px rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05) rotate(2deg);
         }
 
         .app-name {
-            font-size: 32px;
-            font-weight: 700;
+            font-size: 40px;
+            font-weight: 800;
             margin-bottom: 8px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            letter-spacing: -0.5px;
         }
 
         .beta-badge {
             display: inline-block;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.25);
             backdrop-filter: blur(10px);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 1px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 6px 16px;
+            border-radius: 24px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .tagline {
-            font-size: 14px;
-            opacity: 0.9;
-            margin-top: 8px;
+            font-size: 16px;
+            opacity: 0.95;
+            margin-top: 12px;
+            font-weight: 500;
         }
 
         .card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(30px);
+            border-radius: 28px;
+            padding: 36px 32px;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.35), 0 0 1px rgba(255, 255, 255, 0.5);
+            animation: fadeInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .intro-card {
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: fadeInUp 0.8s ease;
+            color: #333;
+            margin-bottom: 24px;
+        }
+
+        .intro-card h1 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+        }
+
+        .intro-card p {
+            font-size: 16px;
+            font-weight: 500;
+            color: #555;
+            text-align: center;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .intro-card ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 16px;
+        }
+
+        .intro-card li {
+            padding: 10px 0;
+            font-size: 15px;
+            color: #444;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .intro-card li:hover {
+            transform: translateX(4px);
+        }
+
+        .intro-card li i {
+            color: #764ba2;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .intro-card .footer-text {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            margin: 0;
+            font-weight: 500;
         }
 
         .tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            background: #f1f1f1;
-            padding: 4px;
-            border-radius: 12px;
+            gap: 8px;
+            margin-bottom: 28px;
+            background: #f5f5f5;
+            padding: 6px;
+            border-radius: 16px;
         }
 
         .tab {
             flex: 1;
-            padding: 12px;
+            padding: 14px;
             text-align: center;
-            border-radius: 10px;
-            font-weight: 600;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
             color: #666;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             border: none;
             background: transparent;
         }
 
         .tab.active {
-            background: #a855f7;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: #fff;
-            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
+            box-shadow: 0 6px 20px rgba(118, 75, 162, 0.35);
+            transform: translateY(-2px);
         }
 
         .tab-content {
@@ -120,7 +238,7 @@
 
         .tab-content.active {
             display: block;
-            animation: fadeIn 0.3s ease;
+            animation: fadeIn 0.4s ease;
         }
 
         .form-group {
@@ -131,117 +249,135 @@
             display: block;
             color: #333;
             font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 8px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 0.2px;
         }
 
         .form-input {
             width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e5e5e5;
-            border-radius: 12px;
+            padding: 16px 18px;
+            border: 2px solid #e8e8e8;
+            border-radius: 14px;
             font-size: 15px;
             transition: all 0.3s ease;
-            background: #fff;
+            background: #fafafa;
             color: #333;
+            font-weight: 500;
         }
 
         .form-input:focus {
             outline: none;
             border-color: #a855f7;
-            box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.1);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .form-input::placeholder {
+            color: #aaa;
         }
 
         .btn {
             width: 100%;
-            padding: 16px;
+            padding: 18px;
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin-top: 8px;
+            letter-spacing: 0.3px;
         }
 
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #fff;
-            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.4);
+            box-shadow: 0 8px 24px rgba(118, 75, 162, 0.4);
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(118, 75, 162, 0.5);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(118, 75, 162, 0.5);
         }
 
         .btn-primary:active {
-            transform: translateY(0);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .message {
-            margin-top: 15px;
-            padding: 12px;
-            border-radius: 10px;
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 12px;
             font-size: 14px;
+            font-weight: 600;
             text-align: center;
             display: none;
         }
 
         .message.success {
-            background: #d1fae5;
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
             color: #065f46;
-            border: 1px solid #6ee7b7;
+            border: 2px solid #6ee7b7;
         }
 
         .message.error {
-            background: #fee2e2;
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
             color: #991b1b;
-            border: 1px solid #fca5a5;
+            border: 2px solid #fca5a5;
         }
 
         .message.show {
             display: block;
-            animation: slideIn 0.3s ease;
+            animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         /* PWA Install Banner */
         .pwa-banner {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 20px;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(30px);
+            border-radius: 28px;
+            padding: 28px;
             margin-top: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            animation: fadeInUp 1s ease;
-            animation-delay: 0.5s;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            animation: fadeInUp 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation-delay: 0.3s;
             animation-fill-mode: both;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .pwa-banner-title {
             color: #333;
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 12px;
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .pwa-banner-title i {
             color: #a855f7;
-            font-size: 20px;
+            font-size: 24px;
         }
 
         .pwa-steps {
-            color: #666;
-            font-size: 13px;
-            line-height: 1.6;
+            color: #555;
+            font-size: 14px;
+            line-height: 1.8;
+            font-weight: 500;
         }
 
         .pwa-step {
-            margin-bottom: 8px;
-            padding-left: 20px;
+            margin-bottom: 10px;
+            padding-left: 24px;
             position: relative;
         }
 
@@ -251,31 +387,34 @@
             left: 0;
             color: #a855f7;
             font-weight: bold;
+            font-size: 16px;
         }
 
         .os-toggle {
             display: flex;
-            gap: 8px;
-            margin-bottom: 15px;
+            gap: 10px;
+            margin-bottom: 18px;
         }
 
         .os-btn {
             flex: 1;
-            padding: 8px;
-            border: 2px solid #e5e5e5;
-            border-radius: 8px;
-            background: #fff;
+            padding: 12px;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            background: #fafafa;
             color: #666;
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 13px;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .os-btn.active {
             border-color: #a855f7;
-            background: #f3e8ff;
-            color: #a855f7;
+            background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+            color: #7c3aed;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.25);
         }
 
         .os-content {
@@ -284,12 +423,13 @@
 
         .os-content.active {
             display: block;
+            animation: fadeIn 0.3s ease;
         }
 
         @keyframes fadeInDown {
             from {
                 opacity: 0;
-                transform: translateY(-20px);
+                transform: translateY(-30px);
             }
             to {
                 opacity: 1;
@@ -300,7 +440,7 @@
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(30px);
             }
             to {
                 opacity: 1;
@@ -316,19 +456,19 @@
         @keyframes slideIn {
             from {
                 opacity: 0;
-                transform: translateY(-10px);
+                transform: translateY(-10px) scale(0.95);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0) scale(1);
             }
         }
 
         .loading {
             display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
             border-top-color: #fff;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
@@ -336,6 +476,58 @@
 
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 480px) {
+            .container {
+                max-width: 100%;
+            }
+
+            .card {
+                padding: 28px 24px;
+                border-radius: 24px;
+            }
+
+            .app-name {
+                font-size: 36px;
+            }
+
+            .intro-card h1 {
+                font-size: 24px;
+            }
+
+            .intro-card p {
+                font-size: 15px;
+            }
+
+            .intro-card li {
+                font-size: 14px;
+            }
+
+            .pwa-banner {
+                padding: 24px 20px;
+            }
+        }
+
+        /* Desktop Improvements */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 480px;
+            }
+
+            body {
+                padding: 40px;
+            }
+
+            .card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 40px 100px rgba(0, 0, 0, 0.4);
+            }
+
+            .pwa-banner:hover {
+                transform: translateY(-2px);
+            }
         }
     </style>
 </head>
@@ -350,18 +542,18 @@
         </div>
 
         <!-- Homepage Intro for New Users -->
-        <div class="card" style="margin-bottom: 30px; background: rgba(255,255,255,0.90); color: #333;">
-            <h1 style="font-size: 26px; font-weight: 800; margin-bottom: 8px; color: #764ba2; text-align:center;">What is relays.social?</h1>
-            <p style="font-size: 16px; font-weight:600; color:#764ba2; text-align:center; margin-bottom: 16px;">Relays is a new social network for sharing real moments, connecting with friends, and discovering stories. It's private, fun, and built for you—not advertisers.</p>
-            <ul style="font-size: 14px; margin-bottom: 10px; padding-left: 18px; list-style: none;">
-                <li><i class="bi bi-camera" style="color:#764ba2;margin-right:6px;"></i>Post stories, photos, and videos that expire</li>
-                <li><i class="bi bi-chat-dots" style="color:#764ba2;margin-right:6px;"></i>Chat with friends in real time</li>
-                <li><i class="bi bi-shield-lock" style="color:#764ba2;margin-right:6px;"></i>Privacy-first: you control your audience</li>
-                <li><i class="bi bi-globe" style="color:#764ba2;margin-right:6px;"></i>Discover trending content and new people</li>
-                <li><i class="bi bi-lightning" style="color:#764ba2;margin-right:6px;"></i>Earn streaks and badges for activity</li>
-                <li><i class="bi bi-x-circle" style="color:#764ba2;margin-right:6px;"></i>No ads, no tracking, no nonsense</li>
+        <div class="card intro-card">
+            <h1>What is relays.social?</h1>
+            <p>Relays is a new social network for sharing real moments, connecting with friends, and discovering stories. It's private, fun, and built for you—not advertisers.</p>
+            <ul>
+                <li><i class="bi bi-camera-fill"></i>Post stories, photos, and videos that expire</li>
+                <li><i class="bi bi-chat-dots-fill"></i>Chat with friends in real time</li>
+                <li><i class="bi bi-shield-lock-fill"></i>Privacy-first: you control your audience</li>
+                <li><i class="bi bi-globe"></i>Discover trending content and new people</li>
+                <li><i class="bi bi-lightning-charge-fill"></i>Earn streaks and badges for activity</li>
+                <li><i class="bi bi-x-circle-fill"></i>No ads, no tracking, no nonsense</li>
             </ul>
-            <p style="font-size: 14px; color: #764ba2; margin-bottom: 0;">Sign up to get started or log in if you already have an account!</p>
+            <p class="footer-text">Sign up to get started or log in if you already have an account!</p>
         </div>
 
         <!-- Login/Signup Card -->
@@ -411,7 +603,7 @@
         <!-- PWA Install Instructions -->
         <div class="pwa-banner">
             <div class="pwa-banner-title">
-                <i class="bi bi-phone"></i>
+                <i class="bi bi-phone-fill"></i>
                 Install as Mobile App
             </div>
             <div class="os-toggle">
@@ -449,7 +641,7 @@
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
+
             event.target.classList.add('active');
             document.getElementById(`${tab}-content`).classList.add('active');
         }
@@ -458,7 +650,7 @@
         function switchOS(os) {
             document.querySelectorAll('.os-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.os-content').forEach(c => c.classList.remove('active'));
-            
+
             event.target.classList.add('active');
             document.getElementById(`${os}-instructions`).classList.add('active');
         }
@@ -492,25 +684,25 @@
 
                 if (res.ok) {
                     const data = await res.json();
-                    
+
                     // Store user data in the format expected by other pages
                     const userData = {
                         id: data.user_id,
                         username: data.username,
                         email: data.email
                     };
-                    
+
                     // Save to both localStorage AND sessionStorage for redundancy
                     localStorage.setItem('user', JSON.stringify(userData));
                     localStorage.setItem('userId', data.user_id);
                     localStorage.setItem('username', data.username);
                     localStorage.setItem('token', data.token);
-                    
+
                     sessionStorage.setItem('user', JSON.stringify(userData));
                     sessionStorage.setItem('userId', data.user_id);
                     sessionStorage.setItem('username', data.username);
                     sessionStorage.setItem('token', data.token);
-                    
+
                     showMessage('signup-msg', '✅ Account created! Redirecting...', 'success');
                     setTimeout(() => {
                         window.location.replace('/stories.html');
@@ -547,32 +739,32 @@
 
                 if (res.ok) {
                     const data = await res.json();
-                    
+
                     // Store user data in the format expected by other pages
                     const userData = {
                         id: data.user_id,
                         username: data.username,
                         email: data.email
                     };
-                    
+
                     // Save to both localStorage AND sessionStorage for redundancy
                     localStorage.setItem('user', JSON.stringify(userData));
                     localStorage.setItem('userId', data.user_id);
                     localStorage.setItem('username', data.username);
                     localStorage.setItem('token', data.token);
-                    
+
                     sessionStorage.setItem('user', JSON.stringify(userData));
                     sessionStorage.setItem('userId', data.user_id);
                     sessionStorage.setItem('username', data.username);
                     sessionStorage.setItem('token', data.token);
-                    
+
                     // Debug: verify data was saved
                     console.log('Saved user data:', localStorage.getItem('user'));
                     console.log('User ID:', localStorage.getItem('userId'));
                     console.log('SessionStorage user:', sessionStorage.getItem('user'));
-                    
+
                     showMessage('login-msg', '✅ Login successful! Redirecting...', 'success');
-                    
+
                     // Use location.replace to avoid back button issues
                     setTimeout(() => {
                         console.log('Redirecting to stories...');
