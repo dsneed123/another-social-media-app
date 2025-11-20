@@ -194,6 +194,9 @@
         .badge.banned { background: #ef4444; color: #fff; }
         .badge.paused { background: #fbbf24; color: #000; }
         .badge.completed { background: #34d399; color: #000; }
+        .badge.pending_approval { background: #f59e0b; color: #fff; }
+        .badge.pending_payment { background: #a855f7; color: #fff; }
+        .badge.rejected { background: #ef4444; color: #fff; }
 
         .btn {
             padding: 8px 16px;
@@ -749,18 +752,30 @@
                     const statusBadge = `<span class="badge ${ad.status}">${ad.status}</span>`;
                     const date = new Date(ad.created_at).toLocaleDateString();
 
+                    // Determine action buttons based on status
+                    let actionButtons = '';
+                    if (ad.status === 'pending_approval') {
+                        actionButtons = `
+                            <button class="btn btn-success" onclick="approveAd('${ad.id}')" style="margin-right: 8px;">Approve</button>
+                            <button class="btn btn-danger" onclick="rejectAd('${ad.id}')">Reject</button>
+                        `;
+                    } else if (ad.status === 'active') {
+                        actionButtons = `<button class="btn btn-primary" onclick="pauseAd('${ad.id}')">Pause</button>`;
+                    } else if (ad.status === 'paused') {
+                        actionButtons = `<button class="btn btn-success" onclick="resumeAd('${ad.id}')">Resume</button>`;
+                    } else if (ad.status === 'pending_payment') {
+                        actionButtons = `<span style="color: #888;">Awaiting payment</span>`;
+                    } else if (ad.status === 'rejected' || ad.status === 'completed') {
+                        actionButtons = `<span style="color: #888;">—</span>`;
+                    }
+
                     html += `<tr>
                         <td>${ad.title}</td>
                         <td>${statusBadge}</td>
                         <td>${ad.current_impressions} / ${ad.target_impressions} (${progress}%)</td>
                         <td>${ad.ctr_percentage.toFixed(2)}%</td>
                         <td>${date}</td>
-                        <td>
-                            ${ad.status === 'active' ?
-                                `<button class="btn btn-primary" onclick="pauseAd('${ad.id}')">Pause</button>` :
-                                `<button class="btn btn-success" onclick="resumeAd('${ad.id}')">Resume</button>`
-                            }
-                        </td>
+                        <td>${actionButtons}</td>
                     </tr>`;
                 });
 
@@ -861,6 +876,49 @@
 
         async function resumeAd(adId) {
             await updateAdStatus(adId, 'active');
+        }
+
+        // Approve/reject ad (for pending_approval ads)
+        async function approveAd(adId) {
+            if (!confirm('Approve this ad campaign?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/api/admin/ads/${adId}/approve`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    alert('Ad approved and activated!');
+                    loadAds();
+                } else {
+                    alert('Failed to approve ad');
+                }
+            } catch (error) {
+                console.error('Error approving ad:', error);
+                alert('Failed to approve ad');
+            }
+        }
+
+        async function rejectAd(adId) {
+            if (!confirm('Reject this ad campaign? This action cannot be undone.')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/api/admin/ads/${adId}/reject`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    alert('Ad rejected');
+                    loadAds();
+                } else {
+                    alert('Failed to reject ad');
+                }
+            } catch (error) {
+                console.error('Error rejecting ad:', error);
+                alert('Failed to reject ad');
+            }
         }
 
         async function updateAdStatus(adId, status) {

@@ -1165,3 +1165,245 @@ pub async fn record_ad_click(
         "success": true
     })))
 }
+
+// ============================================================================
+// PUBLIC AD CREATION ENDPOINTS (Self-service advertising)
+// ============================================================================
+
+#[derive(Deserialize)]
+pub struct PublicCreateAdInput {
+    pub title: String,
+    pub description: Option<String>,
+    pub image_url: Option<String>,
+    pub link_url: Option<String>,
+    pub target_impressions: i32,
+    pub package_type: String,
+    pub price: f64,
+    pub contact_email: String,
+}
+
+#[derive(Serialize)]
+pub struct PublicCreateAdResponse {
+    pub ad_id: Uuid,
+    pub status: String,
+}
+
+// Public endpoint for creating ads (requires authentication)
+pub async fn create_ad_public(
+    State(state): State<Arc<crate::AppState>>,
+    headers: axum::http::HeaderMap,
+    Json(input): Json<PublicCreateAdInput>,
+) -> Result<Json<PublicCreateAdResponse>, (StatusCode, String)> {
+    // Extract user ID from JWT token
+    let auth_header = headers
+        .get(header::AUTHORIZATION)
+        .and_then(|v| v.to_str().ok())
+        .ok_or((StatusCode::UNAUTHORIZED, "Missing authorization header".to_string()))?;
+
+    let token = auth_header
+        .strip_prefix("Bearer ")
+        .ok_or((StatusCode::UNAUTHORIZED, "Invalid authorization format".to_string()))?;
+
+    let jwt_secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| "secret".to_string());
+    let token_data = decode::<Claims>(
+        token,
+        &DecodingKey::from_secret(jwt_secret.as_bytes()),
+        &Validation::default(),
+    )
+    .map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid token".to_string()))?;
+
+    let user_id = token_data.claims.sub;
+
+    println!("📢 Public ad creation: {} by user {}", input.title, user_id);
+
+    // Create ad with pending_payment status
+    let ad = sqlx::query!(
+        r#"
+        INSERT INTO advertisements (
+            created_by, title, description, image_url, link_url,
+            target_impressions, status, package_type, price, contact_email
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, 'pending_payment', $7, $8, $9)
+        RETURNING id
+        "#,
+        user_id,
+        input.title,
+        input.description,
+        input.image_url,
+        input.link_url,
+        input.target_impressions,
+        input.package_type,
+        input.price,
+        input.contact_email
+    )
+    .fetch_one(state.pool.as_ref())
+    .await
+    .map_err(|e| {
+        eprintln!("Create public ad error: {:?}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, "Failed to create advertisement".to_string())
+    })?;
+
+    Ok(Json(PublicCreateAdResponse {
+        ad_id: ad.id,
+        status: "pending_payment".to_string(),
+    }))
+}
+
+#[derive(Serialize)]
+pub struct CheckoutSessionResponse {
+    pub session_id: String,
+}
+
+// Create Stripe checkout session for ad payment
+pub async fn create_checkout_session(
+    State(state): State<Arc<crate::AppState>>,
+    Path(ad_id): Path<Uuid>,
+) -> Result<Json<CheckoutSessionResponse>, (StatusCode, String)> {
+    // Get ad details
+    let ad = sqlx::query!(
+        r#"
+        SELECT title, price, package_type FROM advertisements
+        WHERE id = $1 AND status = 'pending_payment'
+        "#,
+        ad_id
+    )
+    .fetch_one(state.pool.as_ref())
+    .await
+    .map_err(|_| (StatusCode::NOT_FOUND, "Ad not found or already paid".to_string()))?;
+
+    let price = ad.price.ok_or((StatusCode::BAD_REQUEST, "Ad has no price set".to_string()))?;
+
+    // In production, you would create a real Stripe checkout session here
+    // For now, in development mode, auto-approve for testing
+    let stripe_secret = std::env::var("STRIPE_SECRET_KEY").unwrap_or_else(|_| "sk_test_mock".to_string());
+
+    if stripe_secret == "sk_test_mock" {
+        // Development mode - just mark as paid
+        sqlx::query!(
+            "UPDATE advertisements SET status = 'pending_approval', paid_at = NOW() WHERE id = $1",
+            ad_id
+        )
+        .execute(state.pool.as_ref())
+        .await
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to update ad".to_string()))?;
+
+        return Ok(Json(CheckoutSessionResponse {
+            session_id: format!("cs_test_mock_{}", ad_id),
+        }));
+    }
+
+    // TODO: Implement real Stripe checkout session creation when you have Stripe configured
+    // You'll need to add stripe-rust dependency and create a real checkout session
+
+    Ok(Json(CheckoutSessionResponse {
+        session_id: format!("cs_dev_{}", ad_id),
+    }))
+}
+
+// Stripe webhook handler
+pub async fn stripe_webhook(
+    State(state): State<Arc<crate::AppState>>,
+    headers: axum::http::HeaderMap,
+    body: String,
+) -> Result<StatusCode, StatusCode> {
+    let _signature = headers
+        .get("stripe-signature")
+        .and_then(|v| v.to_str().ok())
+        .ok_or(StatusCode::BAD_REQUEST)?;
+
+    let _webhook_secret = std::env::var("STRIPE_WEBHOOK_SECRET")
+        .unwrap_or_else(|_| "whsec_test".to_string());
+
+    // TODO: Verify Stripe signature in production
+    // For now, just parse the event
+
+    let event: serde_json::Value = serde_json::from_str(&body)
+        .map_err(|_| StatusCode::BAD_REQUEST)?;
+
+    let event_type = event["type"].as_str().unwrap_or("");
+
+    match event_type {
+        "checkout.session.completed" => {
+            // Extract ad_id from metadata
+            if let Some(ad_id_str) = event["data"]["object"]["metadata"]["ad_id"].as_str() {
+                if let Ok(ad_id) = Uuid::parse_str(ad_id_str) {
+                    // Mark ad as paid and move to pending_approval
+                    sqlx::query!(
+                        r#"
+                        UPDATE advertisements
+                        SET status = 'pending_approval', paid_at = NOW()
+                        WHERE id = $1
+                        "#,
+                        ad_id
+                    )
+                    .execute(state.pool.as_ref())
+                    .await
+                    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+                    println!("✅ Ad {} payment confirmed, moved to pending_approval", ad_id);
+                }
+            }
+        }
+        _ => {
+            println!("Unhandled Stripe event: {}", event_type);
+        }
+    }
+
+    Ok(StatusCode::OK)
+}
+
+// Admin approval endpoint
+pub async fn approve_ad(
+    State(state): State<Arc<crate::AppState>>,
+    _admin: AdminUser,
+    Path(ad_id): Path<Uuid>,
+) -> Result<StatusCode, (StatusCode, String)> {
+    // Update ad status to active
+    sqlx::query!(
+        "UPDATE advertisements SET status = 'active', start_date = NOW() WHERE id = $1",
+        ad_id
+    )
+    .execute(&*state.pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // Log admin action
+    sqlx::query!(
+        "INSERT INTO admin_logs (admin_id, action, target_type, target_id) VALUES ($1, 'approve_ad', 'advertisement', $2)",
+        _admin.user_id,
+        ad_id
+    )
+    .execute(&*state.pool)
+    .await
+    .ok();
+
+    Ok(StatusCode::OK)
+}
+
+// Admin rejection endpoint
+pub async fn reject_ad(
+    State(state): State<Arc<crate::AppState>>,
+    _admin: AdminUser,
+    Path(ad_id): Path<Uuid>,
+) -> Result<StatusCode, (StatusCode, String)> {
+    // Update ad status to rejected
+    sqlx::query!(
+        "UPDATE advertisements SET status = 'rejected' WHERE id = $1",
+        ad_id
+    )
+    .execute(&*state.pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // Log admin action
+    sqlx::query!(
+        "INSERT INTO admin_logs (admin_id, action, target_type, target_id) VALUES ($1, 'reject_ad', 'advertisement', $2)",
+        _admin.user_id,
+        ad_id
+    )
+    .execute(&*state.pool)
+    .await
+    .ok();
+
+    Ok(StatusCode::OK)
+}

@@ -80,6 +80,13 @@ async fn serve_admin_panel() -> Html<String> {
     Html(html)
 }
 
+async fn serve_advertise() -> Html<String> {
+    let html = tokio::fs::read_to_string("frontend/advertise.html")
+        .await
+        .unwrap_or_else(|_| "<h1>Error loading page</h1>".to_string());
+    Html(html)
+}
+
 async fn health_check() -> Json<serde_json::Value> {
     Json(serde_json::json!({
         "status": "healthy",
@@ -141,6 +148,7 @@ async fn main() {
         .route("/stories", get(serve_stories))
         .route("/create-story", get(serve_create_story))
         .route("/admin-panel", get(serve_admin_panel))
+        .route("/advertise", get(serve_advertise))
 
         // Auth endpoints
         .route("/api/signup", post(auth::signup))
@@ -235,11 +243,18 @@ async fn main() {
         .route("/api/admin/ads", post(admin::create_ad))
         .route("/api/admin/ads/:ad_id", axum::routing::patch(admin::update_ad))
         .route("/api/admin/ads/:ad_id", axum::routing::delete(admin::delete_ad))
+        .route("/api/admin/ads/:ad_id/approve", post(admin::approve_ad))
+        .route("/api/admin/ads/:ad_id/reject", post(admin::reject_ad))
 
         // Public ad endpoints (for showing ads to users)
         .route("/api/ads/next/:user_id", get(admin::get_next_ad))
         .route("/api/ads/:ad_id/impression/:user_id", post(admin::record_ad_impression))
         .route("/api/ads/:ad_id/click/:user_id", post(admin::record_ad_click))
+
+        // Self-service ad creation endpoints
+        .route("/api/ads/create", post(admin::create_ad_public))
+        .route("/api/ads/:ad_id/checkout", post(admin::create_checkout_session))
+        .route("/api/stripe/webhook", post(admin::stripe_webhook))
 
         // Health check endpoint
         .route("/health", get(health_check))
