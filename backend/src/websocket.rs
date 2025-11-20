@@ -94,6 +94,7 @@ async fn handle_socket(socket: WebSocket, user_id: Uuid, state: Arc<AppState>) {
     let (mut sender, mut receiver) = socket.split();
 
     // Only create a new broadcast channel if one does not exist
+    // Always ensure a broadcast channel exists for the user
     let tx = state.connections.entry(user_id).or_insert_with(|| {
         let (tx, _) = broadcast::channel(100);
         tx
@@ -111,8 +112,8 @@ async fn handle_socket(socket: WebSocket, user_id: Uuid, state: Arc<AppState>) {
     // Spawn a task to forward broadcast messages to WebSocket
     let mut send_task = tokio::spawn(async move {
         while let Ok(msg) = rx.recv().await {
-            if sender.send(Message::Text(msg)).await.is_err() {
-                tracing::warn!("WebSocket send error for user {}", user_id);
+            if let Err(e) = sender.send(Message::Text(msg)).await {
+                tracing::warn!("WebSocket send error for user {}: {:?}", user_id, e);
                 break;
             }
         }
@@ -201,42 +202,44 @@ async fn handle_ws_message(
                 // Get sender username
                 let sender = sqlx::query!("SELECT username FROM users WHERE id = $1", user_id)
                     .fetch_one(pool.as_ref())
-                    .await
-                    .unwrap();
-
-                // Get all members of the chat room
-                let members = sqlx::query!(
-                    "SELECT user_id FROM chat_members WHERE chat_room_id = $1",
-                    chat_room_id
-                )
-                .fetch_all(pool.as_ref())
-                .await
-                .unwrap();
-
-                // Broadcast to all chat members (including sender)
-                let broadcast_msg = WsMessage::NewMessage {
-                    id: record.id,
-                    chat_room_id,
-                    sender_id: user_id,
-                    sender_username: sender.username,
-                    message_type: message_type.clone(),
-                    content: content.clone(),
-                    media_url: media_url.clone(),
-                    media_thumbnail_url: None,
-                    view_once,
-                    created_at: record.created_at.format("%Y-%m-%dT%H:%M:%S%.fZ").to_string(),
-                };
-
-                let msg_json = serde_json::to_string(&broadcast_msg).unwrap();
-
-                for member in members {
-                    if let Some(conn) = connections.get(&member.user_id) {
-                        let _ = conn.send(msg_json.clone());
+                    .await;
+                if let Ok(sender) = sender {
+                    // Get all members of the chat room
+                    let members = sqlx::query!(
+                        "SELECT user_id FROM chat_members WHERE chat_room_id = $1",
+                        chat_room_id
+                    )
+                    .fetch_all(pool.as_ref())
+                    .await;
+                    if let Ok(members) = members {
+                        // Broadcast to all chat members (including sender)
+                        let broadcast_msg = WsMessage::NewMessage {
+                            id: record.id,
+                            chat_room_id,
+                            sender_id: user_id,
+                            sender_username: sender.username,
+                            message_type: message_type.clone(),
+                            content: content.clone(),
+                            media_url: media_url.clone(),
+                            media_thumbnail_url: None,
+                            view_once,
+                            created_at: record.created_at.format("%Y-%m-%dT%H:%M:%S%.fZ").to_string(),
+                        };
+                        let msg_json = serde_json::to_string(&broadcast_msg).unwrap();
+                        for member in members {
+                            if let Some(conn) = connections.get(&member.user_id) {
+                                let _ = conn.send(msg_json.clone());
+                            } else {
+                                // User is offline, increment unread counter
+                                let mut redis_guard = redis.lock().await;
+                                let _ = redis_guard.increment_unread(member.user_id, chat_room_id).await;
+                            }
+                        }
                     } else {
-                        // User is offline, increment unread counter
-                        let mut redis_guard = redis.lock().await;
-                        let _ = redis_guard.increment_unread(member.user_id, chat_room_id).await;
+                        tracing::error!("Failed to fetch chat members for room {}", chat_room_id);
                     }
+                } else {
+                    tracing::error!("Failed to fetch sender username for user {}", user_id);
                 }
             } else if let Err(e) = result {
                 tracing::error!("Failed to insert message: {}", e);
