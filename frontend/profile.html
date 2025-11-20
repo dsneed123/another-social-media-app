@@ -1052,15 +1052,17 @@
                 // Convert to base64
                 const reader = new FileReader();
                 reader.onload = async (e) => {
-                    const base64Image = e.target.result;
+                    let base64Image = e.target.result;
+                    // Remove base64 prefix for backend
+                    base64Image = base64Image.replace(/^data:[^;]+;base64,/, "");
 
-                    // Upload to server
+                    // Upload to server with file_type
                     const response = await fetch('/api/media/upload', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            user_id: currentUserId,
-                            image_data: base64Image
+                            image_data: base64Image,
+                            file_type: file.type
                         })
                     });
 
