@@ -727,12 +727,29 @@
             }
         }
 
-        /* Desktop Enhancements */
+        /* Desktop - Mobile App Style */
         @media (min-width: 768px) {
+            body {
+                background: #1a1a1a;
+            }
+
             #chat-list-view,
             #message-view {
-                max-width: 600px;
+                max-width: 480px;
                 margin: 0 auto;
+                box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+            }
+
+            .header {
+                max-width: 480px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            .input-area {
+                max-width: 480px;
+                left: 50%;
+                transform: translateX(-50%);
             }
 
             .chat-item:hover {
@@ -740,11 +757,10 @@
             }
 
             .bottom-nav {
-                max-width: 600px;
-                margin: 0 auto;
+                max-width: 480px;
                 left: 50%;
                 transform: translateX(-50%);
-                border-radius: 20px 20px 0 0;
+                border-radius: 0;
             }
         }
     </style>

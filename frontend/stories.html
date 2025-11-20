@@ -191,6 +191,12 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        video.video-placeholder {
+            image-rendering: auto;
         }
 
         .placeholder-gradient {
@@ -289,11 +295,12 @@
         .video-actions {
             position: absolute;
             right: 16px;
-            bottom: 100px;
+            bottom: 120px;
             display: flex;
             flex-direction: column;
             gap: 22px;
             align-items: center;
+            z-index: 10;
         }
 
         .action-btn {
@@ -659,16 +666,22 @@
 
             .video-actions {
                 right: 12px;
-                gap: 18px;
+                bottom: 100px;
+                gap: 16px;
             }
 
             .action-btn {
-                width: 48px;
-                height: 48px;
+                width: 56px;
+                height: 56px;
             }
 
             .action-btn i {
-                font-size: 24px;
+                font-size: 26px;
+            }
+
+            .action-count {
+                font-size: 12px;
+                font-weight: 800;
             }
 
             .video-info {
@@ -676,24 +689,31 @@
             }
         }
 
-        /* Desktop Enhancements */
+        /* Desktop - Mobile App Style */
         @media (min-width: 768px) {
+            body {
+                background: #1a1a1a;
+            }
+
             .feed-container {
                 max-width: 480px;
                 margin: 0 auto;
+                box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
             }
 
             .stories-container {
                 max-width: 480px;
                 left: 50%;
                 transform: translateX(-50%);
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             }
 
             .bottom-nav {
                 max-width: 480px;
                 left: 50%;
                 transform: translateX(-50%);
-                border-radius: 24px 24px 0 0;
+                border-radius: 0;
+                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
             }
 
             .action-btn:hover {
@@ -702,6 +722,11 @@
 
             .story-circle:hover {
                 transform: translateY(-4px);
+            }
+
+            .video-item {
+                max-width: 480px;
+                margin: 0 auto;
             }
         }
     </style>
@@ -904,7 +929,7 @@
                             ` : ''}
                         </div>
 
-                        <div class="side-actions">
+                        <div class="video-actions">
                             <div class="profile-avatar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                                 <i class="bi bi-megaphone"></i>
                             </div>
@@ -931,7 +956,7 @@
                             </div>
                         </div>
 
-                        <div class="side-actions">
+                        <div class="video-actions">
                             <div class="profile-avatar" onclick="viewProfile('${story.user_id}', '${story.username}')">${(story.username || 'U')[0].toUpperCase()}</div>
 
                             <button class="action-btn ${story.is_liked ? 'liked' : ''}" onclick="toggleStoryLike(this, '${story.id}')">
