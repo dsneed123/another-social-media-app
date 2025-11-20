@@ -67,7 +67,7 @@ impl FromRequestParts<Arc<crate::AppState>> for AuthUser
         let user = sqlx::query!(
             r#"
             SELECT u.id, u.username, u.email, u.role,
-                   EXISTS(SELECT 1 FROM user_bans WHERE user_id = u.id AND is_active = true) as "is_banned!"
+                   EXISTS(SELECT 1 FROM user_bans WHERE user_id = u.id AND active = true) as "is_banned!"
             FROM users u
             WHERE u.id = $1
             "#,
@@ -191,8 +191,8 @@ pub async fn list_users(
                     u.id, u.username, u.email, u.role, u.display_name,
                     u.follower_count, u.following_count, u.story_count,
                     u.created_at,
-                    EXISTS(SELECT 1 FROM user_bans WHERE user_id = u.id AND is_active = true) as "is_banned!",
-                    (SELECT reason FROM user_bans WHERE user_id = u.id AND is_active = true LIMIT 1) as ban_reason
+                    EXISTS(SELECT 1 FROM user_bans WHERE user_id = u.id AND active = true) as "is_banned!",
+                    (SELECT reason FROM user_bans WHERE user_id = u.id AND active = true LIMIT 1) as ban_reason
                 FROM users u
                 WHERE u.username ILIKE $1 OR u.email ILIKE $1
                 ORDER BY u.created_at DESC
@@ -213,8 +213,8 @@ pub async fn list_users(
                 u.id, u.username, u.email, u.role, u.display_name,
                 u.follower_count, u.following_count, u.story_count,
                 u.created_at,
-                EXISTS(SELECT 1 FROM user_bans WHERE user_id = u.id AND is_active = true) as "is_banned!",
-                (SELECT reason FROM user_bans WHERE user_id = u.id AND is_active = true LIMIT 1) as ban_reason
+                EXISTS(SELECT 1 FROM user_bans WHERE user_id = u.id AND active = true) as "is_banned!",
+                (SELECT reason FROM user_bans WHERE user_id = u.id AND active = true LIMIT 1) as ban_reason
             FROM users u
             WHERE u.role = $1
             ORDER BY u.created_at DESC
@@ -234,8 +234,8 @@ pub async fn list_users(
                 u.id, u.username, u.email, u.role, u.display_name,
                 u.follower_count, u.following_count, u.story_count,
                 u.created_at as "created_at: _",
-                EXISTS(SELECT 1 FROM user_bans WHERE user_id = u.id AND is_active = true) as "is_banned!",
-                (SELECT reason FROM user_bans WHERE user_id = u.id AND is_active = true LIMIT 1) as ban_reason
+                EXISTS(SELECT 1 FROM user_bans WHERE user_id = u.id AND active = true) as "is_banned!",
+                (SELECT reason FROM user_bans WHERE user_id = u.id AND active = true LIMIT 1) as ban_reason
             FROM users u
             ORDER BY u.created_at DESC
             LIMIT $1 OFFSET $2
@@ -349,7 +349,7 @@ pub async fn unban_user(
     Path(user_id): Path<Uuid>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
     sqlx::query!(
-        "UPDATE user_bans SET is_active = false, unbanned_at = NOW(), unbanned_by = $1 WHERE user_id = $2 AND is_active = true",
+    "UPDATE user_bans SET active = false, unbanned_at = NOW(), unbanned_by = $1 WHERE user_id = $2 AND active = true",
         admin.0.id,
         user_id
     )
