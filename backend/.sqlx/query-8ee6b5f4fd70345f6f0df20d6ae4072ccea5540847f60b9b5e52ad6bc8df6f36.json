@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        WITH date_series AS (\n            SELECT generate_series(\n                CURRENT_DATE - $1::integer,\n                CURRENT_DATE,\n                '1 day'::interval\n            )::date as date\n        )\n        SELECT\n            ds.date as \"date!\",\n            COALESCE((SELECT COUNT(*)::int FROM users WHERE created_at::date <= ds.date), 0) as \"total_users!\",\n            COALESCE((SELECT COUNT(*)::int FROM users WHERE created_at::date = ds.date), 0) as \"new_users!\",\n            COALESCE((SELECT COUNT(DISTINCT user_id)::int FROM stories WHERE created_at::date = ds.date), 0) as \"active_users!\",\n            COALESCE((SELECT COUNT(*)::int FROM stories WHERE created_at::date <= ds.date), 0) as \"total_stories!\",\n            COALESCE((SELECT COUNT(*)::int FROM stories WHERE created_at::date = ds.date), 0) as \"new_stories!\",\n            COALESCE((SELECT COUNT(*)::int FROM messages WHERE created_at::date <= ds.date), 0) as \"total_messages!\",\n            COALESCE((SELECT COUNT(*)::int FROM messages WHERE created_at::date = ds.date), 0) as \"new_messages!\",\n            COALESCE((SELECT COUNT(*)::int FROM follows WHERE created_at::date <= ds.date), 0) as \"total_follows!\",\n            COALESCE((SELECT COUNT(*)::int FROM follows WHERE created_at::date = ds.date), 0) as \"new_follows!\",\n            COALESCE((SELECT COUNT(*)::int FROM ad_impressions WHERE shown_at::date <= ds.date), 0) as \"total_ad_impressions!\",\n            COALESCE((SELECT COUNT(*)::int FROM ad_impressions WHERE clicked = true AND clicked_at::date <= ds.date), 0) as \"total_ad_clicks!\"\n        FROM date_series ds\n        ORDER BY ds.date\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "date!",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 1,
+        "name": "total_users!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "new_users!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "active_users!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "total_stories!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "new_stories!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "total_messages!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "new_messages!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "total_follows!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "new_follows!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "total_ad_impressions!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "total_ad_clicks!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "8ee6b5f4fd70345f6f0df20d6ae4072ccea5540847f60b9b5e52ad6bc8df6f36"
+}

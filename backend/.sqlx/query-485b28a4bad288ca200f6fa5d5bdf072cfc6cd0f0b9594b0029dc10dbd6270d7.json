@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE ad_impressions SET clicked = true, clicked_at = NOW() WHERE ad_id = $1 AND user_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "485b28a4bad288ca200f6fa5d5bdf072cfc6cd0f0b9594b0029dc10dbd6270d7"
+}

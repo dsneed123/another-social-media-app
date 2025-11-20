@@ -1,0 +1,77 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                al.id, al.admin_id, au.username as admin_username, al.action,\n                al.target_user_id, tu.username as target_username,\n                al.target_resource_type, al.target_resource_id,\n                COALESCE(al.details, '{}'::jsonb) as \"details!: serde_json::Value\",\n                al.created_at as \"created_at: chrono::DateTime<chrono::Utc>\"\n            FROM admin_logs al\n            LEFT JOIN users au ON al.admin_id = au.id\n            LEFT JOIN users tu ON al.target_user_id = tu.id\n            ORDER BY al.created_at DESC\n            LIMIT $1 OFFSET $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "admin_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "admin_username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "action",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "target_user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "target_username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "target_resource_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "target_resource_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 8,
+        "name": "details!: serde_json::Value",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at: chrono::DateTime<chrono::Utc>",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      null,
+      false
+    ]
+  },
+  "hash": "e95f9e33d5886bdfdb9f9d72e3574b5f00de3aa5e7ac03c73065b1d068c5fc2b"
+}

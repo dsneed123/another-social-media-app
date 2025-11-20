@@ -1,0 +1,92 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            a.id, a.title, a.description, a.image_url, a.link_url,\n            a.target_impressions, a.current_impressions, a.click_count,\n            a.status, a.created_at, a.updated_at, a.expires_at,\n            u.username as \"created_by_username?\"\n        FROM advertisements a\n        LEFT JOIN users u ON a.created_by = u.id\n        ORDER BY a.created_at DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "image_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "link_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "target_impressions",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "current_impressions",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "click_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "status",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 10,
+        "name": "updated_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 11,
+        "name": "expires_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 12,
+        "name": "created_by_username?",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "68deca2759e13936f25b7764e40220e4d758429b627482db8e131c389cc5cebb"
+}

@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            a.id,\n            a.created_by,\n            a.title,\n            a.description,\n            a.image_url,\n            a.link_url,\n            a.created_at\n        FROM advertisements a\n        LEFT JOIN ad_impressions ai ON a.id = ai.ad_id AND ai.user_id = $1\n        WHERE a.status = 'active'\n            AND a.current_impressions < a.target_impressions\n            AND (a.expires_at IS NULL OR a.expires_at > NOW())\n            AND ai.id IS NULL\n        ORDER BY RANDOM()\n        LIMIT 10\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "created_by",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "title",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "image_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "link_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "abb6e83a1e566484e797922199402ef435f080da0f8843642f84e8fc67fd1f19"
+}

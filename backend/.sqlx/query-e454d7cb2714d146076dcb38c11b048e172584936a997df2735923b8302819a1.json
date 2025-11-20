@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE user_bans SET is_active = false, unbanned_at = NOW(), unbanned_by = $1 WHERE user_id = $2 AND is_active = true",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e454d7cb2714d146076dcb38c11b048e172584936a997df2735923b8302819a1"
+}

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT \n            s.id,\n            s.user_id,\n            s.media_url,\n            s.media_type,\n            s.thumbnail_url,\n            s.caption,\n            s.view_count as \"view_count?\",\n            s.like_count as \"like_count?\",\n            s.comment_count as \"comment_count?\",\n            s.created_at,\n            s.expires_at,\n            u.username,\n            NULL::BOOLEAN as \"is_viewed?\",\n            NULL::BOOLEAN as \"is_liked?\"\n        FROM stories s\n        JOIN users u ON s.user_id = u.id\n        WHERE s.user_id = $1 \n        AND s.expires_at > NOW()\n        ORDER BY s.created_at DESC\n        ",
+  "query": "\n        SELECT\n            s.id,\n            s.user_id,\n            s.media_url,\n            s.media_type,\n            s.thumbnail_url,\n            s.caption,\n            s.view_count,\n            s.like_count,\n            s.comment_count,\n            s.created_at,\n            s.expires_at,\n            u.username,\n            FALSE as is_viewed,\n            EXISTS(SELECT 1 FROM story_likes sl WHERE sl.story_id = s.id AND sl.user_id = $1) as is_liked\n        FROM stories s\n        JOIN users u ON s.user_id = u.id\n        LEFT JOIN story_views sv ON s.id = sv.story_id AND sv.viewer_id = $1\n        WHERE s.expires_at > NOW()\n          AND sv.viewer_id IS NULL\n        ORDER BY s.created_at DESC\n        LIMIT 50\n        ",
   "describe": {
     "columns": [
       {
@@ -35,17 +35,17 @@
       },
       {
         "ordinal": 6,
-        "name": "view_count?",
+        "name": "view_count",
         "type_info": "Int4"
       },
       {
         "ordinal": 7,
-        "name": "like_count?",
+        "name": "like_count",
         "type_info": "Int4"
       },
       {
         "ordinal": 8,
-        "name": "comment_count?",
+        "name": "comment_count",
         "type_info": "Int4"
       },
       {
@@ -65,12 +65,12 @@
       },
       {
         "ordinal": 12,
-        "name": "is_viewed?",
+        "name": "is_viewed",
         "type_info": "Bool"
       },
       {
         "ordinal": 13,
-        "name": "is_liked?",
+        "name": "is_liked",
         "type_info": "Bool"
       }
     ],
@@ -96,5 +96,5 @@
       null
     ]
   },
-  "hash": "3ab514ba54900e3c3c2e2dd396fe1c298a716e6213ba72d3102a3178249971a8"
+  "hash": "86b907728bb72ac91caed903cf57e56dffb9f06ad0d52dd6991bae12ac474214"
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT \n            s.id,\n            s.user_id,\n            s.media_url,\n            s.media_type,\n            s.thumbnail_url,\n            s.caption,\n            s.view_count as \"view_count?\",\n            s.like_count as \"like_count?\",\n            s.comment_count as \"comment_count?\",\n            s.created_at,\n            s.expires_at,\n            u.username,\n            CASE WHEN sv.viewer_id IS NOT NULL THEN TRUE ELSE FALSE END as \"is_viewed?\",\n            EXISTS(SELECT 1 FROM story_likes sl WHERE sl.story_id = s.id AND sl.user_id = $1) as \"is_liked?\"\n        FROM stories s\n        JOIN users u ON s.user_id = u.id\n        LEFT JOIN story_views sv ON s.id = sv.story_id AND sv.viewer_id = $1\n        WHERE s.expires_at > NOW()\n        ORDER BY \n            CASE WHEN sv.viewer_id IS NULL THEN 0 ELSE 1 END,\n            s.created_at DESC\n        LIMIT 50\n        ",
+  "query": "\n        SELECT\n            s.id,\n            s.user_id,\n            s.media_url,\n            s.media_type,\n            s.thumbnail_url,\n            s.caption,\n            s.view_count,\n            s.like_count,\n            s.comment_count,\n            s.created_at,\n            s.expires_at,\n            u.username\n        FROM stories s\n        JOIN users u ON s.user_id = u.id\n        WHERE s.user_id = $1\n        AND s.expires_at > NOW()\n        ORDER BY s.created_at DESC\n        ",
   "describe": {
     "columns": [
       {
@@ -35,17 +35,17 @@
       },
       {
         "ordinal": 6,
-        "name": "view_count?",
+        "name": "view_count",
         "type_info": "Int4"
       },
       {
         "ordinal": 7,
-        "name": "like_count?",
+        "name": "like_count",
         "type_info": "Int4"
       },
       {
         "ordinal": 8,
-        "name": "comment_count?",
+        "name": "comment_count",
         "type_info": "Int4"
       },
       {
@@ -62,16 +62,6 @@
         "ordinal": 11,
         "name": "username",
         "type_info": "Varchar"
-      },
-      {
-        "ordinal": 12,
-        "name": "is_viewed?",
-        "type_info": "Bool"
-      },
-      {
-        "ordinal": 13,
-        "name": "is_liked?",
-        "type_info": "Bool"
       }
     ],
     "parameters": {
@@ -91,10 +81,8 @@
       true,
       false,
       false,
-      false,
-      null,
-      null
+      false
     ]
   },
-  "hash": "2c15a82113421a951fd2e11e25bce54c1128f13da96d5ce355e96e6d892245a5"
+  "hash": "87d20fadd8f053c73b2dfb78c954bc77f3763856d446ca88fcf0ab9e9886bf5f"
 }

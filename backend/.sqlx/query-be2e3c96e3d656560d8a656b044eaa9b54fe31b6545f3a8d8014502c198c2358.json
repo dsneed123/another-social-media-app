@@ -1,0 +1,93 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO advertisements (created_by, title, description, image_url, link_url, target_impressions)\n        VALUES ($1, $2, $3, $4, $5, $6)\n        RETURNING id, title, description, image_url, link_url, target_impressions, current_impressions,\n                  click_count, status, created_at, updated_at, expires_at\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "image_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "link_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "target_impressions",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "current_impressions",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "click_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "status",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 10,
+        "name": "updated_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 11,
+        "name": "expires_at",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Text",
+        "Text",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "be2e3c96e3d656560d8a656b044eaa9b54fe31b6545f3a8d8014502c198c2358"
+}

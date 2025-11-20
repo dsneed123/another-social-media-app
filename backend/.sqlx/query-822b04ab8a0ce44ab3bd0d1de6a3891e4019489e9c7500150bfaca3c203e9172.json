@@ -1,0 +1,83 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                u.id, u.username, u.email, u.role, u.display_name,\n                u.follower_count, u.following_count, u.story_count,\n                u.created_at as \"created_at: _\",\n                EXISTS(SELECT 1 FROM user_bans WHERE user_id = u.id AND is_active = true) as \"is_banned!\",\n                (SELECT reason FROM user_bans WHERE user_id = u.id AND is_active = true LIMIT 1) as ban_reason\n            FROM users u\n            ORDER BY u.created_at DESC\n            LIMIT $1 OFFSET $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "email",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "role",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "display_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "follower_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "following_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "story_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at: _",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 9,
+        "name": "is_banned!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "ban_reason",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "822b04ab8a0ce44ab3bd0d1de6a3891e4019489e9c7500150bfaca3c203e9172"
+}
