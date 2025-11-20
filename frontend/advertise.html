@@ -297,41 +297,52 @@
             <p>4. Your ad goes live in the stories feed!</p>
         </div>
 
-        <!-- Pricing Cards -->
-        <div class="pricing-cards">
-            <div class="pricing-card" onclick="selectPackage('starter', 1000, 9.99)">
-                <h3>Starter</h3>
-                <div class="price">$9<span>.99</span></div>
-                <ul>
-                    <li><i class="bi bi-check-circle-fill"></i> 1,000 impressions</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Stories feed placement</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Click tracking</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Basic analytics</li>
-                </ul>
+        <!-- Pricing Slider -->
+        <div class="ad-form" style="display: block; max-width: 600px; margin: 0 auto 30px;">
+            <h2 style="margin-bottom: 20px; text-align: center;">Choose Your Impressions</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 30px;">
+                $10 per 1,000 views • $5 minimum (100 views)
+            </p>
+
+            <div class="form-group">
+                <label class="form-label">Number of Impressions: <strong id="impressionsDisplay">100</strong></label>
+                <input
+                    type="range"
+                    id="impressionsSlider"
+                    min="100"
+                    max="50000"
+                    value="100"
+                    step="100"
+                    style="width: 100%; height: 8px; border-radius: 5px; background: linear-gradient(to right, #667eea, #764ba2); outline: none; cursor: pointer;"
+                    oninput="updatePricing()"
+                >
+                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-top: 5px;">
+                    <span>100</span>
+                    <span>25,000</span>
+                    <span>50,000</span>
+                </div>
             </div>
 
-            <div class="pricing-card" onclick="selectPackage('growth', 5000, 39.99)">
-                <h3>Growth</h3>
-                <div class="price">$39<span>.99</span></div>
-                <ul>
-                    <li><i class="bi bi-check-circle-fill"></i> 5,000 impressions</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Stories feed placement</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Click tracking</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Detailed analytics</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Priority support</li>
-                </ul>
+            <div style="text-align: center; margin-top: 30px;">
+                <div style="font-size: 48px; font-weight: bold; color: #667eea; margin-bottom: 10px;">
+                    $<span id="priceDisplay">5.00</span>
+                </div>
+                <p style="color: #666; margin-bottom: 20px;">
+                    <span id="costPerView">$0.050</span> per view
+                </p>
+                <button class="btn" onclick="selectCustomPackage()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 18px; padding: 16px 48px;">
+                    Continue to Create Ad
+                </button>
             </div>
 
-            <div class="pricing-card" onclick="selectPackage('premium', 15000, 99.99)">
-                <h3>Premium</h3>
-                <div class="price">$99<span>.99</span></div>
-                <ul>
-                    <li><i class="bi bi-check-circle-fill"></i> 15,000 impressions</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Stories feed placement</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Advanced tracking</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Detailed analytics</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Priority support</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Featured placement</li>
+            <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                <h4 style="margin-bottom: 15px; color: #333;">What's Included:</h4>
+                <ul style="list-style: none; padding: 0; color: #666;">
+                    <li style="padding: 8px 0;"><i class="bi bi-check-circle-fill" style="color: #10b981;"></i> Stories feed placement</li>
+                    <li style="padding: 8px 0;"><i class="bi bi-check-circle-fill" style="color: #10b981;"></i> Click tracking & analytics</li>
+                    <li style="padding: 8px 0;"><i class="bi bi-check-circle-fill" style="color: #10b981;"></i> Location & demographics data</li>
+                    <li style="padding: 8px 0;"><i class="bi bi-check-circle-fill" style="color: #10b981;"></i> Interest-based targeting</li>
+                    <li style="padding: 8px 0;"><i class="bi bi-check-circle-fill" style="color: #10b981;"></i> Real-time performance dashboard</li>
                 </ul>
             </div>
         </div>
@@ -413,19 +424,37 @@
             stripe = Stripe('pk_test_51SVPxtLHtzZbvqDv6ChXMPwFEquV8z4BhrJ6jHNLgfVoLjjB2N5qVZZWXRMdoudpHCiwMGa1u0rEZSsICKdWOP5l00oe4m7lyR');
         }
 
-        function selectPackage(plan, impressions, price) {
-            selectedPlan = { plan, impressions, price };
+        function updatePricing() {
+            const impressions = parseInt(document.getElementById('impressionsSlider').value);
 
-            // Update UI
-            document.querySelectorAll('.pricing-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            event.currentTarget.classList.add('selected');
+            // Calculate price: $10 per 1000 views, minimum $5
+            const basePrice = (impressions / 1000) * 10;
+            const price = Math.max(5, basePrice);
+
+            // Calculate cost per view
+            const costPerView = price / impressions;
+
+            // Update display
+            document.getElementById('impressionsDisplay').textContent = impressions.toLocaleString();
+            document.getElementById('priceDisplay').textContent = price.toFixed(2);
+            document.getElementById('costPerView').textContent = `$${costPerView.toFixed(3)}`;
+        }
+
+        function selectCustomPackage() {
+            const impressions = parseInt(document.getElementById('impressionsSlider').value);
+            const basePrice = (impressions / 1000) * 10;
+            const price = Math.max(5, basePrice);
+
+            selectedPlan = {
+                plan: 'custom',
+                impressions: impressions,
+                price: price
+            };
 
             // Show form
             document.getElementById('adForm').style.display = 'block';
             document.getElementById('selectedPackage').textContent =
-                `${plan.charAt(0).toUpperCase() + plan.slice(1)} - ${impressions.toLocaleString()} impressions - $${price}`;
+                `${impressions.toLocaleString()} impressions - $${price.toFixed(2)}`;
 
             // Scroll to form
             document.getElementById('adForm').scrollIntoView({ behavior: 'smooth' });
