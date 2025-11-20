@@ -913,7 +913,7 @@
                 } else {
                     // Render regular story
                     const mediaElement = story.media_type === 'video'
-                        ? `<video class="video-placeholder" src="${story.media_url}" loop muted></video>`
+                        ? `<video class="video-placeholder" src="${story.media_url}" loop muted autoplay playsinline></video>`
                         : `<img class="video-placeholder" src="${story.media_url}" alt="Story">`;
 
                     videoItem.innerHTML = `
@@ -980,13 +980,25 @@
 
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
+                    const video = entry.target.querySelector('video');
+
                     if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
                         const storyId = entry.target.dataset.storyId;
+
+                        // Autoplay video when in view (TikTok style)
+                        if (video) {
+                            video.play().catch(e => console.log('Autoplay prevented:', e));
+                        }
 
                         // Only mark as viewed once per session
                         if (storyId && !viewedInSession.has(storyId)) {
                             viewedInSession.add(storyId);
                             markStoryViewed(storyId);
+                        }
+                    } else {
+                        // Pause video when out of view
+                        if (video) {
+                            video.pause();
                         }
                     }
                 });
