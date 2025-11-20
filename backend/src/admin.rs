@@ -1145,7 +1145,7 @@ pub async fn record_ad_impression(
         .get("CF-IPCountry")
         .and_then(|v| v.to_str().ok())
         .map(|c| c.chars().take(2).collect::<String>())
-        .unwrap_or("un");
+        .unwrap_or("un".to_string());
 
     let city = headers
         .get("CF-IPCity")
