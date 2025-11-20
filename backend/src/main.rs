@@ -8,7 +8,7 @@ use axum::{
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tower_http::cors::{CorsLayer, Any};
-use http::HeaderValue;
+use axum::http::HeaderValue;
 use tower_http::services::ServeDir;
 use dashmap::DashMap;
 
