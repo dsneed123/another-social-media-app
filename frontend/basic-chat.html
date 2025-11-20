@@ -1170,6 +1170,7 @@ document.querySelectorAll('#userStatus').forEach(el => {
             let msgs = await res.json();
             // Sort by most recent (descending)
             msgs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            // Only mark as viewed when user interacts, not on load
             msgs.forEach(msg => addMessage(msg, msg.sender_id !== userId));
         }
 
