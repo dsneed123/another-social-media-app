@@ -894,8 +894,16 @@
         }
 
         function renderProfile() {
-            document.getElementById('profileAvatar').textContent = 
-                (profileData.username || 'U')[0].toUpperCase();
+            const avatarEl = document.getElementById('profileAvatar');
+            if (profileData.avatar_url) {
+                avatarEl.style.backgroundImage = `url(${profileData.avatar_url})`;
+                avatarEl.style.backgroundSize = 'cover';
+                avatarEl.style.backgroundPosition = 'center';
+                avatarEl.textContent = '';
+            } else {
+                avatarEl.style.backgroundImage = '';
+                avatarEl.textContent = (profileData.username || 'U')[0].toUpperCase();
+            }
 
             document.getElementById('profileUsername').textContent = 
                 `@${profileData.username}`;
