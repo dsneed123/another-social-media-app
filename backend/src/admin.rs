@@ -1124,12 +1124,80 @@ pub async fn get_next_ad(
 pub async fn record_ad_impression(
     State(state): State<Arc<crate::AppState>>,
     Path((ad_id, user_id)): Path<(Uuid, Uuid)>,
+    headers: axum::http::HeaderMap,
 ) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
-    // Insert impression record (will trigger auto-increment via database trigger)
-    sqlx::query!(
-        "INSERT INTO ad_impressions (ad_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-        ad_id,
+    // Extract device type from User-Agent
+    let user_agent = headers
+        .get(axum::http::header::USER_AGENT)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("unknown");
+
+    let device_type = if user_agent.contains("Mobile") || user_agent.contains("Android") || user_agent.contains("iPhone") {
+        "mobile"
+    } else if user_agent.contains("Tablet") || user_agent.contains("iPad") {
+        "tablet"
+    } else {
+        "desktop"
+    };
+
+    // Extract location from CloudFlare headers (if using CF) or X-Forwarded-For
+    let country = headers
+        .get("CF-IPCountry")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("unknown");
+
+    let city = headers
+        .get("CF-IPCity")
+        .and_then(|v| v.to_str().ok());
+
+    // Get user demographics
+    let user_demo = sqlx::query!(
+        r#"
+        SELECT birthdate, gender
+        FROM users
+        WHERE id = $1
+        "#,
         user_id
+    )
+    .fetch_optional(state.pool.as_ref())
+    .await
+    .ok()
+    .flatten();
+
+    let (age_range, gender) = if let Some(demo) = user_demo {
+        let age_range = if let Some(birthdate) = demo.birthdate {
+            sqlx::query_scalar!(
+                "SELECT get_age_range($1::DATE)",
+                birthdate
+            )
+            .fetch_one(state.pool.as_ref())
+            .await
+            .ok()
+            .flatten()
+        } else {
+            None
+        };
+        (age_range, demo.gender)
+    } else {
+        (None, None)
+    };
+
+    // Insert impression record with analytics data
+    sqlx::query!(
+        r#"
+        INSERT INTO ad_impressions (
+            ad_id, user_id, country, city, device_type, user_age_range, user_gender
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ON CONFLICT DO NOTHING
+        "#,
+        ad_id,
+        user_id,
+        country,
+        city,
+        device_type,
+        age_range,
+        gender
     )
     .execute(state.pool.as_ref())
     .await
@@ -1137,6 +1205,28 @@ pub async fn record_ad_impression(
         eprintln!("Record impression error: {:?}", e);
         (StatusCode::INTERNAL_SERVER_ERROR, "Failed to record impression".to_string())
     })?;
+
+    // Update location performance aggregates
+    sqlx::query!(
+        r#"
+        INSERT INTO ad_performance_by_location (ad_id, country, city, impressions)
+        VALUES ($1, $2, COALESCE($3, ''), 1)
+        ON CONFLICT (ad_id, country, city) DO UPDATE
+        SET impressions = ad_performance_by_location.impressions + 1,
+            ctr = CASE
+                WHEN ad_performance_by_location.impressions + 1 > 0
+                THEN (ad_performance_by_location.clicks::DECIMAL / (ad_performance_by_location.impressions + 1)) * 100
+                ELSE 0
+            END,
+            last_updated = NOW()
+        "#,
+        ad_id,
+        country,
+        city
+    )
+    .execute(state.pool.as_ref())
+    .await
+    .ok();
 
     Ok(Json(serde_json::json!({
         "success": true
@@ -1148,6 +1238,17 @@ pub async fn record_ad_click(
     State(state): State<Arc<crate::AppState>>,
     Path((ad_id, user_id)): Path<(Uuid, Uuid)>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
+    // Get the impression country/city for updating location aggregates
+    let impression = sqlx::query!(
+        "SELECT country, city FROM ad_impressions WHERE ad_id = $1 AND user_id = $2",
+        ad_id,
+        user_id
+    )
+    .fetch_optional(state.pool.as_ref())
+    .await
+    .ok()
+    .flatten();
+
     // Update impression record to mark as clicked
     sqlx::query!(
         "UPDATE ad_impressions SET clicked = true, clicked_at = NOW() WHERE ad_id = $1 AND user_id = $2",
@@ -1160,6 +1261,30 @@ pub async fn record_ad_click(
         eprintln!("Record click error: {:?}", e);
         (StatusCode::INTERNAL_SERVER_ERROR, "Failed to record click".to_string())
     })?;
+
+    // Update location performance aggregates (increment clicks)
+    if let Some(imp) = impression {
+        sqlx::query!(
+            r#"
+            INSERT INTO ad_performance_by_location (ad_id, country, city, clicks)
+            VALUES ($1, $2, COALESCE($3, ''), 1)
+            ON CONFLICT (ad_id, country, city) DO UPDATE
+            SET clicks = ad_performance_by_location.clicks + 1,
+                ctr = CASE
+                    WHEN ad_performance_by_location.impressions > 0
+                    THEN ((ad_performance_by_location.clicks + 1)::DECIMAL / ad_performance_by_location.impressions) * 100
+                    ELSE 0
+                END,
+                last_updated = NOW()
+            "#,
+            ad_id,
+            imp.country,
+            imp.city
+        )
+        .execute(state.pool.as_ref())
+        .await
+        .ok();
+    }
 
     Ok(Json(serde_json::json!({
         "success": true
@@ -1406,4 +1531,90 @@ pub async fn reject_ad(
     .ok();
 
     Ok(StatusCode::OK)
+}
+
+// ============================================================================
+// AD ANALYTICS ENDPOINTS
+// ============================================================================
+
+#[derive(Serialize)]
+pub struct AdLocationAnalytics {
+    country: String,
+    city: Option<String>,
+    impressions: i32,
+    clicks: i32,
+    ctr: f64,
+}
+
+// Get ad performance by location
+pub async fn get_ad_location_analytics(
+    State(state): State<Arc<crate::AppState>>,
+    _admin: AdminUser,
+    Path(ad_id): Path<Uuid>,
+) -> Result<Json<Vec<AdLocationAnalytics>>, (StatusCode, String)> {
+    let analytics = sqlx::query_as!(
+        AdLocationAnalytics,
+        r#"
+        SELECT
+            country,
+            NULLIF(city, '') as city,
+            impressions as "impressions!",
+            clicks as "clicks!",
+            ctr as "ctr!"
+        FROM ad_performance_by_location
+        WHERE ad_id = $1
+        ORDER BY impressions DESC
+        LIMIT 50
+        "#,
+        ad_id
+    )
+    .fetch_all(&*state.pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    Ok(Json(analytics))
+}
+
+#[derive(Serialize)]
+pub struct AdDemographicsAnalytics {
+    device_type: Option<String>,
+    age_range: Option<String>,
+    gender: Option<String>,
+    impressions: i64,
+    clicks: i64,
+    ctr: f64,
+}
+
+// Get ad performance by demographics
+pub async fn get_ad_demographics_analytics(
+    State(state): State<Arc<crate::AppState>>,
+    _admin: AdminUser,
+    Path(ad_id): Path<Uuid>,
+) -> Result<Json<Vec<AdDemographicsAnalytics>>, (StatusCode, String)> {
+    let analytics = sqlx::query_as!(
+        AdDemographicsAnalytics,
+        r#"
+        SELECT
+            device_type,
+            user_age_range as age_range,
+            user_gender as gender,
+            COUNT(*) as "impressions!",
+            COUNT(*) FILTER (WHERE clicked = true) as "clicks!",
+            CASE
+                WHEN COUNT(*) > 0
+                THEN (COUNT(*) FILTER (WHERE clicked = true)::DECIMAL / COUNT(*)) * 100
+                ELSE 0
+            END as "ctr!"
+        FROM ad_impressions
+        WHERE ad_id = $1
+        GROUP BY device_type, user_age_range, user_gender
+        ORDER BY impressions DESC
+        "#,
+        ad_id
+    )
+    .fetch_all(&*state.pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    Ok(Json(analytics))
 }

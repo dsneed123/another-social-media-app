@@ -245,6 +245,8 @@ async fn main() {
         .route("/api/admin/ads/:ad_id", axum::routing::delete(admin::delete_ad))
         .route("/api/admin/ads/:ad_id/approve", post(admin::approve_ad))
         .route("/api/admin/ads/:ad_id/reject", post(admin::reject_ad))
+        .route("/api/admin/ads/:ad_id/analytics/location", get(admin::get_ad_location_analytics))
+        .route("/api/admin/ads/:ad_id/analytics/demographics", get(admin::get_ad_demographics_analytics))
 
         // Public ad endpoints (for showing ads to users)
         .route("/api/ads/next/:user_id", get(admin::get_next_ad))
