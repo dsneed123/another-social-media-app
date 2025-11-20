@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT user_id FROM chat_members WHERE chat_room_id = $1 AND user_id != $2",
+  "query": "SELECT user_id FROM chat_members WHERE chat_room_id = (SELECT chat_room_id FROM messages WHERE id = $1)",
   "describe": {
     "columns": [
       {
@@ -11,7 +11,6 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid",
         "Uuid"
       ]
     },
@@ -19,5 +18,5 @@
       false
     ]
   },
-  "hash": "0e2990e53c2db86e0040393cc357139d09da25548c626a1c64b4d872fbffcab7"
+  "hash": "10469bfd6f5db047e093e01f7c2f243f12fab6df24ab4652a7cec7b622bf992e"
 }

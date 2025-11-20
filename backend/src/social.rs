@@ -569,9 +569,9 @@ pub async fn get_user_stories(
             like_count,
             comment_count,
             created_at
-        FROM stories
-        WHERE user_id = $1
-        ORDER BY created_at DESC
+            FROM stories
+            WHERE user_id = $1 AND expires_at > NOW()
+            ORDER BY created_at DESC
         "#,
         user_id
     )

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT \n            id,\n            media_url,\n            media_type,\n            caption,\n            view_count,\n            like_count,\n            comment_count,\n            created_at\n        FROM stories\n        WHERE user_id = $1\n        ORDER BY created_at DESC\n        ",
+  "query": "\n        SELECT \n            id,\n            media_url,\n            media_type,\n            caption,\n            view_count,\n            like_count,\n            comment_count,\n            created_at\n            FROM stories\n            WHERE user_id = $1 AND expires_at > NOW()\n            ORDER BY created_at DESC\n        ",
   "describe": {
     "columns": [
       {
@@ -60,5 +60,5 @@
       false
     ]
   },
-  "hash": "f14cb1933b5c575f1fd25e137bf91eee1044f27e1449579eb2fb39f92a689c59"
+  "hash": "ed439fa53431badbd1420c87108f74f43a73677da4c53bb83b8b48bb61066659"
 }
