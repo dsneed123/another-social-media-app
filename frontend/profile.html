@@ -726,11 +726,11 @@
                 <span class="stat-number" id="storyCount">0</span>
                 <span class="stat-label">Stories</span>
             </div>
-            <div class="stat">
+            <div class="stat" onclick="viewFollowers()">
                 <span class="stat-number" id="followerCount">0</span>
                 <span class="stat-label">Followers</span>
             </div>
-            <div class="stat">
+            <div class="stat" onclick="viewFollowing()">
                 <span class="stat-number" id="followingCount">0</span>
                 <span class="stat-label">Following</span>
             </div>
@@ -774,11 +774,46 @@
             </div>
 
             <form onsubmit="saveProfile(event)">
+                <!-- Profile Photo Section -->
+                <div class="form-group" style="text-align: center; margin-bottom: 32px;">
+                    <label class="form-label">Profile Photo</label>
+                    <div class="profile-avatar-large" id="modalAvatar" style="margin: 16px auto; cursor: pointer;" onclick="openPhotoUpload()">
+                        U
+                    </div>
+                    <input type="file" id="avatarInput" accept="image/*" style="display: none;" onchange="handleAvatarUpload(event)">
+                    <button type="button" class="btn btn-secondary" onclick="openPhotoUpload()">
+                        <i class="bi bi-camera-fill"></i> Change Photo
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Display Name</label>
+                    <input
+                        type="text"
+                        class="form-input"
+                        id="displayNameInput"
+                        placeholder="Your display name"
+                        maxlength="50">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Bio</label>
+                    <textarea
+                        class="form-textarea"
+                        id="bioInput"
+                        placeholder="Write a short bio..."
+                        maxlength="100"
+                        oninput="updateCharCount(this, 'bioCount', 100)"></textarea>
+                    <div class="char-count">
+                        <span id="bioCount">0</span>/100
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">About</label>
-                    <textarea 
-                        class="form-textarea" 
-                        id="aboutInput" 
+                    <textarea
+                        class="form-textarea"
+                        id="aboutInput"
                         placeholder="Tell us about yourself..."
                         maxlength="150"
                         oninput="updateCharCount(this, 'aboutCount', 150)"></textarea>
@@ -789,17 +824,19 @@
 
                 <div class="form-group">
                     <label class="form-label">Link</label>
-                    <input 
-                        type="url" 
-                        class="form-input" 
-                        id="linkInput" 
+                    <input
+                        type="url"
+                        class="form-input"
+                        id="linkInput"
                         placeholder="https://example.com"
                         maxlength="100">
                 </div>
 
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeEditProfile()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle-fill"></i> Save Changes
+                    </button>
                 </div>
             </form>
         </div>
@@ -956,20 +993,113 @@
             }
         }
 
+        let uploadedAvatarUrl = null;
+
         function openEditProfile() {
             if (!isOwnProfile) return;
+
+            // Populate form fields
+            document.getElementById('displayNameInput').value = profileData.display_name || '';
+            document.getElementById('bioInput').value = profileData.bio || '';
             document.getElementById('aboutInput').value = profileData.about || '';
             document.getElementById('linkInput').value = profileData.profile_link || '';
+
+            // Update avatar display
+            const modalAvatar = document.getElementById('modalAvatar');
+            if (profileData.avatar_url) {
+                modalAvatar.style.backgroundImage = `url(${profileData.avatar_url})`;
+                modalAvatar.style.backgroundSize = 'cover';
+                modalAvatar.style.backgroundPosition = 'center';
+                modalAvatar.textContent = '';
+            } else {
+                modalAvatar.style.backgroundImage = '';
+                modalAvatar.textContent = (profileData.username || 'U')[0].toUpperCase();
+            }
+
+            // Update character counts
+            updateCharCount(document.getElementById('bioInput'), 'bioCount', 100);
             updateCharCount(document.getElementById('aboutInput'), 'aboutCount', 150);
+
             document.getElementById('editModal').classList.add('active');
         }
 
         function closeEditProfile() {
             document.getElementById('editModal').classList.remove('active');
+            uploadedAvatarUrl = null;
+        }
+
+        function openPhotoUpload() {
+            document.getElementById('avatarInput').click();
+        }
+
+        async function handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            // Validate file size (max 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Image size should be less than 10MB');
+                return;
+            }
+
+            try {
+                // Convert to base64
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const base64Image = e.target.result;
+
+                    // Upload to server
+                    const response = await fetch('/api/media/upload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: currentUserId,
+                            image_data: base64Image
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        uploadedAvatarUrl = data.url;
+
+                        // Update modal avatar preview
+                        const modalAvatar = document.getElementById('modalAvatar');
+                        modalAvatar.style.backgroundImage = `url(${uploadedAvatarUrl})`;
+                        modalAvatar.style.backgroundSize = 'cover';
+                        modalAvatar.style.backgroundPosition = 'center';
+                        modalAvatar.textContent = '';
+
+                        // Show success feedback
+                        const btn = event.target.previousElementSibling;
+                        const originalText = btn.innerHTML;
+                        btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Photo Updated';
+                        btn.style.background = 'linear-gradient(135deg, #43e97b, #38f9d7)';
+                        setTimeout(() => {
+                            btn.innerHTML = originalText;
+                            btn.style.background = '';
+                        }, 2000);
+                    } else {
+                        throw new Error('Upload failed');
+                    }
+                };
+                reader.readAsDataURL(file);
+            } catch (error) {
+                console.error('Error uploading avatar:', error);
+                alert('Failed to upload photo. Please try again.');
+            }
         }
 
         async function saveProfile(e) {
             e.preventDefault();
+
+            const displayName = document.getElementById('displayNameInput').value;
+            const bio = document.getElementById('bioInput').value;
             const about = document.getElementById('aboutInput').value;
             const link = document.getElementById('linkInput').value;
 
@@ -978,15 +1108,20 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        user_id: currentUserId,
-                        about: about,
-                        profile_link: link
+                        display_name: displayName || null,
+                        bio: bio || null,
+                        about: about || null,
+                        profile_link: link || null,
+                        avatar_url: uploadedAvatarUrl || profileData.avatar_url || null
                     })
                 });
 
                 if (response.ok) {
                     closeEditProfile();
                     loadProfile();
+                    alert('Profile updated successfully!');
+                } else {
+                    throw new Error('Failed to save profile');
                 }
             } catch (error) {
                 console.error('Error saving profile:', error);
@@ -1037,6 +1172,14 @@
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+        }
+
+        function viewFollowers() {
+            window.location.href = `/followers.html?user_id=${viewingUserId}&tab=followers`;
+        }
+
+        function viewFollowing() {
+            window.location.href = `/followers.html?user_id=${viewingUserId}&tab=following`;
         }
 
         function navigateTo(page) {

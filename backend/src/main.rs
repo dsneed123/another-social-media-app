@@ -159,6 +159,7 @@ async fn main() {
         .route("/api/chats", post(chat::create_chat))
         .route("/api/users/:user_id/chats", get(chat::get_user_chats))
         .route("/api/users/:user_id/chats/:chat_room_id/messages", get(chat::get_messages))
+        .route("/api/users/:user_id/messages/send", post(chat::send_message_http))
         .route("/api/users/:user_id/messages/:message_id/view", post(chat::mark_message_viewed))
         .route("/api/users/:user_id/messages/:message_id/save", post(chat::save_message))
         .route("/api/users/:user_id/messages/:message_id/unsave", axum::routing::delete(chat::unsave_message))
@@ -265,7 +266,7 @@ async fn main() {
         // WebSocket endpoint
         .route("/ws/:user_id", get(websocket::ws_handler))
 
-        .layer(DefaultBodyLimit::max(50 * 1024 * 1024)) // 50MB limit for uploads
+        .layer(DefaultBodyLimit::max(100 * 1024 * 1024)) // 100MB limit for uploads
         .layer(
             CorsLayer::new()
                 .allow_origin([HeaderValue::from_static("https://relays.social")])

@@ -161,22 +161,29 @@
             width: 100%;
             height: 100vh;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
         }
 
         .preview-state.active {
-            display: block;
+            display: flex;
         }
 
         #preview-media {
-            width: 100%;
-            height: 100%;
+            max-width: 100%;
+            max-height: 100vh;
             object-fit: contain;
+            margin: 0 auto;
         }
 
         #preview-canvas {
-            width: 100%;
-            height: 100%;
+            max-width: 100%;
+            max-height: 100vh;
+            object-fit: contain;
             display: none;
+            margin: 0 auto;
         }
 
         #preview-canvas.active {
@@ -287,6 +294,57 @@
             margin-bottom: 12px;
         }
 
+        .text-style-options {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
+        .style-option-btn {
+            width: 44px;
+            height: 44px;
+            background: #2c2c2c;
+            border: 2px solid #444;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .style-option-btn:hover {
+            border-color: #B39FFF;
+        }
+
+        .style-option-btn.active {
+            background: #B39FFF;
+            border-color: #B39FFF;
+        }
+
+        .font-picker {
+            margin-bottom: 12px;
+        }
+
+        .font-select {
+            width: 100%;
+            padding: 12px;
+            background: #2c2c2c;
+            border: 2px solid #444;
+            border-radius: 8px;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .font-select:focus {
+            outline: none;
+            border-color: #B39FFF;
+        }
+
         .text-actions {
             display: flex;
             gap: 8px;
@@ -321,6 +379,221 @@
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
             padding: 8px 12px;
             border-radius: 4px;
+        }
+
+        /* Music Modal */
+        .music-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .music-modal.active {
+            display: flex;
+        }
+
+        .music-modal-content {
+            background: #1a1a1a;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .music-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        .music-header h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .close-music-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .close-music-btn:hover {
+            background: #333;
+        }
+
+        .music-search {
+            padding: 16px 20px;
+            position: relative;
+            border-bottom: 1px solid #333;
+        }
+
+        .music-search-input {
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+            background: #2c2c2c;
+            border: 2px solid #444;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+        }
+
+        .music-search-input:focus {
+            outline: none;
+            border-color: #B39FFF;
+        }
+
+        .music-search i {
+            position: absolute;
+            right: 32px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            font-size: 18px;
+        }
+
+        .music-categories {
+            display: flex;
+            gap: 8px;
+            padding: 16px 20px;
+            overflow-x: auto;
+            border-bottom: 1px solid #333;
+        }
+
+        .category-btn {
+            padding: 8px 16px;
+            background: #2c2c2c;
+            border: 2px solid #444;
+            border-radius: 20px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .category-btn.active {
+            background: #B39FFF;
+            border-color: #B39FFF;
+        }
+
+        .music-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 20px;
+        }
+
+        .music-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #2c2c2c;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .music-item:hover {
+            background: #333;
+        }
+
+        .music-item.selected {
+            border-color: #B39FFF;
+            background: rgba(179, 159, 255, 0.1);
+        }
+
+        .music-item-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #B39FFF, #9d7fee);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .music-item-info {
+            flex: 1;
+        }
+
+        .music-item-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .music-item-artist {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .music-item-duration {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .music-player {
+            padding: 16px 20px;
+            background: rgba(179, 159, 255, 0.1);
+            border-top: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .playing-track {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #B39FFF;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .playing-track i {
+            font-size: 20px;
+        }
+
+        .remove-music-btn {
+            background: #ff4444;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         /* Filter Options */
@@ -469,6 +742,10 @@
                 <i class="bi bi-palette"></i>
                 <span>Filters</span>
             </button>
+            <button class="tool-btn" onclick="toggleMusicPicker()" id="music-btn">
+                <i class="bi bi-music-note-beamed"></i>
+                <span>Music</span>
+            </button>
             <button class="tool-btn" onclick="cropMedia()">
                 <i class="bi bi-crop"></i>
                 <span>Crop</span>
@@ -507,9 +784,72 @@
             <div class="color-option" style="background: #ffff44;" onclick="selectColor('#ffff44')"></div>
         </div>
         <input type="range" class="size-slider" id="size-slider" min="16" max="72" value="32">
+
+        <div class="text-style-options">
+            <button class="style-option-btn" id="bold-btn" onclick="toggleTextStyle('bold')">
+                <i class="bi bi-type-bold"></i>
+            </button>
+            <button class="style-option-btn" id="italic-btn" onclick="toggleTextStyle('italic')">
+                <i class="bi bi-type-italic"></i>
+            </button>
+            <button class="style-option-btn" id="outline-btn" onclick="toggleTextStyle('outline')">
+                <i class="bi bi-border-width"></i>
+            </button>
+        </div>
+
+        <div class="font-picker">
+            <select id="font-select" class="font-select">
+                <option value="Arial">Arial</option>
+                <option value="Impact">Impact</option>
+                <option value="Comic Sans MS">Comic Sans</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Brush Script MT">Brush Script</option>
+            </select>
+        </div>
+
         <div class="text-actions">
             <button class="cancel-btn" onclick="closeTextEditor()">Cancel</button>
             <button class="add-btn" onclick="addText()">Add Text</button>
+        </div>
+    </div>
+
+    <!-- Music Picker Modal -->
+    <div class="music-modal" id="music-modal">
+        <div class="music-modal-content">
+            <div class="music-header">
+                <h3>Add Music</h3>
+                <button class="close-music-btn" onclick="closeMusicPicker()">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+
+            <div class="music-search">
+                <input type="text" id="music-search-input" class="music-search-input" placeholder="Search music..." oninput="searchMusic(this.value)">
+                <i class="bi bi-search"></i>
+            </div>
+
+            <div class="music-categories">
+                <button class="category-btn active" onclick="filterByCategory('all')">All</button>
+                <button class="category-btn" onclick="filterByCategory('upbeat')">Upbeat</button>
+                <button class="category-btn" onclick="filterByCategory('chill')">Chill</button>
+                <button class="category-btn" onclick="filterByCategory('cinematic')">Cinematic</button>
+                <button class="category-btn" onclick="filterByCategory('electronic')">Electronic</button>
+            </div>
+
+            <div class="music-list" id="music-list">
+                <!-- Music tracks will be populated here -->
+            </div>
+
+            <div class="music-player" id="music-player" style="display: none;">
+                <div class="playing-track">
+                    <i class="bi bi-music-note-beamed"></i>
+                    <span id="playing-track-name">Track Name</span>
+                </div>
+                <button class="remove-music-btn" onclick="removeMusic()">
+                    <i class="bi bi-trash"></i> Remove
+                </button>
+            </div>
         </div>
     </div>
 
@@ -531,12 +871,179 @@
         let textElements = [];
         let selectedTextColor = 'white';
         let selectedTextSize = 32;
+        let selectedTextFont = 'Arial';
+        let textStyleBold = false;
+        let textStyleItalic = false;
+        let textStyleOutline = false;
         let originalImage = null;
+        let selectedMusic = null;
+        let currentCategory = 'all';
+        let isDragging = false;
+        let draggedTextIndex = -1;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+        // Royalty-free music library (placeholder - can be replaced with real tracks)
+        const musicLibrary = [
+            { id: 1, title: 'Upbeat Summer', artist: 'Free Music', duration: '2:15', category: 'upbeat', url: '/music/upbeat-summer.mp3' },
+            { id: 2, title: 'Chill Vibes', artist: 'Free Music', duration: '3:20', category: 'chill', url: '/music/chill-vibes.mp3' },
+            { id: 3, title: 'Epic Journey', artist: 'Free Music', duration: '2:45', category: 'cinematic', url: '/music/epic-journey.mp3' },
+            { id: 4, title: 'Electronic Dreams', artist: 'Free Music', duration: '3:00', category: 'electronic', url: '/music/electronic-dreams.mp3' },
+            { id: 5, title: 'Happy Day', artist: 'Free Music', duration: '2:30', category: 'upbeat', url: '/music/happy-day.mp3' },
+            { id: 6, title: 'Calm Waters', artist: 'Free Music', duration: '3:45', category: 'chill', url: '/music/calm-waters.mp3' },
+            { id: 7, title: 'Adventure Awaits', artist: 'Free Music', duration: '2:55', category: 'cinematic', url: '/music/adventure-awaits.mp3' },
+            { id: 8, title: 'Neon Lights', artist: 'Free Music', duration: '3:10', category: 'electronic', url: '/music/neon-lights.mp3' },
+            { id: 9, title: 'Feel Good', artist: 'Free Music', duration: '2:40', category: 'upbeat', url: '/music/feel-good.mp3' },
+            { id: 10, title: 'Sunset Chill', artist: 'Free Music', duration: '4:00', category: 'chill', url: '/music/sunset-chill.mp3' },
+            { id: 11, title: 'Cinematic Rise', artist: 'Free Music', duration: '3:15', category: 'cinematic', url: '/music/cinematic-rise.mp3' },
+            { id: 12, title: 'Digital Wave', artist: 'Free Music', duration: '2:50', category: 'electronic', url: '/music/digital-wave.mp3' }
+        ];
 
         // Initialize
         document.getElementById('camera-input').addEventListener('change', handleFileSelect);
         document.getElementById('photo-input').addEventListener('change', handleFileSelect);
         document.getElementById('video-input').addEventListener('change', handleFileSelect);
+
+        // Dragging functionality for text elements
+        function getMousePos(canvas, evt) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            return {
+                x: (evt.clientX - rect.left) * scaleX,
+                y: (evt.clientY - rect.top) * scaleY
+            };
+        }
+
+        function getTouchPos(canvas, evt) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const touch = evt.touches[0];
+
+            return {
+                x: (touch.clientX - rect.left) * scaleX,
+                y: (touch.clientY - rect.top) * scaleY
+            };
+        }
+
+        function isPointInText(x, y, textElement) {
+            if (!ctx) return false;
+
+            let fontStyle = '';
+            if (textElement.italic) fontStyle += 'italic ';
+            if (textElement.bold) fontStyle += 'bold ';
+
+            ctx.font = `${fontStyle}${textElement.size}px ${textElement.font || 'Arial'}`;
+            const textMetrics = ctx.measureText(textElement.content);
+            const textWidth = textMetrics.width;
+            const textHeight = textElement.size;
+
+            return (
+                x >= textElement.x - textWidth / 2 &&
+                x <= textElement.x + textWidth / 2 &&
+                y >= textElement.y - textHeight / 2 &&
+                y <= textElement.y + textHeight / 2
+            );
+        }
+
+        function handleCanvasMouseDown(evt) {
+            if (!canvas) return;
+
+            const pos = getMousePos(canvas, evt);
+
+            // Check if clicking on any text element (check in reverse order for top-most)
+            for (let i = textElements.length - 1; i >= 0; i--) {
+                if (isPointInText(pos.x, pos.y, textElements[i])) {
+                    isDragging = true;
+                    draggedTextIndex = i;
+                    dragOffsetX = pos.x - textElements[i].x;
+                    dragOffsetY = pos.y - textElements[i].y;
+                    canvas.style.cursor = 'grabbing';
+                    break;
+                }
+            }
+        }
+
+        function handleCanvasMouseMove(evt) {
+            if (!canvas) return;
+
+            const pos = getMousePos(canvas, evt);
+
+            if (isDragging && draggedTextIndex >= 0) {
+                // Update text position
+                textElements[draggedTextIndex].x = pos.x - dragOffsetX;
+                textElements[draggedTextIndex].y = pos.y - dragOffsetY;
+                drawCanvas();
+            } else {
+                // Change cursor if hovering over text
+                let hovering = false;
+                for (let i = textElements.length - 1; i >= 0; i--) {
+                    if (isPointInText(pos.x, pos.y, textElements[i])) {
+                        hovering = true;
+                        break;
+                    }
+                }
+                canvas.style.cursor = hovering ? 'grab' : 'default';
+            }
+        }
+
+        function handleCanvasMouseUp() {
+            isDragging = false;
+            draggedTextIndex = -1;
+            if (canvas) canvas.style.cursor = 'default';
+        }
+
+        // Touch event handlers
+        function handleCanvasTouchStart(evt) {
+            evt.preventDefault();
+            if (!canvas) return;
+
+            const pos = getTouchPos(canvas, evt);
+
+            for (let i = textElements.length - 1; i >= 0; i--) {
+                if (isPointInText(pos.x, pos.y, textElements[i])) {
+                    isDragging = true;
+                    draggedTextIndex = i;
+                    dragOffsetX = pos.x - textElements[i].x;
+                    dragOffsetY = pos.y - textElements[i].y;
+                    break;
+                }
+            }
+        }
+
+        function handleCanvasTouchMove(evt) {
+            evt.preventDefault();
+            if (!canvas || !isDragging || draggedTextIndex < 0) return;
+
+            const pos = getTouchPos(canvas, evt);
+            textElements[draggedTextIndex].x = pos.x - dragOffsetX;
+            textElements[draggedTextIndex].y = pos.y - dragOffsetY;
+            drawCanvas();
+        }
+
+        function handleCanvasTouchEnd(evt) {
+            evt.preventDefault();
+            isDragging = false;
+            draggedTextIndex = -1;
+        }
+
+        // Add event listeners when canvas is ready
+        function initCanvasEvents() {
+            if (!canvas) return;
+
+            // Mouse events
+            canvas.addEventListener('mousedown', handleCanvasMouseDown);
+            canvas.addEventListener('mousemove', handleCanvasMouseMove);
+            canvas.addEventListener('mouseup', handleCanvasMouseUp);
+            canvas.addEventListener('mouseleave', handleCanvasMouseUp);
+
+            // Touch events
+            canvas.addEventListener('touchstart', handleCanvasTouchStart, { passive: false });
+            canvas.addEventListener('touchmove', handleCanvasTouchMove, { passive: false });
+            canvas.addEventListener('touchend', handleCanvasTouchEnd, { passive: false });
+        }
 
         function handleFileSelect(e) {
             const file = e.target.files[0];
@@ -592,16 +1099,15 @@
             canvas = document.getElementById('preview-canvas');
             ctx = canvas.getContext('2d');
 
-            // Set canvas size to fit screen while maintaining aspect ratio
-            const maxWidth = window.innerWidth;
-            const maxHeight = window.innerHeight;
-            const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
-
-            canvas.width = img.width * ratio;
-            canvas.height = img.height * ratio;
+            // Use actual image dimensions - let CSS handle the scaling for display
+            canvas.width = img.width;
+            canvas.height = img.height;
 
             canvas.classList.add('active');
             drawCanvas();
+
+            // Initialize dragging functionality
+            initCanvasEvents();
         }
 
         function drawCanvas() {
@@ -621,13 +1127,39 @@
 
             ctx.restore();
 
-            // Draw text elements
+            // Draw text elements with styles
             textElements.forEach(text => {
-                ctx.font = `${text.size}px Arial`;
-                ctx.fillStyle = text.color;
+                let fontStyle = '';
+                if (text.italic) fontStyle += 'italic ';
+                if (text.bold) fontStyle += 'bold ';
+
+                ctx.font = `${fontStyle}${text.size}px ${text.font || 'Arial'}`;
                 ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                // Draw outline if enabled
+                if (text.outline) {
+                    ctx.strokeStyle = '#000';
+                    ctx.lineWidth = 4;
+                    ctx.strokeText(text.content, text.x, text.y);
+                }
+
+                // Draw main text
+                ctx.fillStyle = text.color;
                 ctx.fillText(text.content, text.x, text.y);
+
+                // Add shadow for better visibility
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                ctx.shadowBlur = 4;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
             });
+
+            // Reset shadow
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
         }
 
         function getFilterString() {
@@ -690,13 +1222,43 @@
                 content: text,
                 color: selectedTextColor,
                 size: selectedTextSize,
+                font: selectedTextFont,
+                bold: textStyleBold,
+                italic: textStyleItalic,
+                outline: textStyleOutline,
                 x: canvas.width / 2,
                 y: canvas.height / 2
             });
 
             drawCanvas();
             closeTextEditor();
+            document.getElementById('text-input').value = '';
         }
+
+        function toggleTextStyle(style) {
+            const btn = document.getElementById(`${style}-btn`);
+
+            if (style === 'bold') {
+                textStyleBold = !textStyleBold;
+                btn.classList.toggle('active', textStyleBold);
+            } else if (style === 'italic') {
+                textStyleItalic = !textStyleItalic;
+                btn.classList.toggle('active', textStyleItalic);
+            } else if (style === 'outline') {
+                textStyleOutline = !textStyleOutline;
+                btn.classList.toggle('active', textStyleOutline);
+            }
+        }
+
+        // Update font selection
+        document.addEventListener('DOMContentLoaded', () => {
+            const fontSelect = document.getElementById('font-select');
+            if (fontSelect) {
+                fontSelect.addEventListener('change', (e) => {
+                    selectedTextFont = e.target.value;
+                });
+            }
+        });
 
         // Filter Functions
         function toggleFilters() {
@@ -729,7 +1291,7 @@
         }
 
         // Compress and Upload
-        async function compressImage(file, maxSizeMB = 5) {
+        async function compressImage(file, maxSizeMB = 10) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -775,11 +1337,11 @@
             });
         }
 
-        async function compressVideo(file, maxSizeMB = 50) {
+        async function compressVideo(file, maxSizeMB = 100) {
             // For videos, we'll just ensure they're under max size
             // Full video compression requires ffmpeg or similar
             if (file.size / 1024 / 1024 > maxSizeMB) {
-                alert('Video is too large. Please select a smaller video (under 50MB).');
+                alert(`Video is too large. Please select a smaller video (under ${maxSizeMB}MB).`);
                 return null;
             }
             return file;
@@ -851,6 +1413,102 @@
             } finally {
                 document.getElementById('loading-overlay').classList.remove('active');
             }
+        }
+
+        // Music picker functions
+        function toggleMusicPicker() {
+            const modal = document.getElementById('music-modal');
+            modal.classList.add('active');
+            renderMusicList();
+        }
+
+        function closeMusicPicker() {
+            const modal = document.getElementById('music-modal');
+            modal.classList.remove('active');
+        }
+
+        function renderMusicList(filteredTracks = null) {
+            const tracks = filteredTracks || musicLibrary;
+            const musicList = document.getElementById('music-list');
+
+            musicList.innerHTML = tracks.map(track => `
+                <div class="music-item ${selectedMusic && selectedMusic.id === track.id ? 'selected' : ''}"
+                     onclick="selectMusic(${track.id})">
+                    <div class="music-item-icon">
+                        <i class="bi bi-music-note"></i>
+                    </div>
+                    <div class="music-item-info">
+                        <div class="music-item-title">${track.title}</div>
+                        <div class="music-item-artist">${track.artist}</div>
+                    </div>
+                    <div class="music-item-duration">${track.duration}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectMusic(trackId) {
+            selectedMusic = musicLibrary.find(t => t.id === trackId);
+
+            // Update UI
+            renderMusicList();
+
+            // Show music player indicator
+            const musicPlayer = document.getElementById('music-player');
+            const trackNameEl = document.getElementById('playing-track-name');
+
+            musicPlayer.style.display = 'flex';
+            trackNameEl.textContent = selectedMusic.title;
+
+            // Update music button to show selected state
+            const musicBtn = document.getElementById('music-btn');
+            musicBtn.classList.add('active');
+
+            // Close modal after selection
+            setTimeout(() => closeMusicPicker(), 500);
+        }
+
+        function removeMusic() {
+            selectedMusic = null;
+            document.getElementById('music-player').style.display = 'none';
+            document.getElementById('music-btn').classList.remove('active');
+        }
+
+        function filterByCategory(category) {
+            currentCategory = category;
+
+            // Update category button states
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Filter tracks
+            const filteredTracks = category === 'all'
+                ? musicLibrary
+                : musicLibrary.filter(t => t.category === category);
+
+            renderMusicList(filteredTracks);
+        }
+
+        function searchMusic(query) {
+            const searchQuery = query.toLowerCase().trim();
+
+            if (!searchQuery) {
+                // Show all tracks for current category
+                const filteredTracks = currentCategory === 'all'
+                    ? musicLibrary
+                    : musicLibrary.filter(t => t.category === currentCategory);
+                renderMusicList(filteredTracks);
+                return;
+            }
+
+            // Search in title and artist
+            const searchResults = musicLibrary.filter(track =>
+                track.title.toLowerCase().includes(searchQuery) ||
+                track.artist.toLowerCase().includes(searchQuery)
+            );
+
+            renderMusicList(searchResults);
         }
 
         function goBack() {

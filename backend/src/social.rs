@@ -422,7 +422,7 @@ pub async fn get_story_comments(
 ) -> Result<Json<Vec<Comment>>, StatusCode> {
     let comments = sqlx::query!(
         r#"
-        SELECT 
+        SELECT
             sc.id,
             sc.story_id,
             sc.user_id,
@@ -433,7 +433,7 @@ pub async fn get_story_comments(
             sc.created_at
         FROM story_comments sc
         JOIN users u ON sc.user_id = u.id
-        WHERE sc.story_id = $1
+        WHERE sc.story_id = $1 AND sc.parent_comment_id IS NULL
         ORDER BY sc.created_at ASC
         "#,
         story_id

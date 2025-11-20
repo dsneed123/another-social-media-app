@@ -418,3 +418,109 @@ pub async fn unsave_message(
 
     Ok(StatusCode::OK)
 }
+
+// Send a message via HTTP (also broadcasts via WebSocket)
+#[derive(Deserialize)]
+pub struct SendMessageRequest {
+    pub chat_room_id: Uuid,
+    pub content: Option<String>,
+    pub message_type: String,
+    pub media_url: Option<String>,
+    pub media_thumbnail_url: Option<String>,
+    pub view_once: bool,
+    pub expires_in_seconds: Option<i64>,
+}
+
+pub async fn send_message_http(
+    State(state): State<Arc<crate::AppState>>,
+    Path(user_id): Path<Uuid>,
+    Json(payload): Json<SendMessageRequest>,
+) -> Result<Json<MessageResponse>, StatusCode> {
+    let pool = &state.pool;
+
+    // Calculate expiration
+    let expires_at = payload.expires_in_seconds.map(|seconds| {
+        (chrono::Utc::now() + chrono::Duration::seconds(seconds)).naive_utc()
+    });
+
+    // Insert message into database
+    let record = sqlx::query!(
+        r#"
+        INSERT INTO messages
+        (chat_room_id, sender_id, message_type, content, media_url, media_thumbnail_url, view_once, expires_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id, created_at
+        "#,
+        payload.chat_room_id,
+        user_id,
+        payload.message_type,
+        payload.content,
+        payload.media_url,
+        payload.media_thumbnail_url,
+        payload.view_once,
+        expires_at
+    )
+    .fetch_one(pool.as_ref())
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Get sender username
+    let sender = sqlx::query!("SELECT username FROM users WHERE id = $1", user_id)
+        .fetch_one(pool.as_ref())
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Get all members of the chat room
+    let members = sqlx::query!(
+        "SELECT user_id FROM chat_members WHERE chat_room_id = $1",
+        payload.chat_room_id
+    )
+    .fetch_all(pool.as_ref())
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Broadcast to all chat members via WebSocket
+    use crate::websocket::WsMessage;
+    let broadcast_msg = WsMessage::NewMessage {
+        id: record.id,
+        chat_room_id: payload.chat_room_id,
+        sender_id: user_id,
+        sender_username: sender.username.clone(),
+        message_type: payload.message_type.clone(),
+        content: payload.content.clone(),
+        media_url: payload.media_url.clone(),
+        media_thumbnail_url: payload.media_thumbnail_url.clone(),
+        view_once: payload.view_once,
+        created_at: record.created_at.format("%Y-%m-%dT%H:%M:%S%.fZ").to_string(),
+    };
+    let msg_json = serde_json::to_string(&broadcast_msg).unwrap();
+
+    for member in &members {
+        if let Some(conn) = state.connections.get(&member.user_id) {
+            let _ = conn.send(msg_json.clone());
+        } else {
+            // User is offline, increment unread counter
+            let mut redis_guard = state.redis.lock().await;
+            let _ = redis_guard.increment_unread(member.user_id, payload.chat_room_id).await;
+        }
+    }
+
+    // Return the message response
+    Ok(Json(MessageResponse {
+        id: record.id,
+        chat_room_id: payload.chat_room_id,
+        sender_id: user_id,
+        sender_username: sender.username,
+        message_type: payload.message_type,
+        content: payload.content,
+        media_url: payload.media_url,
+        media_thumbnail_url: payload.media_thumbnail_url,
+        view_once: payload.view_once,
+        is_ephemeral: expires_at.is_some(),
+        expires_at,
+        created_at: record.created_at,
+        is_viewed: false,
+        is_read: false,
+        is_saved: false,
+    }))
+}
