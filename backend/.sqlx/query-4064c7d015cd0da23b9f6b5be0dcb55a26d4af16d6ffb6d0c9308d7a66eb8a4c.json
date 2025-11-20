@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO messages\n        (chat_room_id, sender_id, message_type, content, media_url, media_thumbnail_url, view_once, expires_at)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)\n        RETURNING id, created_at\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Varchar",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Timestamp"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "4064c7d015cd0da23b9f6b5be0dcb55a26d4af16d6ffb6d0c9308d7a66eb8a4c"
+}

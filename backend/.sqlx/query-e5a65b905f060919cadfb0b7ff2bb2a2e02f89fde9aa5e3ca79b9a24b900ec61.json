@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT \n            sc.id,\n            sc.story_id,\n            sc.user_id,\n            u.username,\n            sc.comment_text,\n            sc.parent_comment_id,\n            sc.reply_count,\n            sc.created_at\n        FROM story_comments sc\n        JOIN users u ON sc.user_id = u.id\n        WHERE sc.story_id = $1\n        ORDER BY sc.created_at ASC\n        ",
+  "query": "\n        SELECT\n            sc.id,\n            sc.story_id,\n            sc.user_id,\n            u.username,\n            sc.comment_text,\n            sc.parent_comment_id,\n            sc.reply_count,\n            sc.created_at\n        FROM story_comments sc\n        JOIN users u ON sc.user_id = u.id\n        WHERE sc.story_id = $1 AND sc.parent_comment_id IS NULL\n        ORDER BY sc.created_at ASC\n        ",
   "describe": {
     "columns": [
       {
@@ -60,5 +60,5 @@
       false
     ]
   },
-  "hash": "794e59770761c87cd71410a5401c43d7b9954e83138b15d9998bdfee172ac658"
+  "hash": "e5a65b905f060919cadfb0b7ff2bb2a2e02f89fde9aa5e3ca79b9a24b900ec61"
 }
