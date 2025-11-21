@@ -1,5 +1,5 @@
 use aws_sdk_s3::Client as S3Client;
-use chrono::{Utc, Duration};
+use chrono::Utc;
 use sqlx::PgPool;
 use std::collections::HashSet;
 
@@ -143,56 +143,44 @@ async fn get_active_media_urls(pool: &PgPool) -> Result<Vec<String>, String> {
     let mut urls = Vec::new();
 
     // Get story media URLs
-    let stories = sqlx::query!(
-        r#"
-        SELECT media_url, thumbnail_url
-        FROM stories
-        WHERE expires_at > NOW()
-        "#
+    let stories = sqlx::query_as::<_, (String, Option<String>)>(
+        "SELECT media_url, thumbnail_url FROM stories WHERE expires_at > NOW()"
     )
     .fetch_all(pool)
     .await
     .map_err(|e| format!("Failed to fetch active stories: {}", e))?;
 
-    for story in stories {
-        urls.push(story.media_url);
-        if let Some(thumb) = story.thumbnail_url {
+    for (media_url, thumbnail_url) in stories {
+        urls.push(media_url);
+        if let Some(thumb) = thumbnail_url {
             urls.push(thumb);
         }
     }
 
     // Get profile pictures
-    let users = sqlx::query!(
-        r#"
-        SELECT profile_pic
-        FROM users
-        WHERE profile_pic IS NOT NULL
-        "#
+    let users = sqlx::query_as::<_, (Option<String>,)>(
+        "SELECT profile_pic FROM users WHERE profile_pic IS NOT NULL"
     )
     .fetch_all(pool)
     .await
     .map_err(|e| format!("Failed to fetch user profiles: {}", e))?;
 
-    for user in users {
-        if let Some(pic) = user.profile_pic {
+    for (profile_pic,) in users {
+        if let Some(pic) = profile_pic {
             urls.push(pic);
         }
     }
 
     // Get post media URLs
-    let posts = sqlx::query!(
-        r#"
-        SELECT media_urls
-        FROM posts
-        WHERE media_urls IS NOT NULL
-        "#
+    let posts = sqlx::query_as::<_, (Option<Vec<String>>,)>(
+        "SELECT media_urls FROM posts WHERE media_urls IS NOT NULL"
     )
     .fetch_all(pool)
     .await
     .map_err(|e| format!("Failed to fetch posts: {}", e))?;
 
-    for post in posts {
-        if let Some(media_urls) = post.media_urls {
+    for (media_urls,) in posts {
+        if let Some(media_urls) = media_urls {
             for url in media_urls {
                 urls.push(url);
             }
@@ -200,20 +188,15 @@ async fn get_active_media_urls(pool: &PgPool) -> Result<Vec<String>, String> {
     }
 
     // Get message attachments
-    let messages = sqlx::query!(
-        r#"
-        SELECT attachment_url
-        FROM messages
-        WHERE attachment_url IS NOT NULL
-        AND created_at > NOW() - INTERVAL '90 days'
-        "#
+    let messages = sqlx::query_as::<_, (Option<String>,)>(
+        "SELECT attachment_url FROM messages WHERE attachment_url IS NOT NULL AND created_at > NOW() - INTERVAL '90 days'"
     )
     .fetch_all(pool)
     .await
     .map_err(|e| format!("Failed to fetch messages: {}", e))?;
 
-    for message in messages {
-        if let Some(url) = message.attachment_url {
+    for (attachment_url,) in messages {
+        if let Some(url) = attachment_url {
             urls.push(url);
         }
     }
@@ -223,12 +206,8 @@ async fn get_active_media_urls(pool: &PgPool) -> Result<Vec<String>, String> {
 
 /// Get S3 keys for expired stories
 async fn get_expired_story_keys(pool: &PgPool) -> Result<HashSet<String>, String> {
-    let expired_stories = sqlx::query!(
-        r#"
-        SELECT media_url, thumbnail_url
-        FROM stories
-        WHERE expires_at < NOW() - INTERVAL '24 hours'
-        "#
+    let expired_stories = sqlx::query_as::<_, (String, Option<String>)>(
+        "SELECT media_url, thumbnail_url FROM stories WHERE expires_at < NOW() - INTERVAL '24 hours'"
     )
     .fetch_all(pool)
     .await
@@ -236,11 +215,11 @@ async fn get_expired_story_keys(pool: &PgPool) -> Result<HashSet<String>, String
 
     let mut keys = HashSet::new();
 
-    for story in expired_stories {
-        if let Some(key) = extract_s3_key_from_any_url(&story.media_url) {
+    for (media_url, thumbnail_url) in expired_stories {
+        if let Some(key) = extract_s3_key_from_any_url(&media_url) {
             keys.insert(key);
         }
-        if let Some(thumb) = story.thumbnail_url {
+        if let Some(thumb) = thumbnail_url {
             if let Some(key) = extract_s3_key_from_any_url(&thumb) {
                 keys.insert(key);
             }
@@ -302,12 +281,10 @@ async fn cleanup_orphaned_story_records(
     s3_client: &S3Client,
     bucket_name: &str,
 ) -> Result<i32, String> {
-    let expired_stories = sqlx::query!(
-        r#"
-        SELECT id, media_url
-        FROM stories
-        WHERE expires_at < NOW() - INTERVAL '24 hours'
-        "#
+    use sqlx::Row;
+
+    let expired_stories = sqlx::query(
+        "SELECT id, media_url FROM stories WHERE expires_at < NOW() - INTERVAL '24 hours'"
     )
     .fetch_all(pool)
     .await
@@ -316,8 +293,11 @@ async fn cleanup_orphaned_story_records(
     let mut deleted_count = 0;
 
     for story in expired_stories {
+        let story_id: uuid::Uuid = story.get("id");
+        let media_url: String = story.get("media_url");
+
         // Check if S3 object exists
-        if let Some(key) = extract_s3_key_from_any_url(&story.media_url) {
+        if let Some(key) = extract_s3_key_from_any_url(&media_url) {
             let exists = s3_client
                 .head_object()
                 .bucket(bucket_name)
@@ -328,15 +308,11 @@ async fn cleanup_orphaned_story_records(
 
             if !exists {
                 // Delete orphaned record
-                sqlx::query!(
-                    r#"
-                    DELETE FROM stories WHERE id = $1
-                    "#,
-                    story.id
-                )
-                .execute(pool)
-                .await
-                .map_err(|e| format!("Failed to delete story record: {}", e))?;
+                sqlx::query("DELETE FROM stories WHERE id = $1")
+                    .bind(story_id)
+                    .execute(pool)
+                    .await
+                    .map_err(|e| format!("Failed to delete story record: {}", e))?;
 
                 deleted_count += 1;
             }

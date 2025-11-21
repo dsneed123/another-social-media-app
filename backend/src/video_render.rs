@@ -13,7 +13,7 @@ use aws_sdk_s3::primitives::ByteStream;
 
 use crate::AppState;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TextElement {
     pub content: String,
     pub x: f64,
@@ -24,7 +24,7 @@ pub struct TextElement {
     pub end_time: f64,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VideoClip {
     pub id: String,
     pub start_time: f64,
@@ -32,7 +32,7 @@ pub struct VideoClip {
     pub order: i32,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AudioTrack {
     pub id: String,
     pub start_time: f64,
