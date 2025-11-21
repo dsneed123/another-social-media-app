@@ -1142,8 +1142,8 @@
         </div>
 
         <!-- Live Video Preview -->
-        <div style="flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-            <video id="live-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+        <div style="flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #000; min-height: 400px;">
+            <video id="live-video" autoplay playsinline muted style="min-width: 300px; min-height: 400px; max-width: 100%; max-height: 100%; object-fit: contain;"></video>
         </div>
 
         <!-- Capture Button -->
@@ -1153,7 +1153,7 @@
     </div>
 
     <!-- Camera Preview Modal (after capture) -->
-    <div id="camera-preview-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 3000; flex-direction: column;">
+    <div id="camera-preview-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 3001; flex-direction: column;">
         <!-- Header -->
         <div style="position: fixed; top: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 16px; display: flex; align-items: center; justify-content: space-between; z-index: 10; backdrop-filter: blur(10px);">
             <button onclick="retakePhoto()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; padding: 8px;">
@@ -1165,8 +1165,8 @@
         </div>
 
         <!-- Canvas Preview -->
-        <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 80px 20px;">
-            <canvas id="camera-canvas" style="max-width: min(390px, 100%); max-height: 100%; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.8);"></canvas>
+        <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 80px 20px; overflow: hidden;">
+            <canvas id="camera-canvas" width="1920" height="1080" style="max-width: 90vw; max-height: calc(100vh - 200px); display: block; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.8);"></canvas>
         </div>
 
         <!-- Controls -->
@@ -1179,34 +1179,61 @@
     </div>
 
     <!-- Camera Text Editor Modal -->
-    <div id="camera-text-editor" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(180deg, #1a1a1a, #0a0a0a); z-index: 4000; border-radius: 24px 24px 0 0; padding: 24px; box-shadow: 0 -4px 24px rgba(0,0,0,0.5);">
+    <div id="camera-text-editor" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(180deg, #1a1a1a, #0a0a0a); z-index: 4000; border-radius: 24px 24px 0 0; padding: 24px; box-shadow: 0 -4px 24px rgba(0,0,0,0.5); max-height: 80vh; overflow-y: auto;">
         <div style="display: flex; flex-direction: column; gap: 16px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="margin: 0; font-size: 18px;">Add Text</h3>
+                <h3 style="margin: 0; font-size: 18px;" id="camera-text-editor-title">Add Text</h3>
                 <button onclick="closeCameraTextEditor()" style="background: none; border: none; color: #888; font-size: 24px; cursor: pointer;">×</button>
             </div>
 
             <input type="text" id="camera-text-input" placeholder="Type your text..." style="width: 100%; padding: 14px 20px; border: 2px solid #333; border-radius: 16px; background: #1a1a1a; color: #fff; font-size: 16px;">
 
+            <!-- Text Style Options -->
+            <div>
+                <label style="font-size: 14px; color: #888; margin-bottom: 8px; display: block;">Text Style</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div onclick="selectCameraTextStyle('outline')" class="camera-style-option" data-style="outline" style="padding: 12px; border: 2px solid #B39FFF; border-radius: 12px; cursor: pointer; text-align: center; background: #1a1a1a;">
+                        <span style="font-weight: 600; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">Outline</span>
+                    </div>
+                    <div onclick="selectCameraTextStyle('solid')" class="camera-style-option" data-style="solid" style="padding: 12px; border: 2px solid #333; border-radius: 12px; cursor: pointer; text-align: center; background: #1a1a1a;">
+                        <span style="background: white; color: black; padding: 4px 12px; border-radius: 6px; font-weight: 600;">Solid</span>
+                    </div>
+                    <div onclick="selectCameraTextStyle('rounded')" class="camera-style-option" data-style="rounded" style="padding: 12px; border: 2px solid #333; border-radius: 12px; cursor: pointer; text-align: center; background: #1a1a1a;">
+                        <span style="background: white; color: black; padding: 6px 16px; border-radius: 20px; font-weight: 600;">Rounded</span>
+                    </div>
+                    <div onclick="selectCameraTextStyle('semi')" class="camera-style-option" data-style="semi" style="padding: 12px; border: 2px solid #333; border-radius: 12px; cursor: pointer; text-align: center; background: #1a1a1a;">
+                        <span style="background: rgba(255,255,255,0.3); padding: 4px 12px; border-radius: 6px; font-weight: 600;">Semi</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Color Picker -->
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <div onclick="selectCameraTextColor('white')" class="camera-color-option selected" style="width: 40px; height: 40px; background: white; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
-                <div onclick="selectCameraTextColor('black')" class="camera-color-option" style="width: 40px; height: 40px; background: black; border-radius: 50%; cursor: pointer; border: 3px solid #333;"></div>
-                <div onclick="selectCameraTextColor('#B39FFF')" class="camera-color-option" style="width: 40px; height: 40px; background: #B39FFF; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
-                <div onclick="selectCameraTextColor('#FF6B6B')" class="camera-color-option" style="width: 40px; height: 40px; background: #FF6B6B; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
-                <div onclick="selectCameraTextColor('#4ECDC4')" class="camera-color-option" style="width: 40px; height: 40px; background: #4ECDC4; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
-                <div onclick="selectCameraTextColor('#FFD93D')" class="camera-color-option" style="width: 40px; height: 40px; background: #FFD93D; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
+            <div>
+                <label style="font-size: 14px; color: #888; margin-bottom: 8px; display: block;">Text Color</label>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <div onclick="selectCameraTextColor('white')" class="camera-color-option selected" style="width: 40px; height: 40px; background: white; border-radius: 50%; cursor: pointer; border: 3px solid #B39FFF;"></div>
+                    <div onclick="selectCameraTextColor('black')" class="camera-color-option" style="width: 40px; height: 40px; background: black; border-radius: 50%; cursor: pointer; border: 3px solid #333;"></div>
+                    <div onclick="selectCameraTextColor('#B39FFF')" class="camera-color-option" style="width: 40px; height: 40px; background: #B39FFF; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
+                    <div onclick="selectCameraTextColor('#FF6B6B')" class="camera-color-option" style="width: 40px; height: 40px; background: #FF6B6B; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
+                    <div onclick="selectCameraTextColor('#4ECDC4')" class="camera-color-option" style="width: 40px; height: 40px; background: #4ECDC4; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
+                    <div onclick="selectCameraTextColor('#FFD93D')" class="camera-color-option" style="width: 40px; height: 40px; background: #FFD93D; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
+                </div>
             </div>
 
             <!-- Size Slider -->
             <div>
                 <label style="font-size: 14px; color: #888; margin-bottom: 8px; display: block;">Text Size</label>
-                <input type="range" id="camera-size-slider" min="24" max="72" value="48" style="width: 100%;">
+                <input type="range" id="camera-size-slider" min="24" max="96" value="48" style="width: 100%;">
             </div>
 
-            <button onclick="addCameraText()" style="background: #B39FFF; color: white; border: none; padding: 14px; border-radius: 16px; font-weight: 700; cursor: pointer; font-size: 16px;">
-                Add Text
-            </button>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="saveCameraText()" style="flex: 1; background: #B39FFF; color: white; border: none; padding: 14px; border-radius: 16px; font-weight: 700; cursor: pointer; font-size: 16px;">
+                    <span id="camera-text-save-btn">Add Text</span>
+                </button>
+                <button onclick="deleteCameraText()" id="camera-text-delete-btn" style="display: none; background: #FF6B6B; color: white; border: none; padding: 14px 20px; border-radius: 16px; font-weight: 700; cursor: pointer; font-size: 16px;">
+                    Delete
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1749,29 +1776,77 @@ document.querySelectorAll('#userStatus').forEach(el => {
         let cameraTextElements = [];
         let selectedCameraTextColor = 'white';
         let selectedCameraTextSize = 48;
+        let selectedCameraTextStyle = 'outline'; // outline, solid, rounded, semi
         let isDraggingCamera = false;
         let draggedCameraTextIndex = -1;
         let dragCameraOffsetX = 0;
         let dragCameraOffsetY = 0;
+        let cameraDownX = 0;
+        let cameraDownY = 0;
         let liveStream = null;
         let currentFacingMode = 'user';
+        let editingCameraTextIndex = -1; // -1 means adding new text, >= 0 means editing existing
+
+        // Pinch-to-zoom variables
+        let isPinching = false;
+        let initialPinchDistance = 0;
+        let initialTextSize = 0;
+        let pinchTextIndex = -1;
 
         async function takeSnap() {
             try {
                 const liveVideo = document.getElementById('live-video');
                 const modal = document.getElementById('live-camera-modal');
 
+                console.log('Starting camera...');
+
                 // Start live camera
                 liveStream = await navigator.mediaDevices.getUserMedia({
                     video: {
                         facingMode: currentFacingMode,
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
                     }
                 });
 
-                liveVideo.srcObject = liveStream;
+                console.log('Camera stream obtained:', liveStream);
+
                 modal.style.display = 'flex';
+                liveVideo.srcObject = liveStream;
+
+                // Wait for video to start playing
+                await new Promise((resolve) => {
+                    liveVideo.onloadedmetadata = () => {
+                        console.log('Video metadata loaded, dimensions:', liveVideo.videoWidth, 'x', liveVideo.videoHeight);
+
+                        // Force video to display
+                        liveVideo.style.display = 'block';
+                        liveVideo.style.width = '100%';
+                        liveVideo.style.height = 'auto';
+
+                        liveVideo.play().then(() => {
+                            console.log('Video playing');
+                            console.log('Video element display:', window.getComputedStyle(liveVideo).display);
+                            console.log('Video element opacity:', window.getComputedStyle(liveVideo).opacity);
+                            console.log('Video element visibility:', window.getComputedStyle(liveVideo).visibility);
+
+                            // Mirror for front camera
+                            if (currentFacingMode === 'user') {
+                                liveVideo.style.transform = 'scaleX(-1)';
+                            } else {
+                                liveVideo.style.transform = 'scaleX(1)';
+                            }
+
+                            // Force repaint
+                            liveVideo.style.opacity = '0.99';
+                            setTimeout(() => {
+                                liveVideo.style.opacity = '1';
+                            }, 10);
+
+                            resolve();
+                        });
+                    };
+                });
 
             } catch (e) {
                 alert('Camera error: ' + e.message);
@@ -1780,11 +1855,15 @@ document.querySelectorAll('#userStatus').forEach(el => {
         }
 
         function closeLiveCamera() {
+            console.log('closeLiveCamera called');
             if (liveStream) {
                 liveStream.getTracks().forEach(t => t.stop());
                 liveStream = null;
             }
-            document.getElementById('live-camera-modal').style.display = 'none';
+            const liveModal = document.getElementById('live-camera-modal');
+            liveModal.style.display = 'none';
+            console.log('Live camera modal display set to none');
+            console.log('Live camera modal display:', window.getComputedStyle(liveModal).display);
         }
 
         async function switchCamera() {
@@ -1797,47 +1876,88 @@ document.querySelectorAll('#userStatus').forEach(el => {
             const liveVideo = document.getElementById('live-video');
             const tempCanvas = document.getElementById('canvas');
 
+            if (!liveVideo || !tempCanvas) {
+                alert('Elements not found');
+                return;
+            }
+
+            console.log('Capturing photo - video dimensions:', liveVideo.videoWidth, 'x', liveVideo.videoHeight);
+
+            if (liveVideo.videoWidth === 0 || liveVideo.videoHeight === 0) {
+                alert('Camera not ready - try again');
+                return;
+            }
+
+            // Set canvas to 1920x1080 (16:9)
+            tempCanvas.width = 1920;
+            tempCanvas.height = 1080;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            if (!tempCtx) {
+                alert('Failed to get canvas context');
+                return;
+            }
+
+            // Clear canvas first
+            tempCtx.fillStyle = '#000';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+            // Draw video frame - mirror if front camera
             try {
-                // Wait for video to be ready
-                if (liveVideo.readyState < 2) {
-                    await new Promise(resolve => {
-                        liveVideo.onloadeddata = resolve;
-                    });
+                if (currentFacingMode === 'user') {
+                    tempCtx.save();
+                    tempCtx.scale(-1, 1);
+                    tempCtx.drawImage(liveVideo, -tempCanvas.width, 0, tempCanvas.width, tempCanvas.height);
+                    tempCtx.restore();
+                } else {
+                    tempCtx.drawImage(liveVideo, 0, 0, tempCanvas.width, tempCanvas.height);
                 }
-
-                console.log('Capturing from video:', liveVideo.videoWidth, 'x', liveVideo.videoHeight);
-
-                if (liveVideo.videoWidth === 0 || liveVideo.videoHeight === 0) {
-                    throw new Error('Video has no dimensions');
-                }
-
-                tempCanvas.width = liveVideo.videoWidth;
-                tempCanvas.height = liveVideo.videoHeight;
-                const tempCtx = tempCanvas.getContext('2d');
-                tempCtx.drawImage(liveVideo, 0, 0, tempCanvas.width, tempCanvas.height);
-
-                // Stop live stream
-                closeLiveCamera();
-
-                // Create image from canvas
-                const dataURL = tempCanvas.toDataURL('image/jpeg', 0.9);
-                console.log('Captured image, dataURL length:', dataURL.length);
-
-                const img = new Image();
-                img.onload = () => {
-                    cameraImage = img;
-                    console.log('Image loaded:', img.width, 'x', img.height);
-                    showCameraPreview();
-                };
-                img.onerror = (e) => {
-                    console.error('Failed to load image:', e);
-                    alert('Failed to load camera image');
-                };
-                img.src = dataURL;
-
+                console.log('Video frame drawn to canvas');
             } catch (e) {
-                alert('Capture error: ' + e.message);
-                console.error('Capture error:', e);
+                console.error('Error drawing video to canvas:', e);
+                alert('Failed to capture video frame: ' + e.message);
+                return;
+            }
+
+            // Get the data URL immediately
+            const dataURL = tempCanvas.toDataURL('image/jpeg', 0.9);
+            console.log('Data URL created, length:', dataURL.length);
+
+            if (!dataURL || dataURL === 'data:,' || dataURL.length < 100) {
+                alert('Failed to capture image - data URL is empty or too small');
+                return;
+            }
+
+            // Create image and show preview with proper decoding
+            try {
+                const img = new Image();
+
+                // Wait for image to load and decode fully
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                    img.src = dataURL;
+                });
+
+                console.log('Image loaded, dimensions:', img.width, 'x', img.height);
+
+                // Ensure image is fully decoded before drawing
+                if (img.decode) {
+                    await img.decode();
+                    console.log('Image decoded successfully');
+                }
+
+                // Validate image dimensions
+                if (img.width === 0 || img.height === 0) {
+                    throw new Error('Image has invalid dimensions');
+                }
+
+                cameraImage = img;
+                closeLiveCamera();
+                showCameraPreview();
+            } catch (e) {
+                console.error('Failed to load/decode image:', e);
+                alert('Failed to load captured image: ' + e.message);
             }
         }
 
@@ -1847,19 +1967,24 @@ document.querySelectorAll('#userStatus').forEach(el => {
         }
 
         function showCameraPreview() {
+            console.log('showCameraPreview called');
             const modal = document.getElementById('camera-preview-modal');
             cameraCanvas = document.getElementById('camera-canvas');
-            cameraCtx = cameraCanvas.getContext('2d');
             cameraTextElements = [];
 
-            // Fixed 9:16 aspect ratio (like TikTok/Instagram Stories)
-            const targetWidth = 1080;
-            const targetHeight = 1920;
+            console.log('Modal:', modal);
+            console.log('Canvas:', cameraCanvas);
 
-            cameraCanvas.width = targetWidth;
-            cameraCanvas.height = targetHeight;
+            // Canvas dimensions are set via HTML attributes (1920x1080)
+            // Just get the context - CSS will handle display sizing
+            cameraCtx = cameraCanvas.getContext('2d');
+
+            console.log('Canvas dimensions:', cameraCanvas.width, 'x', cameraCanvas.height);
+            console.log('Canvas display size:', cameraCanvas.clientWidth, 'x', cameraCanvas.clientHeight);
 
             modal.style.display = 'flex';
+
+            // Draw the captured image
             drawCameraCanvas();
             initCameraCanvasEvents();
         }
@@ -1871,13 +1996,24 @@ document.querySelectorAll('#userStatus').forEach(el => {
         }
 
         function drawCameraCanvas() {
-            if (!cameraImage || !cameraCtx) {
-                console.error('Cannot draw - image or context missing', cameraImage, cameraCtx);
+            console.log('drawCameraCanvas called');
+            console.log('cameraImage:', cameraImage);
+            console.log('Canvas size:', cameraCanvas.width, 'x', cameraCanvas.height);
+            console.log('Canvas display size:', cameraCanvas.clientWidth, 'x', cameraCanvas.clientHeight);
+
+            if (!cameraImage || !cameraCtx || !cameraCanvas) {
+                console.error('Missing:', {cameraImage, cameraCtx, cameraCanvas});
                 return;
             }
 
-            console.log('Drawing canvas:', cameraCanvas.width, 'x', cameraCanvas.height);
-            console.log('Drawing image:', cameraImage.width, 'x', cameraImage.height);
+            // Validate image dimensions
+            if (cameraImage.width === 0 || cameraImage.height === 0) {
+                console.error('Invalid image dimensions:', cameraImage.width, 'x', cameraImage.height);
+                alert('Error: Captured image has invalid dimensions');
+                return;
+            }
+
+            console.log('Image dimensions:', cameraImage.width, 'x', cameraImage.height);
 
             // Clear canvas with black background
             cameraCtx.fillStyle = '#000';
@@ -1903,33 +2039,124 @@ document.querySelectorAll('#userStatus').forEach(el => {
                 offsetY = 0;
             }
 
+            console.log('Drawing at:', offsetX, offsetY, 'size:', drawWidth, 'x', drawHeight);
+
             // Draw the image with letterboxing
-            cameraCtx.drawImage(cameraImage, offsetX, offsetY, drawWidth, drawHeight);
+            try {
+                cameraCtx.drawImage(cameraImage, offsetX, offsetY, drawWidth, drawHeight);
+                console.log('Image drawn successfully to preview canvas');
+            } catch (e) {
+                console.error('Failed to draw image to preview canvas:', e);
+                alert('Failed to draw preview: ' + e.message);
+                return;
+            }
 
             // Draw text overlays
             cameraTextElements.forEach(text => {
-                cameraCtx.font = `${text.size}px Arial`;
+                cameraCtx.font = `bold ${text.size}px Arial`;
                 cameraCtx.textAlign = 'center';
                 cameraCtx.textBaseline = 'middle';
 
-                // Draw outline
-                cameraCtx.strokeStyle = '#000';
-                cameraCtx.lineWidth = 4;
-                cameraCtx.strokeText(text.content, text.x, text.y);
+                const style = text.style || 'outline';
+                const metrics = cameraCtx.measureText(text.content);
+                const textWidth = metrics.width;
+                const textHeight = text.size;
 
-                // Draw text
-                cameraCtx.fillStyle = text.color;
-                cameraCtx.fillText(text.content, text.x, text.y);
+                if (style === 'outline') {
+                    // Classic outlined text
+                    cameraCtx.strokeStyle = '#000';
+                    cameraCtx.lineWidth = 4;
+                    cameraCtx.strokeText(text.content, text.x, text.y);
+                    cameraCtx.fillStyle = text.color;
+                    cameraCtx.fillText(text.content, text.x, text.y);
+                } else if (style === 'solid') {
+                    // Solid rectangular background
+                    const padding = 8;
+                    cameraCtx.fillStyle = text.color === 'white' || text.color === '#fff' ? '#000' : '#fff';
+                    cameraCtx.fillRect(
+                        text.x - textWidth / 2 - padding,
+                        text.y - textHeight / 2 - padding,
+                        textWidth + padding * 2,
+                        textHeight + padding * 2
+                    );
+                    cameraCtx.fillStyle = text.color === 'white' || text.color === '#fff' ? '#fff' : '#000';
+                    cameraCtx.fillText(text.content, text.x, text.y);
+                } else if (style === 'rounded') {
+                    // Rounded pill background
+                    const padding = 12;
+                    const radius = textHeight / 2 + padding;
+                    cameraCtx.fillStyle = text.color === 'white' || text.color === '#fff' ? '#000' : '#fff';
+                    cameraCtx.beginPath();
+                    cameraCtx.roundRect(
+                        text.x - textWidth / 2 - padding,
+                        text.y - textHeight / 2 - padding,
+                        textWidth + padding * 2,
+                        textHeight + padding * 2,
+                        radius
+                    );
+                    cameraCtx.fill();
+                    cameraCtx.fillStyle = text.color === 'white' || text.color === '#fff' ? '#fff' : '#000';
+                    cameraCtx.fillText(text.content, text.x, text.y);
+                } else if (style === 'semi') {
+                    // Semi-transparent background
+                    const padding = 8;
+                    cameraCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                    cameraCtx.fillRect(
+                        text.x - textWidth / 2 - padding,
+                        text.y - textHeight / 2 - padding,
+                        textWidth + padding * 2,
+                        textHeight + padding * 2
+                    );
+                    cameraCtx.fillStyle = text.color;
+                    cameraCtx.fillText(text.content, text.x, text.y);
+                }
             });
         }
 
         function openCameraTextEditor() {
+            editingCameraTextIndex = -1;
+            document.getElementById('camera-text-editor-title').textContent = 'Add Text';
+            document.getElementById('camera-text-save-btn').textContent = 'Add Text';
+            document.getElementById('camera-text-delete-btn').style.display = 'none';
+            document.getElementById('camera-text-input').value = '';
+            document.getElementById('camera-text-editor').style.display = 'block';
+        }
+
+        function editCameraText(index) {
+            const text = cameraTextElements[index];
+            editingCameraTextIndex = index;
+
+            document.getElementById('camera-text-editor-title').textContent = 'Edit Text';
+            document.getElementById('camera-text-save-btn').textContent = 'Save';
+            document.getElementById('camera-text-delete-btn').style.display = 'block';
+            document.getElementById('camera-text-input').value = text.content;
+            document.getElementById('camera-size-slider').value = text.size;
+
+            selectedCameraTextColor = text.color;
+            selectedCameraTextSize = text.size;
+            selectedCameraTextStyle = text.style || 'outline';
+
+            // Update color selection UI
+            document.querySelectorAll('.camera-color-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            const colorOpt = Array.from(document.querySelectorAll('.camera-color-option')).find(
+                opt => opt.getAttribute('onclick').includes(text.color)
+            );
+            if (colorOpt) colorOpt.classList.add('selected');
+
+            // Update style selection UI
+            document.querySelectorAll('.camera-style-option').forEach(opt => {
+                opt.style.borderColor = opt.getAttribute('data-style') === selectedCameraTextStyle ? '#B39FFF' : '#333';
+            });
+
             document.getElementById('camera-text-editor').style.display = 'block';
         }
 
         function closeCameraTextEditor() {
             document.getElementById('camera-text-editor').style.display = 'none';
             document.getElementById('camera-text-input').value = '';
+            editingCameraTextIndex = -1;
         }
 
         function selectCameraTextColor(color) {
@@ -1940,24 +2167,52 @@ document.querySelectorAll('#userStatus').forEach(el => {
             event.target.classList.add('selected');
         }
 
+        function selectCameraTextStyle(style) {
+            selectedCameraTextStyle = style;
+            document.querySelectorAll('.camera-style-option').forEach(opt => {
+                opt.style.borderColor = opt.getAttribute('data-style') === style ? '#B39FFF' : '#333';
+            });
+        }
+
         document.getElementById('camera-size-slider').addEventListener('input', (e) => {
             selectedCameraTextSize = parseInt(e.target.value);
         });
 
-        function addCameraText() {
+        function saveCameraText() {
             const text = document.getElementById('camera-text-input').value.trim();
             if (!text) return;
 
-            cameraTextElements.push({
-                content: text,
-                color: selectedCameraTextColor,
-                size: selectedCameraTextSize,
-                x: cameraCanvas.width / 2,
-                y: cameraCanvas.height / 2
-            });
+            if (editingCameraTextIndex >= 0) {
+                // Update existing text
+                cameraTextElements[editingCameraTextIndex] = {
+                    ...cameraTextElements[editingCameraTextIndex],
+                    content: text,
+                    color: selectedCameraTextColor,
+                    size: selectedCameraTextSize,
+                    style: selectedCameraTextStyle
+                };
+            } else {
+                // Add new text
+                cameraTextElements.push({
+                    content: text,
+                    color: selectedCameraTextColor,
+                    size: selectedCameraTextSize,
+                    style: selectedCameraTextStyle,
+                    x: cameraCanvas.width / 2,
+                    y: cameraCanvas.height / 2
+                });
+            }
 
             drawCameraCanvas();
             closeCameraTextEditor();
+        }
+
+        function deleteCameraText() {
+            if (editingCameraTextIndex >= 0) {
+                cameraTextElements.splice(editingCameraTextIndex, 1);
+                drawCameraCanvas();
+                closeCameraTextEditor();
+            }
         }
 
         // Camera Canvas Drag Events
@@ -2010,6 +2265,8 @@ document.querySelectorAll('#userStatus').forEach(el => {
 
         function handleCameraMouseDown(evt) {
             const pos = getCameraMousePos(cameraCanvas, evt);
+            cameraDownX = pos.x;
+            cameraDownY = pos.y;
             for (let i = cameraTextElements.length - 1; i >= 0; i--) {
                 if (isPointInCameraText(pos.x, pos.y, cameraTextElements[i])) {
                     isDraggingCamera = true;
@@ -2040,37 +2297,142 @@ document.querySelectorAll('#userStatus').forEach(el => {
             }
         }
 
-        function handleCameraMouseUp() {
+        function handleCameraMouseUp(evt) {
+            const pos = getCameraMousePos(cameraCanvas, evt);
+            const distance = Math.sqrt(Math.pow(pos.x - cameraDownX, 2) + Math.pow(pos.y - cameraDownY, 2));
+
+            // If barely moved (tap/click), open editor
+            if (distance < 10 && draggedCameraTextIndex >= 0) {
+                editCameraText(draggedCameraTextIndex);
+            }
+
             isDraggingCamera = false;
             draggedCameraTextIndex = -1;
             if (cameraCanvas) cameraCanvas.style.cursor = 'default';
         }
 
+        function getTouchDistance(touch1, touch2, canvas) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const x1 = (touch1.clientX - rect.left) * scaleX;
+            const y1 = (touch1.clientY - rect.top) * scaleY;
+            const x2 = (touch2.clientX - rect.left) * scaleX;
+            const y2 = (touch2.clientY - rect.top) * scaleY;
+
+            return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        }
+
+        function getTouchMidpoint(touch1, touch2, canvas) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const x1 = (touch1.clientX - rect.left) * scaleX;
+            const y1 = (touch1.clientY - rect.top) * scaleY;
+            const x2 = (touch2.clientX - rect.left) * scaleX;
+            const y2 = (touch2.clientY - rect.top) * scaleY;
+
+            return {
+                x: (x1 + x2) / 2,
+                y: (y1 + y2) / 2
+            };
+        }
+
         function handleCameraTouchStart(evt) {
             evt.preventDefault();
-            const pos = getCameraTouchPos(cameraCanvas, evt);
-            for (let i = cameraTextElements.length - 1; i >= 0; i--) {
-                if (isPointInCameraText(pos.x, pos.y, cameraTextElements[i])) {
-                    isDraggingCamera = true;
-                    draggedCameraTextIndex = i;
-                    dragCameraOffsetX = pos.x - cameraTextElements[i].x;
-                    dragCameraOffsetY = pos.y - cameraTextElements[i].y;
-                    break;
+
+            // Check if this is a pinch gesture (2 fingers)
+            if (evt.touches.length === 2) {
+                // Get midpoint of two fingers
+                const midpoint = getTouchMidpoint(evt.touches[0], evt.touches[1], cameraCanvas);
+
+                // Check if midpoint is on any text
+                for (let i = cameraTextElements.length - 1; i >= 0; i--) {
+                    if (isPointInCameraText(midpoint.x, midpoint.y, cameraTextElements[i])) {
+                        isPinching = true;
+                        pinchTextIndex = i;
+                        initialPinchDistance = getTouchDistance(evt.touches[0], evt.touches[1], cameraCanvas);
+                        initialTextSize = cameraTextElements[i].size;
+                        console.log('Pinch started on text', i, 'initial distance:', initialPinchDistance);
+                        return; // Don't start dragging if pinching
+                    }
+                }
+            }
+
+            // Single finger - check for drag
+            if (evt.touches.length === 1) {
+                const pos = getCameraTouchPos(cameraCanvas, evt);
+                cameraDownX = pos.x;
+                cameraDownY = pos.y;
+                for (let i = cameraTextElements.length - 1; i >= 0; i--) {
+                    if (isPointInCameraText(pos.x, pos.y, cameraTextElements[i])) {
+                        isDraggingCamera = true;
+                        draggedCameraTextIndex = i;
+                        dragCameraOffsetX = pos.x - cameraTextElements[i].x;
+                        dragCameraOffsetY = pos.y - cameraTextElements[i].y;
+                        break;
+                    }
                 }
             }
         }
 
         function handleCameraTouchMove(evt) {
             evt.preventDefault();
-            if (!isDraggingCamera || draggedCameraTextIndex < 0) return;
-            const pos = getCameraTouchPos(cameraCanvas, evt);
-            cameraTextElements[draggedCameraTextIndex].x = pos.x - dragCameraOffsetX;
-            cameraTextElements[draggedCameraTextIndex].y = pos.y - dragCameraOffsetY;
-            drawCameraCanvas();
+
+            // Handle pinch-to-zoom
+            if (isPinching && evt.touches.length === 2 && pinchTextIndex >= 0) {
+                const currentDistance = getTouchDistance(evt.touches[0], evt.touches[1], cameraCanvas);
+                const scale = currentDistance / initialPinchDistance;
+
+                // Calculate new size (with limits)
+                let newSize = initialTextSize * scale;
+                newSize = Math.max(16, Math.min(200, newSize)); // Clamp between 16 and 200
+
+                cameraTextElements[pinchTextIndex].size = Math.round(newSize);
+                drawCameraCanvas();
+                return;
+            }
+
+            // Handle drag
+            if (isDraggingCamera && draggedCameraTextIndex >= 0 && evt.touches.length === 1) {
+                const pos = getCameraTouchPos(cameraCanvas, evt);
+                cameraTextElements[draggedCameraTextIndex].x = pos.x - dragCameraOffsetX;
+                cameraTextElements[draggedCameraTextIndex].y = pos.y - dragCameraOffsetY;
+                drawCameraCanvas();
+            }
         }
 
         function handleCameraTouchEnd(evt) {
             evt.preventDefault();
+
+            // Reset pinch state
+            if (isPinching) {
+                isPinching = false;
+                pinchTextIndex = -1;
+                initialPinchDistance = 0;
+                initialTextSize = 0;
+                console.log('Pinch ended');
+                return;
+            }
+
+            // Check if it was a tap (use changedTouches for end position)
+            if (evt.changedTouches && evt.changedTouches.length > 0 && evt.touches.length === 0) {
+                const rect = cameraCanvas.getBoundingClientRect();
+                const scaleX = cameraCanvas.width / rect.width;
+                const scaleY = cameraCanvas.height / rect.height;
+                const x = (evt.changedTouches[0].clientX - rect.left) * scaleX;
+                const y = (evt.changedTouches[0].clientY - rect.top) * scaleY;
+
+                const distance = Math.sqrt(Math.pow(x - cameraDownX, 2) + Math.pow(y - cameraDownY, 2));
+
+                // If barely moved (tap), open editor
+                if (distance < 10 && draggedCameraTextIndex >= 0) {
+                    editCameraText(draggedCameraTextIndex);
+                }
+            }
+
             isDraggingCamera = false;
             draggedCameraTextIndex = -1;
         }

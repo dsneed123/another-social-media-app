@@ -811,9 +811,24 @@
             <button class="style-option-btn" id="italic-btn" onclick="toggleTextStyle('italic')">
                 <i class="bi bi-type-italic"></i>
             </button>
-            <button class="style-option-btn" id="outline-btn" onclick="toggleTextStyle('outline')">
-                <i class="bi bi-border-width"></i>
-            </button>
+        </div>
+
+        <div style="margin: 12px 0;">
+            <label style="font-size: 12px; color: #888; margin-bottom: 8px; display: block; text-transform: uppercase; letter-spacing: 1px;">Text Style</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div onclick="selectTextStyle('outline')" class="text-bg-style-option" data-style="outline" style="padding: 10px; border: 2px solid #B39FFF; border-radius: 10px; cursor: pointer; text-align: center; background: #222;">
+                    <span style="font-weight: 600; font-size: 13px; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">Outline</span>
+                </div>
+                <div onclick="selectTextStyle('solid')" class="text-bg-style-option" data-style="solid" style="padding: 10px; border: 2px solid #333; border-radius: 10px; cursor: pointer; text-align: center; background: #222;">
+                    <span style="background: white; color: black; padding: 3px 10px; border-radius: 5px; font-weight: 600; font-size: 13px;">Solid</span>
+                </div>
+                <div onclick="selectTextStyle('rounded')" class="text-bg-style-option" data-style="rounded" style="padding: 10px; border: 2px solid #333; border-radius: 10px; cursor: pointer; text-align: center; background: #222;">
+                    <span style="background: white; color: black; padding: 5px 14px; border-radius: 16px; font-weight: 600; font-size: 13px;">Rounded</span>
+                </div>
+                <div onclick="selectTextStyle('semi')" class="text-bg-style-option" data-style="semi" style="padding: 10px; border: 2px solid #333; border-radius: 10px; cursor: pointer; text-align: center; background: #222;">
+                    <span style="background: rgba(255,255,255,0.3); padding: 3px 10px; border-radius: 5px; font-weight: 600; font-size: 13px;">Semi</span>
+                </div>
+            </div>
         </div>
 
         <div class="font-picker">
@@ -894,6 +909,7 @@
         let textStyleBold = false;
         let textStyleItalic = false;
         let textStyleOutline = false;
+        let selectedTextBgStyle = 'outline'; // outline, solid, rounded, semi
         let originalImage = null;
         let selectedMusic = null;
         let currentCategory = 'all';
@@ -901,6 +917,12 @@
         let draggedTextIndex = -1;
         let dragOffsetX = 0;
         let dragOffsetY = 0;
+
+        // Pinch-to-zoom variables
+        let isPinching = false;
+        let initialPinchDistance = 0;
+        let initialTextSize = 0;
+        let pinchTextIndex = -1;
 
         // Royalty-free music library (placeholder - can be replaced with real tracks)
         const musicLibrary = [
@@ -1021,39 +1043,118 @@
             if (canvas) canvas.style.cursor = 'default';
         }
 
+        // Pinch-to-zoom helper functions
+        function getTouchDistance(touch1, touch2, canvas) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const x1 = (touch1.clientX - rect.left) * scaleX;
+            const y1 = (touch1.clientY - rect.top) * scaleY;
+            const x2 = (touch2.clientX - rect.left) * scaleX;
+            const y2 = (touch2.clientY - rect.top) * scaleY;
+
+            return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        }
+
+        function getTouchMidpoint(touch1, touch2, canvas) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const x1 = (touch1.clientX - rect.left) * scaleX;
+            const y1 = (touch1.clientY - rect.top) * scaleY;
+            const x2 = (touch2.clientX - rect.left) * scaleX;
+            const y2 = (touch2.clientY - rect.top) * scaleY;
+
+            return {
+                x: (x1 + x2) / 2,
+                y: (y1 + y2) / 2
+            };
+        }
+
         // Touch event handlers
         function handleCanvasTouchStart(evt) {
             evt.preventDefault();
             if (!canvas) return;
 
-            const pos = getTouchPos(canvas, evt);
-            console.log('Touch start at:', pos.x, pos.y);
-            console.log('Text elements:', textElements.length);
+            // Check if this is a pinch gesture (2 fingers)
+            if (evt.touches.length === 2) {
+                // Get midpoint of two fingers
+                const midpoint = getTouchMidpoint(evt.touches[0], evt.touches[1], canvas);
 
-            for (let i = textElements.length - 1; i >= 0; i--) {
-                if (isPointInText(pos.x, pos.y, textElements[i])) {
-                    isDragging = true;
-                    draggedTextIndex = i;
-                    dragOffsetX = pos.x - textElements[i].x;
-                    dragOffsetY = pos.y - textElements[i].y;
-                    console.log('Started dragging text', i);
-                    break;
+                // Check if midpoint is on any text
+                for (let i = textElements.length - 1; i >= 0; i--) {
+                    if (isPointInText(midpoint.x, midpoint.y, textElements[i])) {
+                        isPinching = true;
+                        pinchTextIndex = i;
+                        initialPinchDistance = getTouchDistance(evt.touches[0], evt.touches[1], canvas);
+                        initialTextSize = textElements[i].size;
+                        console.log('Pinch started on text', i, 'initial distance:', initialPinchDistance);
+                        return; // Don't start dragging if pinching
+                    }
+                }
+            }
+
+            // Single finger - check for drag
+            if (evt.touches.length === 1) {
+                const pos = getTouchPos(canvas, evt);
+                console.log('Touch start at:', pos.x, pos.y);
+                console.log('Text elements:', textElements.length);
+
+                for (let i = textElements.length - 1; i >= 0; i--) {
+                    if (isPointInText(pos.x, pos.y, textElements[i])) {
+                        isDragging = true;
+                        draggedTextIndex = i;
+                        dragOffsetX = pos.x - textElements[i].x;
+                        dragOffsetY = pos.y - textElements[i].y;
+                        console.log('Started dragging text', i);
+                        break;
+                    }
                 }
             }
         }
 
         function handleCanvasTouchMove(evt) {
             evt.preventDefault();
-            if (!canvas || !isDragging || draggedTextIndex < 0) return;
+            if (!canvas) return;
 
-            const pos = getTouchPos(canvas, evt);
-            textElements[draggedTextIndex].x = pos.x - dragOffsetX;
-            textElements[draggedTextIndex].y = pos.y - dragOffsetY;
-            drawCanvas();
+            // Handle pinch-to-zoom
+            if (isPinching && evt.touches.length === 2 && pinchTextIndex >= 0) {
+                const currentDistance = getTouchDistance(evt.touches[0], evt.touches[1], canvas);
+                const scale = currentDistance / initialPinchDistance;
+
+                // Calculate new size (with limits)
+                let newSize = initialTextSize * scale;
+                newSize = Math.max(16, Math.min(200, newSize)); // Clamp between 16 and 200
+
+                textElements[pinchTextIndex].size = Math.round(newSize);
+                drawCanvas();
+                return;
+            }
+
+            // Handle drag
+            if (isDragging && draggedTextIndex >= 0 && evt.touches.length === 1) {
+                const pos = getTouchPos(canvas, evt);
+                textElements[draggedTextIndex].x = pos.x - dragOffsetX;
+                textElements[draggedTextIndex].y = pos.y - dragOffsetY;
+                drawCanvas();
+            }
         }
 
         function handleCanvasTouchEnd(evt) {
             evt.preventDefault();
+
+            // Reset pinch state
+            if (isPinching) {
+                isPinching = false;
+                pinchTextIndex = -1;
+                initialPinchDistance = 0;
+                initialTextSize = 0;
+                console.log('Pinch ended');
+                return;
+            }
+
             isDragging = false;
             draggedTextIndex = -1;
         }
@@ -1205,16 +1306,59 @@
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
 
-                // Draw outline if enabled
-                if (text.outline) {
+                const style = text.style || (text.outline ? 'outline' : 'outline');
+                const metrics = ctx.measureText(text.content);
+                const textWidth = metrics.width;
+                const textHeight = text.size;
+
+                if (style === 'outline' || text.outline) {
+                    // Classic outlined text
                     ctx.strokeStyle = '#000';
                     ctx.lineWidth = 4;
                     ctx.strokeText(text.content, text.x, text.y);
+                    ctx.fillStyle = text.color;
+                    ctx.fillText(text.content, text.x, text.y);
+                } else if (style === 'solid') {
+                    // Solid rectangular background
+                    const padding = 8;
+                    ctx.fillStyle = text.color === 'white' || text.color === '#fff' ? '#000' : '#fff';
+                    ctx.fillRect(
+                        text.x - textWidth / 2 - padding,
+                        text.y - textHeight / 2 - padding,
+                        textWidth + padding * 2,
+                        textHeight + padding * 2
+                    );
+                    ctx.fillStyle = text.color === 'white' || text.color === '#fff' ? '#fff' : '#000';
+                    ctx.fillText(text.content, text.x, text.y);
+                } else if (style === 'rounded') {
+                    // Rounded pill background
+                    const padding = 12;
+                    const radius = textHeight / 2 + padding;
+                    ctx.fillStyle = text.color === 'white' || text.color === '#fff' ? '#000' : '#fff';
+                    ctx.beginPath();
+                    ctx.roundRect(
+                        text.x - textWidth / 2 - padding,
+                        text.y - textHeight / 2 - padding,
+                        textWidth + padding * 2,
+                        textHeight + padding * 2,
+                        radius
+                    );
+                    ctx.fill();
+                    ctx.fillStyle = text.color === 'white' || text.color === '#fff' ? '#fff' : '#000';
+                    ctx.fillText(text.content, text.x, text.y);
+                } else if (style === 'semi') {
+                    // Semi-transparent background
+                    const padding = 8;
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                    ctx.fillRect(
+                        text.x - textWidth / 2 - padding,
+                        text.y - textHeight / 2 - padding,
+                        textWidth + padding * 2,
+                        textHeight + padding * 2
+                    );
+                    ctx.fillStyle = text.color;
+                    ctx.fillText(text.content, text.x, text.y);
                 }
-
-                // Draw main text
-                ctx.fillStyle = text.color;
-                ctx.fillText(text.content, text.x, text.y);
 
                 // Add shadow for better visibility
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
@@ -1294,6 +1438,7 @@
                 bold: textStyleBold,
                 italic: textStyleItalic,
                 outline: textStyleOutline,
+                style: selectedTextBgStyle,
                 x: canvas.width / 2,
                 y: canvas.height / 2
             });
@@ -1301,6 +1446,13 @@
             drawCanvas();
             closeTextEditor();
             document.getElementById('text-input').value = '';
+        }
+
+        function selectTextStyle(style) {
+            selectedTextBgStyle = style;
+            document.querySelectorAll('.text-bg-style-option').forEach(opt => {
+                opt.style.borderColor = opt.getAttribute('data-style') === style ? '#B39FFF' : '#333';
+            });
         }
 
         function toggleTextStyle(style) {
