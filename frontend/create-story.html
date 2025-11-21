@@ -683,6 +683,12 @@
 
         .loading-content {
             text-align: center;
+            color: #fff;
+            max-width: 320px;
+            padding: 32px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
         }
 
         .spinner {
@@ -693,6 +699,44 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 16px;
+        }
+
+        .loading-content p {
+            margin: 12px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .upload-progress-container {
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .upload-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .upload-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #B39FFF, #667eea);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(179, 159, 255, 0.5);
+        }
+
+        .upload-progress-text {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
         }
 
         @keyframes spin {
@@ -897,7 +941,16 @@
     <div class="loading-overlay" id="loading-overlay">
         <div class="loading-content">
             <div class="spinner"></div>
-            <p>Compressing and uploading...</p>
+            <p id="loading-status">Preparing your story...</p>
+            <div class="upload-progress-container" id="upload-progress-container" style="display: none;">
+                <div class="upload-progress-bar">
+                    <div class="upload-progress-fill" id="upload-progress-fill"></div>
+                </div>
+                <div class="upload-progress-text">
+                    <span id="upload-progress-percent">0%</span>
+                    <span id="upload-progress-speed">...</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1590,7 +1643,15 @@
         }
 
         async function postStory() {
-            document.getElementById('loading-overlay').classList.add('active');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const loadingStatus = document.getElementById('loading-status');
+            const progressContainer = document.getElementById('upload-progress-container');
+            const progressFill = document.getElementById('upload-progress-fill');
+            const progressPercent = document.getElementById('upload-progress-percent');
+            const progressSpeed = document.getElementById('upload-progress-speed');
+
+            loadingOverlay.classList.add('active');
+            loadingStatus.textContent = 'Preparing your story...';
 
             try {
                 // Get user info
@@ -1606,12 +1667,14 @@
                 let finalBlob;
 
                 if (isVideo) {
+                    loadingStatus.textContent = 'Compressing video...';
                     finalBlob = await compressVideo(selectedFile);
                     if (!finalBlob) {
-                        document.getElementById('loading-overlay').classList.remove('active');
+                        loadingOverlay.classList.remove('active');
                         return;
                     }
                 } else {
+                    loadingStatus.textContent = 'Processing image...';
                     // Get the canvas with all edits
                     finalBlob = await new Promise(resolve => {
                         canvas.toBlob(resolve, 'image/jpeg', 0.8);
@@ -1620,40 +1683,81 @@
 
                 // Upload to server with story metadata
                 const formData = new FormData();
-                // Use timestamp to ensure unique filenames for each story
                 const timestamp = Date.now();
                 formData.append('file', finalBlob, isVideo ? `story_${timestamp}.mp4` : `story_${timestamp}.jpg`);
                 formData.append('user_id', userId);
                 formData.append('media_type', isVideo ? 'video' : 'image');
-                
+
                 // Add caption if text was added
                 if (textElements.length > 0) {
                     const caption = textElements.map(t => t.content).join(' ');
                     formData.append('caption', caption);
                 }
 
-                const response = await fetch('/api/stories/create', {
-                    method: 'POST',
-                    body: formData
+                // Use XMLHttpRequest for upload progress
+                loadingStatus.textContent = 'Uploading story...';
+                progressContainer.style.display = 'block';
+
+                const uploadStartTime = Date.now();
+                let lastLoaded = 0;
+                let lastTime = uploadStartTime;
+
+                await new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+
+                    xhr.upload.addEventListener('progress', (e) => {
+                        if (e.lengthComputable) {
+                            const percent = Math.round((e.loaded / e.total) * 100);
+                            progressFill.style.width = percent + '%';
+                            progressPercent.textContent = percent + '%';
+
+                            // Calculate speed
+                            const now = Date.now();
+                            const timeDiff = (now - lastTime) / 1000; // seconds
+                            const bytesDiff = e.loaded - lastLoaded;
+
+                            if (timeDiff > 0.5) { // Update speed every 0.5s
+                                const speedMBps = (bytesDiff / timeDiff / (1024 * 1024)).toFixed(2);
+                                progressSpeed.textContent = speedMBps + ' MB/s';
+                                lastLoaded = e.loaded;
+                                lastTime = now;
+                            }
+                        }
+                    });
+
+                    xhr.addEventListener('load', () => {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            resolve(JSON.parse(xhr.responseText));
+                        } else {
+                            reject(new Error('Upload failed'));
+                        }
+                    });
+
+                    xhr.addEventListener('error', () => {
+                        reject(new Error('Network error'));
+                    });
+
+                    xhr.open('POST', '/api/stories/create');
+                    xhr.send(formData);
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('Story created:', data);
+                // Success
+                console.log('Story created successfully');
+                loadingStatus.textContent = '✅ Story posted!';
 
-                    // Show success
-                    alert('Story posted successfully!');
-                    // Force reload by adding timestamp to clear cache
+                setTimeout(() => {
                     window.location.href = '/stories.html?refresh=' + Date.now();
-                } else {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.message || 'Upload failed');
-                }
+                }, 500);
+
             } catch (error) {
                 console.error('Error posting story:', error);
                 alert('Failed to post story. Please try again.');
             } finally {
-                document.getElementById('loading-overlay').classList.remove('active');
+                setTimeout(() => {
+                    loadingOverlay.classList.remove('active');
+                    progressContainer.style.display = 'none';
+                    progressFill.style.width = '0%';
+                }, 2000);
             }
         }
 
@@ -1824,12 +1928,17 @@
             if (!file) return;
 
             if (!videoEditor) {
-                alert('Please open the video editor first');
+                showToast('❌ Please open the video editor first', 'error');
                 return;
             }
 
-            videoEditor.addVideoClip(file);
-            console.log('Added video clip:', file.name);
+            showLoading('Adding video clip...');
+            setTimeout(() => {
+                videoEditor.addVideoClip(file);
+                hideLoading();
+                showToast(`✅ ${file.name} added`, 'success');
+                console.log('Added video clip:', file.name);
+            }, 300);
         }
 
         function handleAudioClipUpload(event) {
@@ -1837,17 +1946,22 @@
             if (!file) return;
 
             if (!videoEditor) {
-                alert('Please open the video editor first');
+                showToast('❌ Please open the video editor first', 'error');
                 return;
             }
 
-            videoEditor.addAudioClip(file);
-            console.log('Added audio clip:', file.name);
+            showLoading('Adding audio track...');
+            setTimeout(() => {
+                videoEditor.addAudioClip(file);
+                hideLoading();
+                showToast(`🎵 ${file.name} added`, 'success');
+                console.log('Added audio clip:', file.name);
+            }, 300);
         }
 
         function openTextCreator() {
             if (!videoEditor) {
-                alert('Please open the video editor first');
+                showToast('❌ Please open the video editor first', 'error');
                 return;
             }
 
@@ -1866,7 +1980,80 @@
                 endTime: Math.min(3, videoEditor.duration)
             });
 
+            showToast(`📝 "${content}" added`, 'success');
             console.log('Added text layer:', content);
+        }
+
+        // Toast notification system
+        function showToast(message, type = 'info', duration = 3000) {
+            const toast = document.getElementById('editor-toast');
+            if (!toast) return;
+
+            toast.textContent = message;
+            toast.className = 'editor-toast ' + type;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
+        }
+
+        // Loading indicator functions
+        function showLoading(text = 'Loading...') {
+            const loading = document.getElementById('editor-loading');
+            if (!loading) return;
+
+            const loadingText = loading.querySelector('.editor-loading-text');
+            if (loadingText) loadingText.textContent = text;
+
+            loading.classList.add('show');
+        }
+
+        function hideLoading() {
+            const loading = document.getElementById('editor-loading');
+            if (!loading) return;
+
+            loading.classList.remove('show');
+        }
+
+        // Show editor help
+        function showEditorHelp() {
+            const helpText = `📱 QUICK GUIDE 📱
+
+🎬 VIDEO CLIPS
+• Tap + Video to add clips
+• Drag clips to move them
+• Pinch handles to resize
+
+🎵 AUDIO
+• Tap + Audio for music
+• Video audio shown automatically
+• Mix multiple tracks
+
+📝 TEXT
+• Tap + Text to add
+• Drag to reposition
+• Edit timing on timeline
+
+✨ TIPS
+• Tap and hold clips to move
+• Drag scrubber to preview
+• Use two fingers for precision
+
+Tap anywhere to close`;
+
+            if (confirm(helpText)) {
+                showToast('👍 Got it!', 'success');
+            }
+        }
+
+        // Add toast notifications for common actions
+        const originalAddVideoClip = window.videoEditor?.addVideoClip;
+        if (window.videoEditor && originalAddVideoClip) {
+            window.videoEditor.addVideoClip = function(...args) {
+                showToast('✨ Video clip added', 'success');
+                return originalAddVideoClip.apply(this, args);
+            };
         }
     </script>
 
@@ -1876,10 +2063,24 @@
             <button class="editor-back-btn" onclick="closeVideoEditor()">
                 <i class="bi bi-x"></i> Cancel
             </button>
-            <span class="editor-title">Edit Video</span>
+            <span class="editor-title">
+                Edit Video
+                <button class="editor-help-btn" onclick="showEditorHelp()" title="Help">
+                    <i class="bi bi-question-lg"></i>
+                </button>
+            </span>
             <button class="editor-done-btn" onclick="handleVideoEditorExport()">
                 Done
             </button>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="editor-toast" class="editor-toast"></div>
+
+        <!-- Loading Indicator -->
+        <div id="editor-loading" class="editor-loading">
+            <div class="editor-loading-spinner"></div>
+            <div class="editor-loading-text">Loading...</div>
         </div>
 
         <div class="editor-preview">
