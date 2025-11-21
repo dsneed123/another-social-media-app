@@ -1667,11 +1667,18 @@
                 let finalBlob;
 
                 if (isVideo) {
-                    loadingStatus.textContent = 'Compressing video...';
-                    finalBlob = await compressVideo(selectedFile);
-                    if (!finalBlob) {
-                        loadingOverlay.classList.remove('active');
-                        return;
+                    // Check if we have a rendered video with edits
+                    if (window.renderedVideoFile) {
+                        loadingStatus.textContent = 'Preparing edited video...';
+                        finalBlob = window.renderedVideoFile;
+                        console.log('Using rendered video with edits');
+                    } else {
+                        loadingStatus.textContent = 'Compressing video...';
+                        finalBlob = await compressVideo(selectedFile);
+                        if (!finalBlob) {
+                            loadingOverlay.classList.remove('active');
+                            return;
+                        }
                     }
                 } else {
                     loadingStatus.textContent = 'Processing image...';
@@ -1881,6 +1888,152 @@
             openVideoEditor(video.src, textElements);
         }
 
+        // Render edited video with all changes applied (including multi-clip)
+        async function renderEditedVideo() {
+            if (!videoEditor) return null;
+
+            const loadingStatus = document.getElementById('loading-status');
+            loadingStatus.textContent = 'Rendering your edits...';
+
+            try {
+                const canvas = document.getElementById('editor-canvas');
+
+                // Create MediaRecorder to capture canvas
+                const stream = canvas.captureStream(30); // 30 fps
+
+                // Create audio context for mixing
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const audioDestination = audioContext.createMediaStreamDestination();
+
+                // We'll mix audio from all sources
+                const audioSources = [];
+
+                // Add audio from all video tracks
+                for (let track of videoEditor.videoTracks) {
+                    const videoEl = track.type === 'main' ?
+                        document.getElementById('editor-video') :
+                        videoEditor.videoElements[track.id];
+
+                    if (videoEl && videoEl.captureStream) {
+                        try {
+                            const vidStream = videoEl.captureStream();
+                            const audioTrack = vidStream.getAudioTracks()[0];
+                            if (audioTrack) {
+                                const source = audioContext.createMediaStreamSource(new MediaStream([audioTrack]));
+                                audioSources.push({ source, track, element: videoEl });
+                            }
+                        } catch (e) {
+                            console.log('Could not capture audio from video:', e);
+                        }
+                    }
+                }
+
+                // Add audio from audio tracks
+                for (let track of videoEditor.audioTracks) {
+                    const audioEl = videoEditor.audioElements[track.id];
+                    if (audioEl && audioEl.captureStream) {
+                        try {
+                            const audStream = audioEl.captureStream();
+                            const audioTrack = audStream.getAudioTracks()[0];
+                            if (audioTrack) {
+                                const source = audioContext.createMediaStreamSource(new MediaStream([audioTrack]));
+                                audioSources.push({ source, track, element: audioEl });
+                            }
+                        } catch (e) {
+                            console.log('Could not capture audio:', e);
+                        }
+                    }
+                }
+
+                // Connect all audio sources to destination (mixing)
+                audioSources.forEach(({ source }) => {
+                    source.connect(audioDestination);
+                });
+
+                // Add mixed audio to stream
+                if (audioDestination.stream.getAudioTracks().length > 0) {
+                    stream.addTrack(audioDestination.stream.getAudioTracks()[0]);
+                }
+
+                const chunks = [];
+                const recorder = new MediaRecorder(stream, {
+                    mimeType: 'video/webm;codecs=vp9',
+                    videoBitsPerSecond: 5000000 // 5 Mbps
+                });
+
+                recorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) {
+                        chunks.push(e.data);
+                    }
+                };
+
+                return new Promise((resolve, reject) => {
+                    recorder.onstop = async () => {
+                        // Clean up audio context
+                        audioContext.close();
+
+                        const blob = new Blob(chunks, { type: 'video/webm' });
+                        hideLoading();
+                        resolve(blob);
+                    };
+
+                    recorder.onerror = (e) => {
+                        console.error('Recorder error:', e);
+                        audioContext.close();
+                        hideLoading();
+                        reject(e);
+                    };
+
+                    // Start recording
+                    recorder.start(100);
+
+                    // Play the video from start
+                    // The video editor's update loop will handle switching between clips
+                    videoEditor.seek(0);
+                    videoEditor.play();
+
+                    // Calculate total duration
+                    const totalDuration = videoEditor.duration;
+                    let checkInterval;
+                    let renderStartTime = Date.now();
+
+                    // Monitor progress
+                    checkInterval = setInterval(() => {
+                        const elapsed = (Date.now() - renderStartTime) / 1000;
+                        const progress = Math.min(Math.round((elapsed / totalDuration) * 100), 99);
+                        loadingStatus.textContent = `Rendering... ${progress}% (${Math.round(elapsed)}s / ${Math.round(totalDuration)}s)`;
+
+                        // Check if we've reached the end
+                        if (videoEditor.currentTime >= totalDuration - 0.1 || !videoEditor.isPlaying) {
+                            clearInterval(checkInterval);
+                            loadingStatus.textContent = 'Finalizing...';
+
+                            setTimeout(() => {
+                                recorder.stop();
+                                videoEditor.pause();
+                                videoEditor.seek(0);
+                            }, 500);
+                        }
+                    }, 500);
+
+                    // Safety timeout (10 minutes)
+                    setTimeout(() => {
+                        if (recorder.state === 'recording') {
+                            clearInterval(checkInterval);
+                            recorder.stop();
+                            videoEditor.pause();
+                            reject(new Error('Rendering timeout'));
+                        }
+                    }, 600000);
+                });
+
+            } catch (error) {
+                console.error('Error rendering video:', error);
+                hideLoading();
+                throw error;
+            }
+        }
+
         // Handle video editor export
         async function handleVideoEditorExport() {
             if (!videoEditor) return;
@@ -1891,8 +2044,47 @@
                 // Update text elements with edited timing
                 textElements = settings.textElements;
 
-                // Store other settings (speed, volume, voiceover)
-                // These would need server-side processing for final video
+                // Check if we need to render edits
+                const hasEdits = textElements.length > 0 ||
+                                settings.videoTracks.length > 1 ||
+                                settings.audioTracks.length > 1 ||
+                                settings.speed !== 1;
+
+                if (hasEdits && isVideo) {
+                    // Build list of what will be rendered
+                    let renderList = [];
+                    if (textElements.length > 0) renderList.push(`• ${textElements.length} text overlay(s)`);
+                    if (settings.videoTracks.length > 1) renderList.push(`• ${settings.videoTracks.length} video clips spliced`);
+                    if (settings.audioTracks.length > 0) renderList.push(`• ${settings.audioTracks.length} audio track(s) mixed`);
+                    if (settings.speed !== 1) renderList.push(`• Speed: ${settings.speed}x`);
+
+                    const renderText = `Apply all edits to video before posting?\n\nThis will render:\n${renderList.join('\n')}\n\nNote: Rendering takes as long as your video duration.\nClick OK to render, Cancel to keep original video.`;
+
+                    const render = confirm(renderText);
+
+                    if (render) {
+                        try {
+                            const renderedBlob = await renderEditedVideo();
+
+                            // Replace the selected file with rendered version
+                            const fileName = `edited_${Date.now()}.webm`;
+                            window.renderedVideoFile = new File([renderedBlob], fileName, { type: 'video/webm' });
+
+                            showToast('✅ Video rendered with all edits!', 'success', 4000);
+                            console.log('Video rendered successfully:', {
+                                videoTracks: settings.videoTracks.length,
+                                audioTracks: settings.audioTracks.length,
+                                textElements: textElements.length
+                            });
+                        } catch (error) {
+                            console.error('Error rendering:', error);
+                            showToast('❌ Failed to render edits', 'error');
+                            alert('Failed to render video. Error: ' + error.message);
+                        }
+                    }
+                }
+
+                // Store other settings
                 window.videoEditorSettings = {
                     speed: settings.speed,
                     volume: settings.volume,
