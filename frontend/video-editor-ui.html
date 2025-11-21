@@ -1,0 +1,199 @@
+<!-- TikTok-Style Video Editor UI -->
+<!-- Add this to create-story.html -->
+
+<!-- Video Editor Modal (Full Screen) -->
+<div id="video-editor" class="video-editor">
+    <!-- Header -->
+    <div class="editor-header">
+        <button class="editor-back-btn" onclick="closeVideoEditor()">
+            <i class="bi bi-x"></i> Cancel
+        </button>
+        <span class="editor-title">Edit Video</span>
+        <button class="editor-done-btn" onclick="exportEditedVideo()">
+            Done
+        </button>
+    </div>
+
+    <!-- Video Preview -->
+    <div class="editor-preview">
+        <video id="editor-video" class="editor-video" playsinline></video>
+        <canvas id="editor-canvas" class="editor-canvas"></canvas>
+
+        <!-- Play/Pause Indicator -->
+        <div class="editor-play-pause">
+            <i class="bi bi-play-fill"></i>
+        </div>
+    </div>
+
+    <!-- Timeline Container -->
+    <div class="editor-timeline-container">
+        <!-- Timeline Controls -->
+        <div class="timeline-controls">
+            <button class="timeline-control-btn" onclick="openControlPanel('speed-panel')">
+                <i class="bi bi-speedometer2"></i> Speed
+            </button>
+            <button class="timeline-control-btn" onclick="openControlPanel('volume-panel')">
+                <i class="bi bi-volume-up"></i> Volume
+            </button>
+            <button class="timeline-control-btn" onclick="openControlPanel('voiceover-panel')">
+                <i class="bi bi-mic"></i> Voiceover
+            </button>
+            <button class="timeline-control-btn" onclick="openControlPanel('text-timing-panel')">
+                <i class="bi bi-clock"></i> Text Timing
+            </button>
+        </div>
+
+        <!-- Timeline -->
+        <div class="editor-timeline">
+            <!-- Time Display -->
+            <div class="timeline-time-display">
+                <span class="timeline-time">0:00</span>
+                <span class="timeline-duration">0:00</span>
+            </div>
+
+            <!-- Scrubber Track -->
+            <div class="timeline-scrubber-track">
+                <!-- Video Thumbnails (Optional) -->
+                <div class="timeline-thumbnails"></div>
+
+                <!-- Scrubber -->
+                <div class="timeline-scrubber">
+                    <div class="timeline-playhead-time">0:00</div>
+                </div>
+            </div>
+
+            <!-- Text Timing Tracks -->
+            <div class="timeline-text-tracks">
+                <div class="timeline-track-label">
+                    <i class="bi bi-fonts"></i> Text Elements
+                </div>
+                <div id="text-tracks-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Speed Control Panel -->
+<div id="speed-panel" class="editor-control-panel">
+    <div class="control-panel-header">
+        <h3 class="control-panel-title">Playback Speed</h3>
+        <button class="control-panel-close" onclick="closeControlPanel('speed-panel')">
+            <i class="bi bi-x"></i>
+        </button>
+    </div>
+
+    <div class="speed-options">
+        <button class="speed-option" data-speed="0.3" onclick="videoEditor.setPlaybackSpeed(0.3)">0.3x</button>
+        <button class="speed-option" data-speed="0.5" onclick="videoEditor.setPlaybackSpeed(0.5)">0.5x</button>
+        <button class="speed-option selected" data-speed="1" onclick="videoEditor.setPlaybackSpeed(1)">1x</button>
+        <button class="speed-option" data-speed="1.5" onclick="videoEditor.setPlaybackSpeed(1.5)">1.5x</button>
+        <button class="speed-option" data-speed="2" onclick="videoEditor.setPlaybackSpeed(2)">2x</button>
+        <button class="speed-option" data-speed="3" onclick="videoEditor.setPlaybackSpeed(3)">3x</button>
+    </div>
+</div>
+
+<!-- Volume Control Panel -->
+<div id="volume-panel" class="editor-control-panel">
+    <div class="control-panel-header">
+        <h3 class="control-panel-title">Audio Volume</h3>
+        <button class="control-panel-close" onclick="closeControlPanel('volume-panel')">
+            <i class="bi bi-x"></i>
+        </button>
+    </div>
+
+    <div class="volume-control">
+        <div class="volume-label">
+            <span class="volume-label-text">Original Audio</span>
+            <span class="volume-value" id="video-volume-value">100%</span>
+        </div>
+        <input
+            type="range"
+            class="volume-slider"
+            id="video-volume-slider"
+            min="0"
+            max="100"
+            value="100"
+            oninput="videoEditor.setVolume(this.value / 100)"
+        >
+    </div>
+
+    <div class="volume-control">
+        <div class="volume-label">
+            <span class="volume-label-text">
+                <i class="bi bi-music-note"></i> Background Music
+            </span>
+            <span class="volume-value" id="music-volume-value">80%</span>
+        </div>
+        <input
+            type="range"
+            class="volume-slider"
+            id="music-volume-slider"
+            min="0"
+            max="100"
+            value="80"
+        >
+    </div>
+
+    <div class="volume-control" id="voiceover-volume-control" style="display: none;">
+        <div class="volume-label">
+            <span class="volume-label-text">
+                <i class="bi bi-mic"></i> Voiceover
+            </span>
+            <span class="volume-value" id="voiceover-volume-value">100%</span>
+        </div>
+        <input
+            type="range"
+            class="volume-slider"
+            id="voiceover-volume-slider"
+            min="0"
+            max="100"
+            value="100"
+        >
+    </div>
+</div>
+
+<!-- Voiceover Panel -->
+<div id="voiceover-panel" class="editor-control-panel">
+    <div class="control-panel-header">
+        <h3 class="control-panel-title">Voiceover</h3>
+        <button class="control-panel-close" onclick="closeControlPanel('voiceover-panel')">
+            <i class="bi bi-x"></i>
+        </button>
+    </div>
+
+    <div class="voiceover-controls">
+        <p style="color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 16px;">
+            Record audio over your video. The recording will start from the current playhead position.
+        </p>
+
+        <button
+            id="voiceover-record-btn"
+            class="voiceover-record-btn"
+            onclick="if(this.classList.contains('recording')) { videoEditor.stopVoiceoverRecording() } else { videoEditor.startVoiceoverRecording() }"
+        >
+            <i class="bi bi-mic"></i> Start Recording
+        </button>
+
+        <div class="voiceover-waveform" id="voiceover-waveform">
+            No voiceover recorded
+        </div>
+    </div>
+</div>
+
+<!-- Text Timing Panel -->
+<div id="text-timing-panel" class="editor-control-panel">
+    <div class="control-panel-header">
+        <h3 class="control-panel-title">Text Timing</h3>
+        <button class="control-panel-close" onclick="closeControlPanel('text-timing-panel')">
+            <i class="bi bi-x"></i>
+        </button>
+    </div>
+
+    <p style="color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 16px;">
+        Set when each text element appears and disappears. Drag the handles on the timeline or enter times manually.
+    </p>
+
+    <div class="text-timing-list" id="text-timing-list">
+        <!-- Text timing items will be dynamically generated -->
+    </div>
+</div>

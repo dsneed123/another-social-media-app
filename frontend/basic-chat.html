@@ -1166,7 +1166,7 @@
 
         <!-- Canvas Preview -->
         <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 80px 20px; overflow: hidden;">
-            <canvas id="camera-canvas" width="1920" height="1080" style="max-width: 90vw; max-height: calc(100vh - 200px); display: block; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.8);"></canvas>
+            <canvas id="camera-canvas" width="1080" height="1920" style="max-width: 90vw; max-height: calc(100vh - 200px); display: block; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.8);"></canvas>
         </div>
 
         <!-- Controls -->
@@ -1888,9 +1888,9 @@ document.querySelectorAll('#userStatus').forEach(el => {
                 return;
             }
 
-            // Set canvas to 1920x1080 (16:9)
-            tempCanvas.width = 1920;
-            tempCanvas.height = 1080;
+            // Set canvas to 1080x1920 (9:16 portrait for stories/snaps)
+            tempCanvas.width = 1080;
+            tempCanvas.height = 1920;
             const tempCtx = tempCanvas.getContext('2d');
 
             if (!tempCtx) {
@@ -1902,15 +1902,39 @@ document.querySelectorAll('#userStatus').forEach(el => {
             tempCtx.fillStyle = '#000';
             tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
-            // Draw video frame - mirror if front camera
+            // Crop landscape video to portrait (9:16)
+            // Canvas is 1080x1920 (portrait), webcam is typically 1920x1080 (landscape)
+            const canvasAspect = tempCanvas.width / tempCanvas.height; // 9:16 = 0.5625
+
+            // Calculate what portion of the video to crop for 9:16
+            const sourceHeight = liveVideo.videoHeight;
+            const sourceWidth = sourceHeight * canvasAspect; // Width for 9:16 ratio
+            const sourceX = (liveVideo.videoWidth - sourceWidth) / 2; // Center crop
+            const sourceY = 0;
+
+            console.log('Video dimensions:', liveVideo.videoWidth, 'x', liveVideo.videoHeight);
+            console.log('Cropping:', sourceX, sourceY, sourceWidth, 'x', sourceHeight);
+            console.log('To canvas:', tempCanvas.width, 'x', tempCanvas.height);
+
+            // Draw video frame - crop center and mirror if front camera
             try {
                 if (currentFacingMode === 'user') {
+                    // Mirror for front camera
                     tempCtx.save();
                     tempCtx.scale(-1, 1);
-                    tempCtx.drawImage(liveVideo, -tempCanvas.width, 0, tempCanvas.width, tempCanvas.height);
+                    tempCtx.drawImage(
+                        liveVideo,
+                        sourceX, sourceY, sourceWidth, sourceHeight,  // Source crop (center of video)
+                        -tempCanvas.width, 0, tempCanvas.width, tempCanvas.height  // Destination (flipped)
+                    );
                     tempCtx.restore();
                 } else {
-                    tempCtx.drawImage(liveVideo, 0, 0, tempCanvas.width, tempCanvas.height);
+                    // Back camera - no mirror
+                    tempCtx.drawImage(
+                        liveVideo,
+                        sourceX, sourceY, sourceWidth, sourceHeight,  // Source crop (center of video)
+                        0, 0, tempCanvas.width, tempCanvas.height  // Destination
+                    );
                 }
                 console.log('Video frame drawn to canvas');
             } catch (e) {

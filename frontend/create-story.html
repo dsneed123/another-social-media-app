@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Story</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/video-editor.css">
+    <script src="/video-editor.js"></script>
 </head>
 <body>
     <style>
@@ -777,6 +779,10 @@
                 <i class="bi bi-brightness-high"></i>
                 <span>Brightness</span>
             </button>
+            <button class="tool-btn" onclick="openAdvancedVideoEditor()" id="advanced-edit-btn" style="display: none;">
+                <i class="bi bi-sliders"></i>
+                <span>Advanced Edit</span>
+            </button>
         </div>
 
         <!-- Filter Options -->
@@ -1217,6 +1223,15 @@
                     video.src = e.target.result;
                     video.style.display = 'block';
                     document.getElementById('preview-canvas').style.display = 'none';
+
+                    // Show Advanced Edit button for videos
+                    const advancedEditBtn = document.getElementById('advanced-edit-btn');
+                    if (advancedEditBtn) {
+                        advancedEditBtn.style.display = 'flex';
+                        console.log('Advanced Edit button shown for video');
+                    } else {
+                        console.error('Advanced Edit button not found!');
+                    }
                 } else {
                     const img = new Image();
                     img.onload = () => {
@@ -1224,6 +1239,13 @@
                         setupCanvas(img);
                     };
                     img.src = e.target.result;
+
+                    // Hide Advanced Edit button for images
+                    const advancedEditBtn = document.getElementById('advanced-edit-btn');
+                    if (advancedEditBtn) {
+                        advancedEditBtn.style.display = 'none';
+                        console.log('Advanced Edit button hidden for image');
+                    }
                 }
             };
             reader.readAsDataURL(file);
@@ -1736,6 +1758,283 @@
                 window.location.href = '/stories';
             }
         }
+
+        // Video Editor Integration
+        function openAdvancedVideoEditor() {
+            if (!isVideo) {
+                alert('Advanced editor is only available for videos');
+                return;
+            }
+
+            // Get the video source
+            const video = document.getElementById('preview-video');
+            if (!video || !video.src) {
+                alert('Please upload a video first');
+                return;
+            }
+
+            // Open the video editor with current text elements
+            openVideoEditor(video.src, textElements);
+        }
+
+        // Handle video editor export
+        async function handleVideoEditorExport() {
+            if (!videoEditor) return;
+
+            try {
+                const settings = await videoEditor.exportVideo();
+
+                // Update text elements with edited timing
+                textElements = settings.textElements;
+
+                // Store other settings (speed, volume, voiceover)
+                // These would need server-side processing for final video
+                window.videoEditorSettings = {
+                    speed: settings.speed,
+                    volume: settings.volume,
+                    voiceoverTrack: settings.voiceoverTrack,
+                    videoTracks: settings.videoTracks,
+                    audioTracks: settings.audioTracks
+                };
+
+                // Redraw canvas with updated text elements
+                drawCanvas();
+
+                // Close the editor
+                closeVideoEditor();
+
+                console.log('Video editor settings applied:', settings);
+            } catch (err) {
+                console.error('Error exporting video:', err);
+                alert('Error applying video edits');
+            }
+        }
+
+        // Multi-track editor functions
+        function triggerVideoUpload() {
+            document.getElementById('video-clip-upload').click();
+        }
+
+        function triggerAudioUpload() {
+            document.getElementById('audio-clip-upload').click();
+        }
+
+        function handleVideoClipUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!videoEditor) {
+                alert('Please open the video editor first');
+                return;
+            }
+
+            videoEditor.addVideoClip(file);
+            console.log('Added video clip:', file.name);
+        }
+
+        function handleAudioClipUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!videoEditor) {
+                alert('Please open the video editor first');
+                return;
+            }
+
+            videoEditor.addAudioClip(file);
+            console.log('Added audio clip:', file.name);
+        }
+
+        function openTextCreator() {
+            if (!videoEditor) {
+                alert('Please open the video editor first');
+                return;
+            }
+
+            const content = prompt('Enter text content:');
+            if (!content) return;
+
+            videoEditor.addTextLayer({
+                content: content,
+                x: 540,
+                y: 960,
+                size: 48,
+                color: 'white',
+                font: 'Arial',
+                style: 'outline',
+                startTime: 0,
+                endTime: Math.min(3, videoEditor.duration)
+            });
+
+            console.log('Added text layer:', content);
+        }
     </script>
+
+    <!-- Video Editor UI -->
+    <div id="video-editor" class="video-editor">
+        <div class="editor-header">
+            <button class="editor-back-btn" onclick="closeVideoEditor()">
+                <i class="bi bi-x"></i> Cancel
+            </button>
+            <span class="editor-title">Edit Video</span>
+            <button class="editor-done-btn" onclick="handleVideoEditorExport()">
+                Done
+            </button>
+        </div>
+
+        <div class="editor-preview">
+            <video id="editor-video" class="editor-video" playsinline></video>
+            <canvas id="editor-canvas" class="editor-canvas"></canvas>
+            <div class="editor-play-pause">
+                <i class="bi bi-play-fill"></i>
+            </div>
+        </div>
+
+        <div class="editor-timeline-container">
+            <div class="timeline-controls">
+                <button class="timeline-control-btn" onclick="openControlPanel('speed-panel')">
+                    <i class="bi bi-speedometer2"></i> Speed
+                </button>
+                <button class="timeline-control-btn" onclick="openControlPanel('volume-panel')">
+                    <i class="bi bi-volume-up"></i> Volume
+                </button>
+                <button class="timeline-control-btn" onclick="openControlPanel('voiceover-panel')">
+                    <i class="bi bi-mic"></i> Voiceover
+                </button>
+                <button class="timeline-control-btn" onclick="openControlPanel('text-timing-panel')">
+                    <i class="bi bi-clock"></i> Text Timing
+                </button>
+            </div>
+
+            <div class="editor-timeline">
+                <div class="timeline-time-display">
+                    <span class="timeline-time">0:00</span>
+                    <span class="timeline-duration">0:00</span>
+                </div>
+
+                <div class="timeline-scrubber-track">
+                    <div class="timeline-thumbnails"></div>
+                    <div class="timeline-scrubber">
+                        <div class="timeline-playhead-time">0:00</div>
+                    </div>
+                </div>
+
+                <!-- Add Buttons -->
+                <div class="timeline-add-buttons">
+                    <button class="timeline-add-btn" onclick="triggerVideoUpload()">
+                        <i class="bi bi-film"></i> <span>+ Video</span>
+                    </button>
+                    <button class="timeline-add-btn" onclick="triggerAudioUpload()">
+                        <i class="bi bi-music-note"></i> <span>+ Audio</span>
+                    </button>
+                    <button class="timeline-add-btn" onclick="openTextCreator()">
+                        <i class="bi bi-fonts"></i> <span>+ Text</span>
+                    </button>
+                </div>
+
+                <!-- Hidden file inputs -->
+                <input type="file" id="video-clip-upload" accept="video/*" style="display: none" onchange="handleVideoClipUpload(event)">
+                <input type="file" id="audio-clip-upload" accept="audio/*" style="display: none" onchange="handleAudioClipUpload(event)">
+
+                <!-- Video Tracks Section -->
+                <div class="timeline-section">
+                    <div class="timeline-section-header">
+                        <i class="bi bi-film"></i> Video Clips
+                    </div>
+                    <div id="video-tracks-container"></div>
+                </div>
+
+                <!-- Audio Tracks Section -->
+                <div class="timeline-section">
+                    <div class="timeline-section-header">
+                        <i class="bi bi-music-note"></i> Audio Tracks
+                    </div>
+                    <div id="audio-tracks-container"></div>
+                </div>
+
+                <!-- Text Elements Section -->
+                <div class="timeline-section">
+                    <div class="timeline-section-header">
+                        <i class="bi bi-fonts"></i> Text Elements
+                    </div>
+                    <div id="text-tracks-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="speed-panel" class="editor-control-panel">
+        <div class="control-panel-header">
+            <h3 class="control-panel-title">Playback Speed</h3>
+            <button class="control-panel-close" onclick="closeControlPanel('speed-panel')">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <div class="speed-options">
+            <button class="speed-option" data-speed="0.3" onclick="videoEditor.setPlaybackSpeed(0.3)">0.3x</button>
+            <button class="speed-option" data-speed="0.5" onclick="videoEditor.setPlaybackSpeed(0.5)">0.5x</button>
+            <button class="speed-option selected" data-speed="1" onclick="videoEditor.setPlaybackSpeed(1)">1x</button>
+            <button class="speed-option" data-speed="1.5" onclick="videoEditor.setPlaybackSpeed(1.5)">1.5x</button>
+            <button class="speed-option" data-speed="2" onclick="videoEditor.setPlaybackSpeed(2)">2x</button>
+            <button class="speed-option" data-speed="3" onclick="videoEditor.setPlaybackSpeed(3)">3x</button>
+        </div>
+    </div>
+
+    <div id="volume-panel" class="editor-control-panel">
+        <div class="control-panel-header">
+            <h3 class="control-panel-title">Audio Volume</h3>
+            <button class="control-panel-close" onclick="closeControlPanel('volume-panel')">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <div class="volume-control">
+            <div class="volume-label">
+                <span class="volume-label-text">Original Audio</span>
+                <span class="volume-value" id="video-volume-value">100%</span>
+            </div>
+            <input type="range" class="volume-slider" id="video-volume-slider" min="0" max="100" value="100" oninput="videoEditor.setVolume(this.value / 100)">
+        </div>
+        <div class="volume-control">
+            <div class="volume-label">
+                <span class="volume-label-text"><i class="bi bi-music-note"></i> Background Music</span>
+                <span class="volume-value" id="music-volume-value">80%</span>
+            </div>
+            <input type="range" class="volume-slider" id="music-volume-slider" min="0" max="100" value="80">
+        </div>
+    </div>
+
+    <div id="voiceover-panel" class="editor-control-panel">
+        <div class="control-panel-header">
+            <h3 class="control-panel-title">Voiceover</h3>
+            <button class="control-panel-close" onclick="closeControlPanel('voiceover-panel')">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <div class="voiceover-controls">
+            <p style="color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 16px;">
+                Record audio over your video.
+            </p>
+            <button id="voiceover-record-btn" class="voiceover-record-btn" onclick="if(this.classList.contains('recording')) { videoEditor.stopVoiceoverRecording() } else { videoEditor.startVoiceoverRecording() }">
+                <i class="bi bi-mic"></i> Start Recording
+            </button>
+            <div class="voiceover-waveform" id="voiceover-waveform">
+                No voiceover recorded
+            </div>
+        </div>
+    </div>
+
+    <div id="text-timing-panel" class="editor-control-panel">
+        <div class="control-panel-header">
+            <h3 class="control-panel-title">Text Timing</h3>
+            <button class="control-panel-close" onclick="closeControlPanel('text-timing-panel')">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <p style="color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 16px;">
+            Set when each text element appears and disappears. Drag the handles on the timeline.
+        </p>
+        <div class="text-timing-list" id="text-timing-list"></div>
+    </div>
+
 </body>
 </html>
