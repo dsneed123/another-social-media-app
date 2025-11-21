@@ -27,6 +27,8 @@ mod algorithm;
 mod streaks;
 mod notifications;
 mod admin;
+mod video_render;
+mod bucket_cleanup;
 
 use redis_client::RedisClient;
 use media::MediaService;
@@ -140,6 +142,19 @@ async fn main() {
     });
     println!("✓ Message expiration service started");
 
+    // Start background bucket cleanup service
+    let cleanup_s3_client = media_service.s3_client.clone();
+    let cleanup_bucket = media_service.bucket_name.clone();
+    let cleanup_pool = pool.clone();
+    tokio::spawn(async move {
+        bucket_cleanup::run_scheduled_cleanup(
+            &cleanup_s3_client,
+            &cleanup_bucket,
+            &cleanup_pool,
+        ).await;
+    });
+    println!("✓ Bucket cleanup service started");
+
     // Build router
     let app = Router::new()
         // Static pages
@@ -170,6 +185,7 @@ async fn main() {
 
         // Stories endpoints (also needs increased limit for media uploads)
         .route("/api/stories/create", post(stories::create_story_multipart))
+        .route("/api/stories/render", post(video_render::render_video))
         .route("/api/stories/user/:user_id", get(stories::get_user_stories))
         .route("/api/stories/feed/:viewer_id", get(stories::get_feed_stories))
         .route("/api/stories/by-user/:viewer_id", get(stories::get_stories_by_user))

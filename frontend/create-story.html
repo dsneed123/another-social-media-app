@@ -1666,12 +1666,15 @@
 
                 let finalBlob;
 
+                let fileExtension = 'mp4';
                 if (isVideo) {
                     // Check if we have a rendered video with edits
                     if (window.renderedVideoFile) {
                         loadingStatus.textContent = 'Preparing edited video...';
                         finalBlob = window.renderedVideoFile;
+                        fileExtension = 'webm'; // Rendered videos are WebM format
                         console.log('Using rendered video with edits');
+                        console.log('Rendered video size:', (finalBlob.size / (1024 * 1024)).toFixed(2), 'MB');
                     } else {
                         loadingStatus.textContent = 'Compressing video...';
                         finalBlob = await compressVideo(selectedFile);
@@ -1688,10 +1691,24 @@
                     });
                 }
 
+                // Check file size (warn if > 100MB)
+                const fileSizeMB = finalBlob.size / (1024 * 1024);
+                console.log('Upload file size:', fileSizeMB.toFixed(2), 'MB');
+
+                if (fileSizeMB > 100) {
+                    const proceed = confirm(`Video is large (${fileSizeMB.toFixed(1)}MB). Upload may take a while or fail. Continue?`);
+                    if (!proceed) {
+                        loadingOverlay.classList.remove('active');
+                        return;
+                    }
+                }
+
                 // Upload to server with story metadata
                 const formData = new FormData();
                 const timestamp = Date.now();
-                formData.append('file', finalBlob, isVideo ? `story_${timestamp}.mp4` : `story_${timestamp}.jpg`);
+                const fileName = isVideo ? `story_${timestamp}.${fileExtension}` : `story_${timestamp}.jpg`;
+                formData.append('file', finalBlob, fileName);
+                console.log('Uploading as:', fileName);
                 formData.append('user_id', userId);
                 formData.append('media_type', isVideo ? 'video' : 'image');
 
@@ -1711,6 +1728,9 @@
 
                 await new Promise((resolve, reject) => {
                     const xhr = new XMLHttpRequest();
+
+                    // Set timeout (10 minutes for large files)
+                    xhr.timeout = 600000;
 
                     xhr.upload.addEventListener('progress', (e) => {
                         if (e.lengthComputable) {
@@ -1733,17 +1753,40 @@
                     });
 
                     xhr.addEventListener('load', () => {
+                        console.log('XHR load event, status:', xhr.status);
                         if (xhr.status >= 200 && xhr.status < 300) {
-                            resolve(JSON.parse(xhr.responseText));
+                            try {
+                                const response = JSON.parse(xhr.responseText);
+                                console.log('Upload successful:', response);
+                                resolve(response);
+                            } catch (e) {
+                                console.error('Failed to parse response:', xhr.responseText);
+                                reject(new Error('Invalid server response'));
+                            }
                         } else {
-                            reject(new Error('Upload failed'));
+                            console.error('Upload failed with status:', xhr.status, xhr.statusText);
+                            console.error('Response:', xhr.responseText);
+                            reject(new Error(`Upload failed: ${xhr.status} ${xhr.statusText}`));
                         }
                     });
 
-                    xhr.addEventListener('error', () => {
-                        reject(new Error('Network error'));
+                    xhr.addEventListener('error', (e) => {
+                        console.error('XHR error event:', e);
+                        console.error('XHR state:', xhr.readyState, 'Status:', xhr.status);
+                        reject(new Error('Network error - check your internet connection'));
                     });
 
+                    xhr.addEventListener('timeout', () => {
+                        console.error('XHR timeout after', xhr.timeout, 'ms');
+                        reject(new Error('Upload timeout - file may be too large'));
+                    });
+
+                    xhr.addEventListener('abort', () => {
+                        console.error('XHR aborted');
+                        reject(new Error('Upload cancelled'));
+                    });
+
+                    console.log('Starting XHR upload to /api/stories/create');
                     xhr.open('POST', '/api/stories/create');
                     xhr.send(formData);
                 });
@@ -1888,7 +1931,102 @@
             openVideoEditor(video.src, textElements);
         }
 
-        // Render edited video with all changes applied (including multi-clip)
+        // Server-side rendering (10-100x faster!)
+        async function renderEditedVideoServer() {
+            console.log('renderEditedVideoServer() called - using FFmpeg');
+
+            const loadingStatus = document.getElementById('loading-status');
+            if (!loadingStatus) {
+                console.error('loading-status element not found!');
+            } else {
+                loadingStatus.textContent = 'Uploading video for rendering...';
+            }
+
+            try {
+                // Get user ID
+                const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                const userId = userData.id;
+
+                if (!userId) {
+                    throw new Error('User not logged in');
+                }
+
+                // Prepare FormData with all render data
+                const formData = new FormData();
+                formData.append('user_id', userId);
+
+                // Add original video
+                formData.append('video', selectedFile);
+
+                // Add text elements
+                if (textElements.length > 0) {
+                    formData.append('text_elements', JSON.stringify(textElements));
+                }
+
+                // Add video clips info
+                if (videoEditor && videoEditor.videoTracks.length > 0) {
+                    formData.append('video_clips', JSON.stringify(videoEditor.videoTracks));
+
+                    // Add additional video files
+                    for (let track of videoEditor.videoTracks) {
+                        if (track.type !== 'main' && track.file) {
+                            formData.append(`video_clip_${track.id}`, track.file);
+                        }
+                    }
+                }
+
+                // Add audio tracks
+                if (videoEditor && videoEditor.audioTracks.length > 0) {
+                    formData.append('audio_tracks', JSON.stringify(videoEditor.audioTracks));
+
+                    // Add audio files
+                    for (let track of videoEditor.audioTracks) {
+                        if (track.file) {
+                            formData.append(`audio_${track.id}`, track.file);
+                        }
+                    }
+                }
+
+                // Add speed
+                if (videoEditor && videoEditor.speed !== 1.0) {
+                    formData.append('speed', videoEditor.speed.toString());
+                }
+
+                console.log('Sending render request to server...');
+                loadingStatus.textContent = 'Server is rendering your video...';
+
+                // Send to server
+                const response = await fetch('/api/stories/render', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(`Render failed: ${error}`);
+                }
+
+                const result = await response.json();
+                console.log('✅ Server render complete:', result);
+                console.log('Render time:', result.render_time_seconds, 'seconds');
+
+                loadingStatus.textContent = 'Downloading rendered video...';
+
+                // Download rendered video
+                const videoResponse = await fetch(result.video_url);
+                const blob = await videoResponse.blob();
+
+                console.log('✅ Downloaded rendered video:', blob.size, 'bytes');
+
+                return blob;
+
+            } catch (error) {
+                console.error('Server rendering failed:', error);
+                throw error;
+            }
+        }
+
+        // Browser-based rendering (slower but works offline) - FALLBACK
         async function renderEditedVideo() {
             console.log('renderEditedVideo() called');
 
@@ -2177,8 +2315,20 @@
                         }
 
                         try {
-                            console.log('Calling renderEditedVideo()...');
-                            const renderedBlob = await renderEditedVideo();
+                            console.log('Attempting server-side rendering (faster)...');
+                            let renderedBlob;
+
+                            try {
+                                // Try server-side rendering first (10-100x faster)
+                                renderedBlob = await renderEditedVideoServer();
+                                console.log('✅ Server-side rendering successful!');
+                            } catch (serverError) {
+                                console.warn('⚠️ Server rendering failed, falling back to browser rendering:', serverError);
+                                console.log('Using browser-based rendering (slower)...');
+                                // Fallback to browser rendering
+                                renderedBlob = await renderEditedVideo();
+                                console.log('✅ Browser rendering successful!');
+                            }
 
                             if (!renderedBlob) {
                                 throw new Error('Rendering returned no video data');
@@ -2189,6 +2339,42 @@
                             // Replace the selected file with rendered version
                             const fileName = `edited_${Date.now()}.webm`;
                             window.renderedVideoFile = new File([renderedBlob], fileName, { type: 'video/webm' });
+
+                            // Update the preview video to show rendered version
+                            const previewVideo = document.getElementById('preview-video');
+                            const previewMedia = document.getElementById('preview-media');
+                            const previewCanvas = document.getElementById('preview-canvas');
+
+                            console.log('Updating preview with rendered video...');
+                            console.log('Preview elements found:', {
+                                previewVideo: !!previewVideo,
+                                previewMedia: !!previewMedia,
+                                previewCanvas: !!previewCanvas
+                            });
+
+                            if (previewVideo) {
+                                // Clean up old URL if exists
+                                if (previewVideo.src) {
+                                    URL.revokeObjectURL(previewVideo.src);
+                                }
+
+                                const renderedUrl = URL.createObjectURL(renderedBlob);
+                                previewVideo.src = renderedUrl;
+                                previewVideo.load();
+
+                                // Hide other preview elements, show video
+                                if (previewMedia) previewMedia.style.display = 'none';
+                                if (previewCanvas) previewCanvas.style.display = 'none';
+                                previewVideo.style.display = 'block';
+
+                                console.log('Preview updated with rendered video:', renderedUrl);
+                            } else {
+                                console.error('preview-video element not found!');
+                            }
+
+                            // Update selectedFile reference
+                            selectedFile = window.renderedVideoFile;
+                            console.log('selectedFile updated to rendered video');
 
                             // Hide loading overlay
                             if (loadingOverlay) {

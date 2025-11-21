@@ -33,11 +33,13 @@ RUN touch src/main.rs && cargo build --release
 # Stage 2: Runtime
 FROM debian:bookworm-slim
 
-# Install runtime dependencies
+# Install runtime dependencies including FFmpeg for video rendering
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     libssl3 \
     libpq5 \
+    ffmpeg \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
