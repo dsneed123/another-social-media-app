@@ -1890,19 +1890,70 @@
 
         // Render edited video with all changes applied (including multi-clip)
         async function renderEditedVideo() {
-            if (!videoEditor) return null;
+            console.log('renderEditedVideo() called');
+
+            if (!videoEditor) {
+                console.error('videoEditor not found!');
+                return null;
+            }
 
             const loadingStatus = document.getElementById('loading-status');
-            loadingStatus.textContent = 'Rendering your edits...';
+            if (!loadingStatus) {
+                console.error('loading-status element not found!');
+            } else {
+                loadingStatus.textContent = 'Rendering your edits...';
+            }
 
             try {
                 const canvas = document.getElementById('editor-canvas');
+                if (!canvas) {
+                    throw new Error('Editor canvas not found');
+                }
+
+                console.log('Canvas found:', canvas.width, 'x', canvas.height);
+                console.log('VideoEditor duration:', videoEditor.duration);
+                console.log('Video tracks:', videoEditor.videoTracks.length);
+                console.log('Audio tracks:', videoEditor.audioTracks.length);
+
+                // Validate canvas dimensions
+                if (canvas.width === 0 || canvas.height === 0) {
+                    throw new Error('Canvas has invalid dimensions: ' + canvas.width + 'x' + canvas.height);
+                }
+
+                // Validate main video element is loaded
+                const mainVideoEl = document.getElementById('editor-video');
+                if (!mainVideoEl) {
+                    throw new Error('Main video element not found');
+                }
+                if (mainVideoEl.readyState < 2) { // HAVE_CURRENT_DATA
+                    console.warn('Main video not fully loaded, readyState:', mainVideoEl.readyState);
+                    loadingStatus.textContent = 'Waiting for video to load...';
+                    await new Promise((resolve) => {
+                        mainVideoEl.oncanplay = resolve;
+                        // Timeout after 10 seconds
+                        setTimeout(resolve, 10000);
+                    });
+                }
+                console.log('Main video ready, readyState:', mainVideoEl.readyState);
 
                 // Create MediaRecorder to capture canvas
+                console.log('Creating canvas stream...');
                 const stream = canvas.captureStream(30); // 30 fps
+                console.log('Stream created:', stream);
+                console.log('Stream tracks:', stream.getTracks().length);
 
                 // Create audio context for mixing
+                console.log('Creating AudioContext...');
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                console.log('AudioContext state:', audioContext.state);
+
+                // Resume AudioContext if suspended (required by some browsers)
+                if (audioContext.state === 'suspended') {
+                    console.log('Resuming suspended AudioContext...');
+                    await audioContext.resume();
+                    console.log('AudioContext resumed, state:', audioContext.state);
+                }
+
                 const audioDestination = audioContext.createMediaStreamDestination();
 
                 // We'll mix audio from all sources
@@ -1951,46 +2002,90 @@
                 });
 
                 // Add mixed audio to stream
+                console.log('Audio tracks available:', audioDestination.stream.getAudioTracks().length);
                 if (audioDestination.stream.getAudioTracks().length > 0) {
                     stream.addTrack(audioDestination.stream.getAudioTracks()[0]);
+                    console.log('Audio track added to stream');
+                }
+
+                // Check MediaRecorder support
+                if (!window.MediaRecorder) {
+                    throw new Error('MediaRecorder not supported in this browser');
+                }
+
+                // Check codec support
+                const mimeType = 'video/webm;codecs=vp9';
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    console.warn('VP9 not supported, trying VP8...');
+                    const fallbackMime = 'video/webm;codecs=vp8';
+                    if (!MediaRecorder.isTypeSupported(fallbackMime)) {
+                        throw new Error('WebM recording not supported in this browser');
+                    }
                 }
 
                 const chunks = [];
+                console.log('Creating MediaRecorder...');
                 const recorder = new MediaRecorder(stream, {
-                    mimeType: 'video/webm;codecs=vp9',
+                    mimeType: mimeType,
                     videoBitsPerSecond: 5000000 // 5 Mbps
                 });
+                console.log('MediaRecorder created, state:', recorder.state);
 
                 recorder.ondataavailable = (e) => {
                     if (e.data.size > 0) {
                         chunks.push(e.data);
+                        console.log('Data chunk received:', e.data.size, 'bytes. Total chunks:', chunks.length);
                     }
                 };
 
+                recorder.onerror = (e) => {
+                    console.error('MediaRecorder error:', e);
+                    console.error('Recorder state at error:', recorder.state);
+                };
+
                 return new Promise((resolve, reject) => {
+                    console.log('Setting up recorder callbacks...');
+
                     recorder.onstop = async () => {
+                        console.log('Recorder stopped. Chunks collected:', chunks.length);
+
                         // Clean up audio context
                         audioContext.close();
 
+                        if (chunks.length === 0) {
+                            reject(new Error('No video data was recorded'));
+                            return;
+                        }
+
                         const blob = new Blob(chunks, { type: 'video/webm' });
-                        hideLoading();
+                        console.log('Created blob:', blob.size, 'bytes');
+
                         resolve(blob);
                     };
 
                     recorder.onerror = (e) => {
                         console.error('Recorder error:', e);
                         audioContext.close();
-                        hideLoading();
-                        reject(e);
+                        reject(new Error('MediaRecorder error: ' + (e.error?.message || 'Unknown error')));
                     };
 
                     // Start recording
-                    recorder.start(100);
+                    console.log('Starting recorder...');
+                    try {
+                        recorder.start(100);
+                        console.log('Recorder started successfully, state:', recorder.state);
+                    } catch (e) {
+                        console.error('Failed to start recorder:', e);
+                        reject(new Error('Failed to start recording: ' + e.message));
+                        return;
+                    }
 
                     // Play the video from start
                     // The video editor's update loop will handle switching between clips
+                    console.log('Seeking to start and playing...');
                     videoEditor.seek(0);
                     videoEditor.play();
+                    console.log('Video playing, isPlaying:', videoEditor.isPlaying);
 
                     // Calculate total duration
                     const totalDuration = videoEditor.duration;
@@ -2029,7 +2124,6 @@
 
             } catch (error) {
                 console.error('Error rendering video:', error);
-                hideLoading();
                 throw error;
             }
         }
@@ -2060,27 +2154,70 @@
 
                     const renderText = `Apply all edits to video before posting?\n\nThis will render:\n${renderList.join('\n')}\n\nNote: Rendering takes as long as your video duration.\nClick OK to render, Cancel to keep original video.`;
 
+                    console.log('Showing render confirmation dialog...');
                     const render = confirm(renderText);
+                    console.log('User clicked:', render ? 'OK (will render)' : 'Cancel (skip render)');
 
                     if (render) {
+                        console.log('Starting render process...');
+
+                        // Show main loading overlay
+                        const loadingOverlay = document.getElementById('loading-overlay');
+                        const loadingStatus = document.getElementById('loading-status');
+                        if (loadingOverlay && loadingStatus) {
+                            console.log('Showing loading overlay...');
+                            loadingOverlay.classList.add('active');
+                            loadingStatus.textContent = 'Starting render...';
+                            console.log('Loading overlay shown');
+                        } else {
+                            console.error('Loading overlay elements not found!', {
+                                loadingOverlay: !!loadingOverlay,
+                                loadingStatus: !!loadingStatus
+                            });
+                        }
+
                         try {
+                            console.log('Calling renderEditedVideo()...');
                             const renderedBlob = await renderEditedVideo();
+
+                            if (!renderedBlob) {
+                                throw new Error('Rendering returned no video data');
+                            }
+
+                            console.log('Render complete! Blob size:', renderedBlob.size);
 
                             // Replace the selected file with rendered version
                             const fileName = `edited_${Date.now()}.webm`;
                             window.renderedVideoFile = new File([renderedBlob], fileName, { type: 'video/webm' });
 
+                            // Hide loading overlay
+                            if (loadingOverlay) {
+                                loadingOverlay.classList.remove('active');
+                                console.log('Loading overlay hidden');
+                            }
+
                             showToast('✅ Video rendered with all edits!', 'success', 4000);
                             console.log('Video rendered successfully:', {
                                 videoTracks: settings.videoTracks.length,
                                 audioTracks: settings.audioTracks.length,
-                                textElements: textElements.length
+                                textElements: textElements.length,
+                                fileSize: `${(renderedBlob.size / (1024 * 1024)).toFixed(2)} MB`
                             });
                         } catch (error) {
                             console.error('Error rendering:', error);
+                            console.error('Error stack:', error.stack);
+
+                            // Hide loading overlay
+                            if (loadingOverlay) {
+                                loadingOverlay.classList.remove('active');
+                                console.log('Loading overlay hidden');
+                            }
+
                             showToast('❌ Failed to render edits', 'error');
-                            alert('Failed to render video. Error: ' + error.message);
+                            alert('Failed to render video.\n\nError: ' + error.message + '\n\nCheck the console for details.');
                         }
+                    } else {
+                        console.log('User cancelled rendering');
                     }
                 }
 
