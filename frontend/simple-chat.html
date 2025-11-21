@@ -2,146 +2,150 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat</title>
     <script src="config.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { max-width: 100vw; overflow-x: hidden; }
-        body { font-family: Arial, sans-serif; display: flex; height: 100vh; }
-
-        /* Left sidebar - chats list */
-        .sidebar { width: 250px; border-right: 1px solid #ddd; overflow-y: auto; }
-        .sidebar h3 { padding: 15px; background: #f5f5f5; border-bottom: 1px solid #ddd; }
-        .chat-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
-        .chat-item:hover { background: #f9f9f9; }
-        .chat-item.active { background: #e3f2fd; }
-
-        /* Main chat area */
-        .main { flex: 1; display: flex; flex-direction: column; }
-        .header { padding: 15px; background: #f5f5f5; border-bottom: 1px solid #ddd; }
-        .messages { flex: 1; overflow-y: auto; padding: 20px; }
-
-        /* Messages */
-        .message { margin: 10px 0; max-width: 70%; }
-        .message.sent { margin-left: auto; text-align: right; }
-        .message.received { margin-right: auto; }
-        .message-bubble { display: inline-block; padding: 10px 15px; border-radius: 15px; }
-        .message.sent .message-bubble { background: #007bff; color: white; }
-        .message.received .message-bubble { background: #f1f1f1; }
-        .message-time { font-size: 11px; color: #999; margin-top: 3px; }
-        .message img { max-width: 300px; border-radius: 10px; }
-
-        /* Input */
-        .input-area {
-            display: flex;
-            padding: 15px;
-            border-top: 1px solid #ddd;
-            gap: 10px;
-            max-width: 100vw;
-            box-sizing: border-box;
-        }
-        input {
-            flex: 1;
-            min-width: 0;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            font-size: 16px;
-        }
-        button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 20px;
-            background: #007bff;
-            color: white;
-            cursor: pointer;
-            min-height: 44px;
-            flex-shrink: 0;
-        }
-        button:hover { background: #0056b3; }
-
-        .status { font-size: 12px; color: #666; padding: 5px 15px; }
-
-        /* Mobile improvements */
-        @media (max-width: 768px) {
-            .sidebar { display: none; }
-            .main {
-                width: 100%;
-                max-width: 100vw;
-            }
-            .input-area {
-                padding: 10px;
-                gap: 8px;
-                position: sticky;
-                bottom: 0;
-                background: white;
-                left: 0;
-                right: 0;
-                width: 100%;
-                max-width: 100vw;
-            }
-            input {
-                font-size: 16px;
-                padding: 12px 16px;
-                min-width: 0;
-            }
-            button {
-                min-width: 60px;
-                min-height: 48px;
-                font-size: 16px;
-                font-weight: 600;
-                padding: 12px 20px;
-                flex-shrink: 0;
-            }
-            button:active { transform: scale(0.95); }
-            .message img { max-width: 100%; max-width: min(250px, 80vw); }
-            .message { max-width: 85%; }
-        }
-        button[onclick*="sendText"] {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-width: 80px;
-            font-weight: 700;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
-            transition: all 0.2s;
-        }
-        button[onclick*="sendText"]:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.6);
-        }
-        button[onclick*="sendText"]:active { transform: scale(0.95); }
-        button[onclick*="takeSnap"] {
-            font-size: 24px;
-            padding: 8px 16px;
-            background: transparent;
-            border: 2px solid #ddd;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
-<body>
-    <div class="sidebar">
-        <h3 id="username">Loading...</h3>
-        <div id="chat-list"></div>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#000;color:#fff;height:100vh;overflow:hidden;display:flex;flex-direction:column;">
+
+    <!-- Header -->
+    <div style="background:rgba(0,0,0,0.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(179,159,255,0.1);padding:16px 20px;display:flex;align-items:center;gap:16px;flex-shrink:0;">
+        <button onclick="window.history.back()" style="background:rgba(179,159,255,0.15);border:none;color:#fff;font-size:32px;cursor:pointer;padding:14px;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+            <i class="bi bi-arrow-left"></i>
+        </button>
+        <strong id="chat-name" style="font-size:18px;font-weight:700;color:#fff;flex:1;">Select a chat</strong>
     </div>
 
-    <div class="main">
-        <div class="header">
-            <strong id="chat-name">Select a chat</strong>
-            <div class="status" id="status">Connecting...</div>
-        </div>
+    <!-- Messages -->
+    <div id="messages" style="flex:1;overflow-y:auto;padding:20px;background:#000;"></div>
 
-        <div class="messages" id="messages"></div>
-
-        <div class="input-area">
-            <button onclick="takeSnap()">📷</button>
-            <input type="text" id="input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendText()">
-            <button onclick="sendText()">Send</button>
-        </div>
+    <!-- Input Area -->
+    <div style="background:rgba(0,0,0,0.95);backdrop-filter:blur(20px);border-top:1px solid rgba(179,159,255,0.1);padding:16px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;">
+        <button onclick="takeSnap()" style="background:rgba(179,159,255,0.15);border:none;font-size:28px;cursor:pointer;padding:14px;min-width:56px;min-height:56px;border-radius:50%;color:#fff;flex-shrink:0;">📷</button>
+        <input type="text" id="input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendText()" style="flex:1;min-width:0;padding:16px 20px;border:2px solid #333;border-radius:24px;font-size:17px;background:#1a1a1a;color:#fff;font-weight:500;">
+        <button onclick="sendText()" style="background:linear-gradient(135deg,#B39FFF,#9d7fee);border:none;font-weight:700;font-size:16px;padding:14px 28px;border-radius:24px;min-height:56px;color:#fff;cursor:pointer;flex-shrink:0;">Send</button>
     </div>
 
     <!-- Hidden webcam -->
-    <video id="video" style="display:none" autoplay></video>
+    <video id="video" style="position:fixed;top:-9999px;left:-9999px;" autoplay playsinline></video>
     <canvas id="canvas" style="display:none"></canvas>
+
+    <!-- Live Camera Modal -->
+    <div id="live-camera-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 3000; flex-direction: column;">
+        <!-- Header -->
+        <div style="position: fixed; top: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 16px; display: flex; align-items: center; justify-content: space-between; z-index: 10; backdrop-filter: blur(10px);">
+            <button onclick="closeLiveCamera()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; padding: 8px;">
+                <i class="bi bi-x"></i>
+            </button>
+            <button onclick="switchCamera()" style="background: rgba(179,159,255,0.15); border: none; color: white; font-size: 24px; cursor: pointer; padding: 12px; border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-arrow-repeat"></i>
+            </button>
+        </div>
+
+        <!-- Live Video Preview -->
+        <div style="flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+            <video id="live-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+        </div>
+
+        <!-- Capture Button -->
+        <div style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.9); padding: 30px; display: flex; justify-content: center; z-index: 10; backdrop-filter: blur(20px);">
+            <button onclick="capturePhoto()" style="background: white; border: 4px solid #B39FFF; width: 80px; height: 80px; border-radius: 50%; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(179,159,255,0.4);"></button>
+        </div>
+    </div>
+
+    <!-- Camera Preview Modal (after capture) -->
+    <div id="camera-preview-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 3000; flex-direction: column;">
+        <!-- Header -->
+        <div style="position: fixed; top: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 16px; display: flex; align-items: center; justify-content: space-between; z-index: 10; backdrop-filter: blur(10px);">
+            <button onclick="retakePhoto()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; padding: 8px;">
+                <i class="bi bi-arrow-left"></i>
+            </button>
+            <button onclick="sendCameraImage()" style="background: #B39FFF; color: white; border: none; padding: 10px 28px; border-radius: 24px; font-weight: 700; cursor: pointer; font-size: 16px;">
+                Send
+            </button>
+        </div>
+
+        <!-- Canvas Preview -->
+        <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 80px 20px;">
+            <canvas id="camera-canvas" style="max-width: min(390px, 100%); max-height: 100%; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.8);"></canvas>
+        </div>
+
+        <!-- Controls -->
+        <div style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.9); padding: 20px; display: flex; flex-direction: column; gap: 16px; z-index: 10; backdrop-filter: blur(20px);">
+            <button onclick="openCameraTextEditor()" style="background: rgba(179,159,255,0.15); border: 2px solid #B39FFF; color: #fff; padding: 14px 24px; border-radius: 24px; font-weight: 700; cursor: pointer; font-size: 16px; width: 100%;">
+                <i class="bi bi-fonts"></i> Add Text
+            </button>
+        </div>
+    </div>
+
+    <!-- Camera Text Editor Modal -->
+    <div id="camera-text-editor" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(180deg, #1a1a1a, #0a0a0a); z-index: 4000; border-radius: 24px 24px 0 0; padding: 24px; box-shadow: 0 -4px 24px rgba(0,0,0,0.5);">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 18px;">Add Text</h3>
+                <button onclick="closeCameraTextEditor()" style="background: none; border: none; color: #888; font-size: 24px; cursor: pointer;">×</button>
+            </div>
+
+            <input type="text" id="camera-text-input" placeholder="Type your text..." style="width: 100%; padding: 14px 20px; border: 2px solid #333; border-radius: 16px; background: #1a1a1a; color: #fff; font-size: 16px;">
+
+            <!-- Color Picker -->
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <div onclick="selectCameraTextColor('white')" class="camera-color-option selected" style="width: 40px; height: 40px; background: white; border-radius: 50%; cursor: pointer; border: 3px solid #B39FFF;"></div>
+                <div onclick="selectCameraTextColor('black')" class="camera-color-option" style="width: 40px; height: 40px; background: black; border-radius: 50%; cursor: pointer; border: 3px solid #333;"></div>
+                <div onclick="selectCameraTextColor('#B39FFF')" class="camera-color-option" style="width: 40px; height: 40px; background: #B39FFF; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
+                <div onclick="selectCameraTextColor('#FF6B6B')" class="camera-color-option" style="width: 40px; height: 40px; background: #FF6B6B; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
+                <div onclick="selectCameraTextColor('#4ECDC4')" class="camera-color-option" style="width: 40px; height: 40px; background: #4ECDC4; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
+                <div onclick="selectCameraTextColor('#FFD93D')" class="camera-color-option" style="width: 40px; height: 40px; background: #FFD93D; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
+            </div>
+
+            <!-- Size Slider -->
+            <div>
+                <label style="font-size: 14px; color: #888; margin-bottom: 8px; display: block;">Text Size</label>
+                <input type="range" id="camera-size-slider" min="24" max="72" value="48" style="width: 100%;">
+            </div>
+
+            <button onclick="addCameraText()" style="background: #B39FFF; color: white; border: none; padding: 14px; border-radius: 16px; font-weight: 700; cursor: pointer; font-size: 16px;">
+                Add Text
+            </button>
+        </div>
+    </div>
+
+    <style>
+        .camera-color-option.selected {
+            border-color: #B39FFF !important;
+            border-width: 3px !important;
+        }
+    </style>
+
+    <style>
+        .message { margin: 10px 0; max-width: 70%; display: flex; flex-direction: column; }
+        .message.sent { margin-left: auto; align-items: flex-end; }
+        .message.received { margin-right: auto; align-items: flex-start; }
+        .message-bubble {
+            display: inline-block;
+            padding: 10px 14px;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+        .message.sent .message-bubble {
+            background: linear-gradient(135deg, #B39FFF, #9d7fee);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .message.received .message-bubble {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border-bottom-left-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .message-time {
+            font-size: 11px;
+            color: #888;
+            margin-top: 3px;
+        }
+        .message img { max-width: 250px; border-radius: 10px; }
+    </style>
 
     <script>
         let ws, userId, chatId;
@@ -151,17 +155,20 @@
         userId = user.id;
         chatId = savedChat.id;
 
-        document.getElementById('username').textContent = user.username || 'Guest';
-
         if (!userId) {
             alert('Please select a user first');
             window.location.href = '/';
         }
 
+        document.getElementById('chat-name').textContent = savedChat.name || 'Select a chat';
+
         // Connect WebSocket
         ws = new WebSocket(`${CONFIG.WS_URL}/ws/${userId}`);
 
-        ws.onopen = () => console.log("WebSocket connected");
+        ws.onopen = () => {
+            console.log("WebSocket connected");
+            if (chatId) loadMessages();
+        };
 
         ws.onclose = () => {
             console.log("WebSocket closed, reconnecting in 3s...");
@@ -170,11 +177,6 @@
 
         ws.onerror = (error) => console.error("WebSocket error:", error);
 
-        ws.onopen = () => {
-            document.getElementById('status').textContent = 'Connected';
-            loadChats();
-        };
-
         ws.onmessage = (e) => {
             const msg = JSON.parse(e.data);
             if (msg.type === 'new_message' && msg.chat_room_id === chatId) {
@@ -182,56 +184,43 @@
             }
         };
 
-        // Load chats
-        async function loadChats() {
-            const res = await fetch(`/api/users/${userId}/chats`);
-            const chats = await res.json();
-            const list = document.getElementById('chat-list');
-
-            chats.forEach(chat => {
-                const div = document.createElement('div');
-                div.className = 'chat-item' + (chat.id === chatId ? ' active' : '');
-                div.textContent = chat.name || 'Chat';
-                div.onclick = () => selectChat(chat.id, chat.name);
-                list.appendChild(div);
-            });
-
-            if (chatId) {
-                document.getElementById('chat-name').textContent = savedChat.name || 'Chat';
-                loadMessages();
-            }
-        }
-
-        function selectChat(id, name) {
-            chatId = id;
-            document.getElementById('chat-name').textContent = name;
-            document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById('messages').innerHTML = '';
-            loadMessages();
-        }
-
         async function loadMessages() {
             if (!chatId) return;
             const res = await fetch(`/api/users/${userId}/chats/${chatId}/messages`);
             const msgs = await res.json();
             msgs.reverse().forEach(msg => addMessage(msg, msg.sender_id !== userId));
+            scrollToBottom();
         }
 
         function addMessage(msg, isReceived) {
-            const div = document.createElement('div');
-            div.className = 'message ' + (isReceived ? 'received' : 'sent');
+            const container = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + (isReceived ? 'received' : 'sent');
 
-            let content = '';
             if (msg.message_type === 'image') {
-                content = `<img src="${msg.media_url}" onclick="window.open('${msg.media_url}','_blank')">`;
+                const img = document.createElement('img');
+                img.src = msg.media_url;
+                img.onclick = () => window.open(msg.media_url, '_blank');
+                messageDiv.appendChild(img);
             } else {
-                content = `<div class="message-bubble">${msg.content}</div>`;
+                const bubble = document.createElement('div');
+                bubble.className = 'message-bubble';
+                bubble.textContent = msg.content;
+                messageDiv.appendChild(bubble);
             }
 
-            div.innerHTML = content + `<div class="message-time">${new Date(msg.created_at).toLocaleTimeString()}</div>`;
-            document.getElementById('messages').appendChild(div);
-            document.getElementById('messages').scrollTop = 999999;
+            const time = document.createElement('div');
+            time.className = 'message-time';
+            time.textContent = new Date(msg.created_at).toLocaleTimeString();
+            messageDiv.appendChild(time);
+
+            container.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('messages');
+            container.scrollTop = container.scrollHeight;
         }
 
         function sendText() {
@@ -249,49 +238,368 @@
             input.value = '';
         }
 
+        // Camera Variables
+        let cameraCanvas, cameraCtx;
+        let cameraImage = null;
+        let cameraTextElements = [];
+        let selectedCameraTextColor = 'white';
+        let selectedCameraTextSize = 48;
+        let isDraggingCamera = false;
+        let draggedCameraTextIndex = -1;
+        let dragCameraOffsetX = 0;
+        let dragCameraOffsetY = 0;
+        let liveStream = null;
+        let currentFacingMode = 'user';
+
         async function takeSnap() {
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
-
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
+                const liveVideo = document.getElementById('live-video');
+                const modal = document.getElementById('live-camera-modal');
 
-                setTimeout(() => {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    canvas.getContext('2d').drawImage(video, 0, 0);
+                // Start live camera
+                liveStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: currentFacingMode,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                });
 
-                    stream.getTracks().forEach(t => t.stop());
+                liveVideo.srcObject = liveStream;
+                modal.style.display = 'flex';
 
-                    const imgData = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-                    uploadSnap(imgData);
-                }, 500);
             } catch (e) {
                 alert('Camera error: ' + e.message);
+                console.error('Camera error:', e);
             }
         }
 
-        async function uploadSnap(base64) {
-            const res = await fetch('/api/media/upload', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    image_data: base64,
-                    file_type: 'image/jpeg',
-                    expires_in_seconds: 86400
-                })
+        function closeLiveCamera() {
+            if (liveStream) {
+                liveStream.getTracks().forEach(t => t.stop());
+                liveStream = null;
+            }
+            document.getElementById('live-camera-modal').style.display = 'none';
+        }
+
+        async function switchCamera() {
+            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+            closeLiveCamera();
+            await takeSnap();
+        }
+
+        async function capturePhoto() {
+            const liveVideo = document.getElementById('live-video');
+            const tempCanvas = document.getElementById('canvas');
+
+            try {
+                // Wait for video to be ready
+                if (liveVideo.readyState < 2) {
+                    await new Promise(resolve => {
+                        liveVideo.onloadeddata = resolve;
+                    });
+                }
+
+                console.log('Capturing from video:', liveVideo.videoWidth, 'x', liveVideo.videoHeight);
+
+                if (liveVideo.videoWidth === 0 || liveVideo.videoHeight === 0) {
+                    throw new Error('Video has no dimensions');
+                }
+
+                tempCanvas.width = liveVideo.videoWidth;
+                tempCanvas.height = liveVideo.videoHeight;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.drawImage(liveVideo, 0, 0, tempCanvas.width, tempCanvas.height);
+
+                // Stop live stream
+                closeLiveCamera();
+
+                // Create image from canvas
+                const dataURL = tempCanvas.toDataURL('image/jpeg', 0.9);
+                console.log('Captured image, dataURL length:', dataURL.length);
+
+                const img = new Image();
+                img.onload = () => {
+                    cameraImage = img;
+                    console.log('Image loaded:', img.width, 'x', img.height);
+                    showCameraPreview();
+                };
+                img.onerror = (e) => {
+                    console.error('Failed to load image:', e);
+                    alert('Failed to load camera image');
+                };
+                img.src = dataURL;
+
+            } catch (e) {
+                alert('Capture error: ' + e.message);
+                console.error('Capture error:', e);
+            }
+        }
+
+        function retakePhoto() {
+            closeCameraPreview();
+            takeSnap();
+        }
+
+        function showCameraPreview() {
+            const modal = document.getElementById('camera-preview-modal');
+            cameraCanvas = document.getElementById('camera-canvas');
+            cameraCtx = cameraCanvas.getContext('2d');
+            cameraTextElements = [];
+
+            // Fixed 9:16 aspect ratio (like TikTok/Instagram Stories)
+            const targetWidth = 1080;
+            const targetHeight = 1920;
+
+            cameraCanvas.width = targetWidth;
+            cameraCanvas.height = targetHeight;
+
+            modal.style.display = 'flex';
+            drawCameraCanvas();
+            initCameraCanvasEvents();
+        }
+
+        function closeCameraPreview() {
+            document.getElementById('camera-preview-modal').style.display = 'none';
+            cameraImage = null;
+            cameraTextElements = [];
+        }
+
+        function drawCameraCanvas() {
+            if (!cameraImage || !cameraCtx) {
+                console.error('Cannot draw - image or context missing', cameraImage, cameraCtx);
+                return;
+            }
+
+            console.log('Drawing canvas:', cameraCanvas.width, 'x', cameraCanvas.height);
+            console.log('Drawing image:', cameraImage.width, 'x', cameraImage.height);
+
+            // Clear canvas with black background
+            cameraCtx.fillStyle = '#000';
+            cameraCtx.fillRect(0, 0, cameraCanvas.width, cameraCanvas.height);
+
+            // Calculate scaling to fit image with letterboxing (9:16 aspect ratio)
+            const imgAspect = cameraImage.width / cameraImage.height;
+            const canvasAspect = cameraCanvas.width / cameraCanvas.height;
+
+            let drawWidth, drawHeight, offsetX, offsetY;
+
+            if (imgAspect > canvasAspect) {
+                // Image is wider - fit to width with black bars top/bottom
+                drawWidth = cameraCanvas.width;
+                drawHeight = cameraCanvas.width / imgAspect;
+                offsetX = 0;
+                offsetY = (cameraCanvas.height - drawHeight) / 2;
+            } else {
+                // Image is taller - fit to height with black bars left/right
+                drawHeight = cameraCanvas.height;
+                drawWidth = cameraCanvas.height * imgAspect;
+                offsetX = (cameraCanvas.width - drawWidth) / 2;
+                offsetY = 0;
+            }
+
+            // Draw the image with letterboxing
+            cameraCtx.drawImage(cameraImage, offsetX, offsetY, drawWidth, drawHeight);
+
+            // Draw text overlays
+            cameraTextElements.forEach(text => {
+                cameraCtx.font = `${text.size}px Arial`;
+                cameraCtx.textAlign = 'center';
+                cameraCtx.textBaseline = 'middle';
+
+                // Draw outline
+                cameraCtx.strokeStyle = '#000';
+                cameraCtx.lineWidth = 4;
+                cameraCtx.strokeText(text.content, text.x, text.y);
+
+                // Draw text
+                cameraCtx.fillStyle = text.color;
+                cameraCtx.fillText(text.content, text.x, text.y);
+            });
+        }
+
+        function openCameraTextEditor() {
+            document.getElementById('camera-text-editor').style.display = 'block';
+        }
+
+        function closeCameraTextEditor() {
+            document.getElementById('camera-text-editor').style.display = 'none';
+            document.getElementById('camera-text-input').value = '';
+        }
+
+        function selectCameraTextColor(color) {
+            selectedCameraTextColor = color;
+            document.querySelectorAll('.camera-color-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+        }
+
+        document.getElementById('camera-size-slider').addEventListener('input', (e) => {
+            selectedCameraTextSize = parseInt(e.target.value);
+        });
+
+        function addCameraText() {
+            const text = document.getElementById('camera-text-input').value.trim();
+            if (!text) return;
+
+            cameraTextElements.push({
+                content: text,
+                color: selectedCameraTextColor,
+                size: selectedCameraTextSize,
+                x: cameraCanvas.width / 2,
+                y: cameraCanvas.height / 2
             });
 
-            const data = await res.json();
+            drawCameraCanvas();
+            closeCameraTextEditor();
+        }
 
-            ws.send(JSON.stringify({
-                type: 'send_message',
-                chat_room_id: chatId,
-                message_type: 'image',
-                media_url: data.url,
-                view_once: true
-            }));
+        function initCameraCanvasEvents() {
+            if (!cameraCanvas) return;
+
+            cameraCanvas.addEventListener('mousedown', handleCameraMouseDown);
+            cameraCanvas.addEventListener('mousemove', handleCameraMouseMove);
+            cameraCanvas.addEventListener('mouseup', handleCameraMouseUp);
+
+            cameraCanvas.addEventListener('touchstart', handleCameraTouchStart);
+            cameraCanvas.addEventListener('touchmove', handleCameraTouchMove);
+            cameraCanvas.addEventListener('touchend', handleCameraTouchEnd);
+        }
+
+        function getCameraMousePos(canvas, evt) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: (evt.clientX - rect.left) * scaleX,
+                y: (evt.clientY - rect.top) * scaleY
+            };
+        }
+
+        function getCameraTouchPos(canvas, evt) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: (evt.touches[0].clientX - rect.left) * scaleX,
+                y: (evt.touches[0].clientY - rect.top) * scaleY
+            };
+        }
+
+        function isPointInCameraText(x, y, textElement) {
+            cameraCtx.font = `${textElement.size}px Arial`;
+            const textMetrics = cameraCtx.measureText(textElement.content);
+            const textWidth = textMetrics.width;
+            const textHeight = textElement.size * 1.5;
+            const padding = 20;
+
+            return (
+                x >= textElement.x - textWidth / 2 - padding &&
+                x <= textElement.x + textWidth / 2 + padding &&
+                y >= textElement.y - textHeight / 2 - padding &&
+                y <= textElement.y + textHeight / 2 + padding
+            );
+        }
+
+        function handleCameraMouseDown(evt) {
+            const pos = getCameraMousePos(cameraCanvas, evt);
+            for (let i = cameraTextElements.length - 1; i >= 0; i--) {
+                if (isPointInCameraText(pos.x, pos.y, cameraTextElements[i])) {
+                    isDraggingCamera = true;
+                    draggedCameraTextIndex = i;
+                    dragCameraOffsetX = pos.x - cameraTextElements[i].x;
+                    dragCameraOffsetY = pos.y - cameraTextElements[i].y;
+                    cameraCanvas.style.cursor = 'grabbing';
+                    break;
+                }
+            }
+        }
+
+        function handleCameraMouseMove(evt) {
+            const pos = getCameraMousePos(cameraCanvas, evt);
+            if (isDraggingCamera && draggedCameraTextIndex >= 0) {
+                cameraTextElements[draggedCameraTextIndex].x = pos.x - dragCameraOffsetX;
+                cameraTextElements[draggedCameraTextIndex].y = pos.y - dragCameraOffsetY;
+                drawCameraCanvas();
+            } else {
+                let hovering = false;
+                for (let i = cameraTextElements.length - 1; i >= 0; i--) {
+                    if (isPointInCameraText(pos.x, pos.y, cameraTextElements[i])) {
+                        hovering = true;
+                        break;
+                    }
+                }
+                cameraCanvas.style.cursor = hovering ? 'grab' : 'default';
+            }
+        }
+
+        function handleCameraMouseUp() {
+            isDraggingCamera = false;
+            draggedCameraTextIndex = -1;
+            if (cameraCanvas) cameraCanvas.style.cursor = 'default';
+        }
+
+        function handleCameraTouchStart(evt) {
+            evt.preventDefault();
+            const pos = getCameraTouchPos(cameraCanvas, evt);
+            for (let i = cameraTextElements.length - 1; i >= 0; i--) {
+                if (isPointInCameraText(pos.x, pos.y, cameraTextElements[i])) {
+                    isDraggingCamera = true;
+                    draggedCameraTextIndex = i;
+                    dragCameraOffsetX = pos.x - cameraTextElements[i].x;
+                    dragCameraOffsetY = pos.y - cameraTextElements[i].y;
+                    break;
+                }
+            }
+        }
+
+        function handleCameraTouchMove(evt) {
+            evt.preventDefault();
+            if (!isDraggingCamera || draggedCameraTextIndex < 0) return;
+            const pos = getCameraTouchPos(cameraCanvas, evt);
+            cameraTextElements[draggedCameraTextIndex].x = pos.x - dragCameraOffsetX;
+            cameraTextElements[draggedCameraTextIndex].y = pos.y - dragCameraOffsetY;
+            drawCameraCanvas();
+        }
+
+        function handleCameraTouchEnd(evt) {
+            evt.preventDefault();
+            isDraggingCamera = false;
+            draggedCameraTextIndex = -1;
+        }
+
+        async function sendCameraImage() {
+            const blob = await new Promise(resolve => {
+                cameraCanvas.toBlob(resolve, 'image/jpeg', 0.8);
+            });
+
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const base64 = reader.result.split(',')[1];
+
+                const res = await fetch('/api/media/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image_data: base64,
+                        file_type: 'image/jpeg'
+                    })
+                });
+
+                const data = await res.json();
+
+                ws.send(JSON.stringify({
+                    type: 'send_message',
+                    chat_room_id: chatId,
+                    message_type: 'image',
+                    media_url: data.url,
+                    view_once: true
+                }));
+
+                closeCameraPreview();
+            };
+            reader.readAsDataURL(blob);
         }
     </script>
 </body>

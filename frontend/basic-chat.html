@@ -22,8 +22,25 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(180deg, #f8f8f8 0%, #fff 100%);
-            color: #222;
+            background: linear-gradient(180deg, #0a0a0a 0%, #000 100%);
+            color: #fff;
+            padding-bottom: 80px;
+        }
+
+        /* Animated Background Gradient */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 400px;
+            background: linear-gradient(180deg,
+                rgba(179, 159, 255, 0.1) 0%,
+                rgba(118, 75, 162, 0.05) 50%,
+                transparent 100%);
+            pointer-events: none;
+            z-index: 0;
         }
 
         /* Header */
@@ -31,82 +48,105 @@
             position: sticky;
             top: 0;
             width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            background: #f8f8ff;
+            max-width: 100vw;
+            background: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(20px);
-            border-bottom: 1px solid #e0e0e0;
-            padding: 8px 12px;
+            border-bottom: 1px solid rgba(179, 159, 255, 0.1);
+            padding: 16px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 100;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
         .header h1 {
-            font-size: 17px;
-            font-weight: 700;
+            font-size: 20px;
+            font-weight: 800;
             letter-spacing: -0.5px;
-            color: #222;
+            color: #fff;
         }
         .header-btn {
             background: rgba(179, 159, 255, 0.15);
             border: none;
             color: #fff;
-            font-size: 22px;
+            font-size: 28px;
             cursor: pointer;
-            padding: 12px;
-            width: 48px;
-            height: 48px;
+            padding: 16px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
+            z-index: 10;
+            position: relative;
         }
         .header-btn:hover {
-            background: linear-gradient(135deg, #B39FFF, #9d7fee);
-            transform: scale(1.1) rotate(90deg);
+            background: rgba(179, 159, 255, 0.3);
+            transform: scale(1.05);
         }
         .header-btn:active {
-            transform: scale(0.95) rotate(90deg);
+            transform: scale(0.95);
         }
 
         /* Chat List View */
         #chat-list-view {
             min-height: 100vh;
+            position: relative;
+            z-index: 1;
         }
 
         .search-bar {
-            padding: 12px 16px;
-            background: #f8f8f8;
+            padding: 12px 20px;
+            background: transparent;
         }
 
         .search-bar input {
             width: 100%;
-            padding: 10px 16px;
-            border: none;
-            border-radius: 20px;
-            background: #fff;
+            padding: 14px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
             font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: #B39FFF;
+            background: rgba(179, 159, 255, 0.1);
+            box-shadow: 0 0 0 4px rgba(179, 159, 255, 0.2);
         }
 
         .chat-item {
             display: flex;
             align-items: center;
-            padding: 12px 16px;
-            border-bottom: 1px solid #f0f0f0;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.3s ease;
             position: relative;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .chat-item:hover {
+            background: rgba(179, 159, 255, 0.1);
+            transform: translateX(4px);
         }
 
         .chat-item:active {
-            background: #f8f8f8;
+            background: rgba(179, 159, 255, 0.15);
         }
 
         .chat-item.has-unread {
-            background: #fafafa;
+            background: rgba(179, 159, 255, 0.08);
         }
 
         .chat-avatar {
@@ -169,14 +209,16 @@
             font-weight: 600;
             font-size: 16px;
             margin-bottom: 4px;
+            color: #fff;
         }
 
         .chat-item.has-unread .chat-name {
             color: #B39FFF;
+            font-weight: 700;
         }
 
         .chat-preview {
-            color: #666;
+            color: rgba(255, 255, 255, 0.6);
             font-size: 14px;
             white-space: nowrap;
             overflow: hidden;
@@ -185,25 +227,36 @@
 
         .chat-item.has-unread .chat-preview {
             font-weight: 600;
-            color: #000;
+            color: rgba(255, 255, 255, 0.9);
         }
 
         .new-chat-btn {
             position: fixed;
-            bottom: 20px;
+            bottom: 90px;
             right: 20px;
-            width: 56px;
-            height: 56px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
-            background: #B39FFF;
+            background: linear-gradient(135deg, #B39FFF, #9d7fee);
             color: white;
             border: none;
             font-size: 28px;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 24px rgba(179, 159, 255, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 50;
+        }
+
+        .new-chat-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 32px rgba(179, 159, 255, 0.5);
+        }
+
+        .new-chat-btn:active {
+            transform: translateY(-1px) scale(0.98);
         }
 
         /* Message View */
@@ -214,7 +267,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: #fff;
+            background: linear-gradient(180deg, #0a0a0a 0%, #000 100%);
             z-index: 200;
         }
 
@@ -227,7 +280,9 @@
             flex: 1;
             overflow-y: auto;
             padding: 70px 16px 80px;
-            background: #f8f8f8;
+            background: transparent;
+            position: relative;
+            z-index: 1;
         }
 
         .message {
@@ -260,15 +315,17 @@
         }
 
         .message.received .message-bubble {
-            background: #fff;
-            color: #000;
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
             border-bottom-left-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .message.sent .message-bubble {
-            background: #B39FFF;
+            background: linear-gradient(135deg, #B39FFF, #9d7fee);
             color: #fff;
             border-bottom-right-radius: 4px;
+            box-shadow: 0 2px 8px rgba(179, 159, 255, 0.3);
         }
 
         .message-image {
@@ -298,43 +355,89 @@
             right: 0;
             width: 100%;
             max-width: 100vw;
-            background: #fff;
-            border-top: 1px solid #e8e8e8;
-            padding: 6px;
-            display: flex;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(179, 159, 255, 0.1);
+            padding: 12px;
+            display: flex !important;
             align-items: center;
-            gap: 4px;
+            gap: 8px;
             box-sizing: border-box;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            pointer-events: auto;
         }
 
         .input-area button {
-            background: none;
+            background: rgba(179, 159, 255, 0.15);
             border: none;
-            font-size: 24px;
+            font-size: 26px;
             cursor: pointer;
-            padding: 4px;
-            min-width: 44px;
-            min-height: 44px;
-            color: #B39FFF;
+            padding: 14px;
+            min-width: 56px;
+            min-height: 56px;
+            border-radius: 50%;
+            color: #fff;
             flex-shrink: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        .input-area button:hover {
+            background: rgba(179, 159, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .input-area button:active {
+            transform: scale(0.95);
         }
 
         .input-area input {
             flex: 1;
             min-width: 0;
-            padding: 10px 16px;
-            border: 1px solid #e8e8e8;
-            border-radius: 20px;
+            padding: 14px 20px;
+            border: 2px solid #333;
+            border-radius: 24px;
+            background: #1a1a1a;
+            color: #fff;
             font-size: 16px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
+        }
+
+        .input-area input::placeholder {
+            color: #888;
+        }
+
+        .input-area input:focus {
+            outline: none;
+            border-color: #B39FFF;
+            background: #222;
+            box-shadow: 0 0 0 4px rgba(179, 159, 255, 0.2);
         }
 
         .input-area .send-btn {
-            font-weight: 600;
-            color: #B39FFF;
+            font-weight: 700;
+            color: #fff;
             font-size: 16px;
+            padding: 14px 28px !important;
+            border-radius: 24px !important;
+            min-height: 52px;
+            background: linear-gradient(135deg, #B39FFF, #9d7fee);
+            box-shadow: 0 4px 12px rgba(179, 159, 255, 0.4);
+        }
+
+        .input-area .send-btn:hover {
+            background: linear-gradient(135deg, #9d7fee, #8B6FDD);
+            transform: translateY(-2px) !important;
         }
 
         /* Modal */
@@ -345,12 +448,14 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
             z-index: 300;
             align-items: center;
             justify-content: center;
             padding: 20px;
             box-sizing: border-box;
+            animation: fadeIn 0.3s ease;
         }
 
         .modal.active {
@@ -358,56 +463,99 @@
         }
 
         .modal-content {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
+            background: linear-gradient(180deg, #1a1a1a, #0a0a0a);
+            border-radius: 24px;
+            padding: 32px;
             width: 100%;
             max-width: min(400px, 90vw);
             box-sizing: border-box;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(179, 159, 255, 0.2);
+            animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         .modal-content h3 {
-            margin-bottom: 16px;
-            font-size: 20px;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 900;
+            color: #fff;
         }
 
         .modal-content input {
             width: 100%;
             max-width: 100%;
-            padding: 12px;
-            border: 1px solid #e8e8e8;
-            border-radius: 8px;
-            font-size: 16px;
+            padding: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 15px;
             margin-bottom: 16px;
             box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        .modal-content input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .modal-content input:focus {
+            outline: none;
+            border-color: #B39FFF;
+            background: rgba(179, 159, 255, 0.1);
+            box-shadow: 0 0 0 4px rgba(179, 159, 255, 0.2);
         }
 
         .modal-buttons {
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
+            margin-top: 24px;
         }
 
         .modal-buttons button {
             flex: 1;
             min-width: 100px;
             min-height: 44px;
-            padding: 12px;
+            padding: 14px 28px;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: 800;
             cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .modal-buttons .primary {
-            background: #B39FFF;
-            color: white;
+            background: linear-gradient(135deg, #B39FFF, #9d7fee);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(179, 159, 255, 0.4);
+        }
+
+        .modal-buttons .primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(179, 159, 255, 0.5);
         }
 
         .modal-buttons .secondary {
-            background: #f0f0f0;
-            color: #000;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-buttons .secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
         }
 
         video, canvas {
@@ -441,13 +589,15 @@
             right: 0;
             width: 100%;
             max-width: 100vw;
-            background: #2c2c2c;
-            border-top: 1px solid #1a1a1a;
+            background: linear-gradient(180deg, transparent, rgba(0,0,0,0.95) 20%, #000);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(179, 159, 255, 0.1);
             display: flex;
             justify-content: space-around;
             padding: 10px 0 max(10px, env(safe-area-inset-bottom));
             z-index: 150;
             box-sizing: border-box;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
         }
 
         .bottom-nav button {
@@ -457,20 +607,36 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
-            padding: 8px;
-            min-height: 44px;
+            gap: 6px;
+            padding: 12px 8px;
+            min-height: 60px;
             cursor: pointer;
-            color: #ffffff;
-            transition: all 0.2s;
+            color: rgba(255, 255, 255, 0.5);
+            transition: all 0.2s ease;
+            border-radius: 12px;
+            position: relative;
         }
 
         .bottom-nav button.active {
             color: #B39FFF;
         }
 
+        .bottom-nav button.active::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 4px;
+            background: linear-gradient(90deg, #B39FFF, #9d7fee);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 2px 8px rgba(179, 159, 255, 0.5);
+        }
+
         .bottom-nav button:hover {
-            color: #B39FFF;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .bottom-nav button:active {
@@ -478,12 +644,13 @@
         }
 
         .bottom-nav button i {
-            font-size: 22px;
+            font-size: 26px;
         }
 
         .bottom-nav button .label {
-            font-size: 11px;
-            font-weight: 500;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
         }
 
         /* Adjust for bottom nav */
@@ -491,29 +658,26 @@
             padding-bottom: 70px;
         }
 
-        .new-chat-btn {
-            bottom: 80px;
-        }
-
-
-
         /* Friends List in New Chat Modal */
         .friend-item {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 12px;
-            border-bottom: 1px solid #333;
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            margin-bottom: 4px;
         }
 
         .friend-item:hover {
-            background: #2a2a2a;
+            background: rgba(179, 159, 255, 0.1);
+            transform: translateX(4px);
         }
 
         .friend-item:active {
-            background: #3a3a3a;
+            background: rgba(179, 159, 255, 0.15);
         }
 
         .friend-avatar {
@@ -545,11 +709,12 @@
             font-weight: 600;
             font-size: 15px;
             margin-bottom: 2px;
+            color: #fff;
         }
 
         .friend-username {
             font-size: 13px;
-            color: #888;
+            color: rgba(255, 255, 255, 0.6);
         }
 
         #friends-list::-webkit-scrollbar {
@@ -557,12 +722,16 @@
         }
 
         #friends-list::-webkit-scrollbar-track {
-            background: #1a1a1a;
+            background: rgba(0, 0, 0, 0.2);
         }
 
         #friends-list::-webkit-scrollbar-thumb {
-            background: #444;
+            background: rgba(179, 159, 255, 0.3);
             border-radius: 3px;
+        }
+
+        #friends-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(179, 159, 255, 0.5);
         }
 
         /* Enhanced View-Once Message Styles */
@@ -672,21 +841,6 @@
             box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
         }
 
-        /* Enhanced Input Area */
-        .input-area {
-            background: linear-gradient(to top, #f8f9fa, #ffffff);
-            border-top: 1px solid #e8e8e8;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-        }
-
-        .input-area input[type="text"] {
-            transition: all 0.3s;
-        }
-
-        .input-area input[type="text"]:focus {
-            background: #fff;
-            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
-        }
 
         .view-once-toggle-wrapper {
             display: flex;
@@ -701,6 +855,9 @@
             transition: all 0.3s;
             user-select: none;
             flex-shrink: 0;
+            pointer-events: auto;
+            position: relative;
+            z-index: 10;
         }
 
         .view-once-toggle-wrapper:hover {
@@ -722,29 +879,14 @@
             box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
         }
 
-        /* Chat Item Enhanced */
-        .chat-item {
-            transition: all 0.2s;
-            border-left: 3px solid transparent;
-        }
-
-        .chat-item:hover {
-            transform: translateX(4px);
-            border-left-color: #667eea;
-        }
-
-        .chat-item.active {
-            background: linear-gradient(90deg, rgba(102, 126, 234, 0.1), transparent);
-            border-left-color: #667eea;
-        }
 
         /* Message Context Menu */
         .message-context-menu {
             position: absolute;
-            background: white;
-            border: 1px solid #e8e8e8;
+            background: linear-gradient(180deg, #1a1a1a, #0a0a0a);
+            border: 1px solid rgba(179, 159, 255, 0.2);
             border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
             padding: 8px;
             z-index: 1000;
             display: none;
@@ -761,16 +903,18 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: background 0.2s;
+            transition: all 0.2s ease;
             white-space: nowrap;
+            color: #fff;
         }
 
         .context-menu-item:hover {
-            background: #f5f5f5;
+            background: rgba(179, 159, 255, 0.2);
         }
 
         .context-menu-item i {
             font-size: 16px;
+            color: #B39FFF;
         }
 
         /* Typing Indicator */
@@ -836,6 +980,45 @@
                 opacity: 1;
             }
         }
+
+        /* Desktop - Mobile App Style */
+        @media (min-width: 768px) {
+            body {
+                max-width: 480px;
+                margin: 0 auto;
+                background: #1a1a1a;
+                box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+            }
+
+            body::before {
+                max-width: 480px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            .header {
+                max-width: 480px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            .bottom-nav {
+                max-width: 480px;
+                left: 50%;
+                transform: translateX(-50%);
+                border-radius: 0;
+            }
+
+            .input-area {
+                max-width: 480px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            .new-chat-btn {
+                left: calc(50% + 180px);
+            }
+        }
     </style>
 
     <!-- Chat List View -->
@@ -899,16 +1082,13 @@
     <!-- Message View -->
     <div id="message-view">
         <div class="header">
-            <div class="header-left">
-                <button class="back-btn" onclick="closeChat()">‹</button>
-                <div class="header-title" style="display: flex; align-items: center; gap: 12px;">
+            <div class="header-left" style="display: flex; align-items: center; gap: 12px; width: 100%;">
+                <button class="header-btn" onclick="closeChat()" style="width: 60px; height: 60px; font-size: 28px;">
+                    <i class="bi bi-arrow-left"></i>
+                </button>
+                <div class="header-title" style="display: flex; align-items: center; gap: 12px; flex: 1;">
                     <img id="userAvatar" src="/logo.jpg" alt="Avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
-                    <span id="chat-name">Chat</span>
-                    <span id="userStatus" style="font-size:13px;color:#B39FFF;font-weight:600;">Online</span>
-                    <span id="streak-display" style="display: none;align-items:center;gap:6px;background:rgba(179,159,255,0.15);padding:4px 10px;border-radius:20px;font-weight:700;color:#B39FFF;">
-                        <i class="bi bi-fire" style="color:#ff9800;font-size:18px;"></i>
-                        <span id="streak-count">0</span> day streak
-                    </span>
+                    <span id="chat-name" style="font-size: 18px; font-weight: 700;">Chat</span>
                 </div>
             </div>
         </div>
@@ -923,12 +1103,12 @@
 
         <div class="input-area">
             <button onclick="takeSnap()">📷</button>
-            <input type="text" id="input" placeholder="Send a message">
+            <input type="text" id="input" placeholder="Type a message..." style="font-size: 16px;">
             <label class="view-once-toggle-wrapper" id="view-once-wrapper" onclick="toggleViewOnce()" title="View Once">
                 <input type="checkbox" id="view-once-toggle">
                 <span>👁️</span>
             </label>
-            <button class="send-btn" onclick="sendText()">➤</button>
+            <button class="send-btn" onclick="sendText()">Send</button>
         </div>
     </div>
 
@@ -946,8 +1126,96 @@
         </div>
     </div>
 
-    <video id="video" autoplay></video>
-    <canvas id="canvas"></canvas>
+    <video id="video" autoplay playsinline style="position:fixed;top:-9999px;left:-9999px;"></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <!-- Live Camera Modal -->
+    <div id="live-camera-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 3000; flex-direction: column;">
+        <!-- Header -->
+        <div style="position: fixed; top: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 16px; display: flex; align-items: center; justify-content: space-between; z-index: 10; backdrop-filter: blur(10px);">
+            <button onclick="closeLiveCamera()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; padding: 8px;">
+                <i class="bi bi-x"></i>
+            </button>
+            <button onclick="switchCamera()" style="background: rgba(179,159,255,0.15); border: none; color: white; font-size: 24px; cursor: pointer; padding: 12px; border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-arrow-repeat"></i>
+            </button>
+        </div>
+
+        <!-- Live Video Preview -->
+        <div style="flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+            <video id="live-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+        </div>
+
+        <!-- Capture Button -->
+        <div style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.9); padding: 30px; display: flex; justify-content: center; z-index: 10; backdrop-filter: blur(20px);">
+            <button onclick="capturePhoto()" style="background: white; border: 4px solid #B39FFF; width: 80px; height: 80px; border-radius: 50%; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(179,159,255,0.4);"></button>
+        </div>
+    </div>
+
+    <!-- Camera Preview Modal (after capture) -->
+    <div id="camera-preview-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 3000; flex-direction: column;">
+        <!-- Header -->
+        <div style="position: fixed; top: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 16px; display: flex; align-items: center; justify-content: space-between; z-index: 10; backdrop-filter: blur(10px);">
+            <button onclick="retakePhoto()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; padding: 8px;">
+                <i class="bi bi-arrow-left"></i>
+            </button>
+            <button onclick="sendCameraImage()" style="background: #B39FFF; color: white; border: none; padding: 10px 28px; border-radius: 24px; font-weight: 700; cursor: pointer; font-size: 16px;">
+                Send
+            </button>
+        </div>
+
+        <!-- Canvas Preview -->
+        <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 80px 20px;">
+            <canvas id="camera-canvas" style="max-width: min(390px, 100%); max-height: 100%; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.8);"></canvas>
+        </div>
+
+        <!-- Controls -->
+        <div style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.9); padding: 20px; display: flex; flex-direction: column; gap: 16px; z-index: 10; backdrop-filter: blur(20px);">
+            <!-- Text Button -->
+            <button onclick="openCameraTextEditor()" style="background: rgba(179,159,255,0.15); border: 2px solid #B39FFF; color: #fff; padding: 14px 24px; border-radius: 24px; font-weight: 700; cursor: pointer; font-size: 16px; width: 100%;">
+                <i class="bi bi-fonts"></i> Add Text
+            </button>
+        </div>
+    </div>
+
+    <!-- Camera Text Editor Modal -->
+    <div id="camera-text-editor" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(180deg, #1a1a1a, #0a0a0a); z-index: 4000; border-radius: 24px 24px 0 0; padding: 24px; box-shadow: 0 -4px 24px rgba(0,0,0,0.5);">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 18px;">Add Text</h3>
+                <button onclick="closeCameraTextEditor()" style="background: none; border: none; color: #888; font-size: 24px; cursor: pointer;">×</button>
+            </div>
+
+            <input type="text" id="camera-text-input" placeholder="Type your text..." style="width: 100%; padding: 14px 20px; border: 2px solid #333; border-radius: 16px; background: #1a1a1a; color: #fff; font-size: 16px;">
+
+            <!-- Color Picker -->
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <div onclick="selectCameraTextColor('white')" class="camera-color-option selected" style="width: 40px; height: 40px; background: white; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
+                <div onclick="selectCameraTextColor('black')" class="camera-color-option" style="width: 40px; height: 40px; background: black; border-radius: 50%; cursor: pointer; border: 3px solid #333;"></div>
+                <div onclick="selectCameraTextColor('#B39FFF')" class="camera-color-option" style="width: 40px; height: 40px; background: #B39FFF; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
+                <div onclick="selectCameraTextColor('#FF6B6B')" class="camera-color-option" style="width: 40px; height: 40px; background: #FF6B6B; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
+                <div onclick="selectCameraTextColor('#4ECDC4')" class="camera-color-option" style="width: 40px; height: 40px; background: #4ECDC4; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
+                <div onclick="selectCameraTextColor('#FFD93D')" class="camera-color-option" style="width: 40px; height: 40px; background: #FFD93D; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
+            </div>
+
+            <!-- Size Slider -->
+            <div>
+                <label style="font-size: 14px; color: #888; margin-bottom: 8px; display: block;">Text Size</label>
+                <input type="range" id="camera-size-slider" min="24" max="72" value="48" style="width: 100%;">
+            </div>
+
+            <button onclick="addCameraText()" style="background: #B39FFF; color: white; border: none; padding: 14px; border-radius: 16px; font-weight: 700; cursor: pointer; font-size: 16px;">
+                Add Text
+            </button>
+        </div>
+    </div>
+
+    <style>
+        .camera-color-option.selected {
+            border-color: #B39FFF !important;
+            border-width: 3px !important;
+        }
+    </style>
 
     <script>
 // Set avatar and status in all chat headers
@@ -1475,32 +1743,362 @@ document.querySelectorAll('#userStatus').forEach(el => {
             if (e.key === 'Enter') sendText();
         };
 
+        // Camera Variables
+        let cameraCanvas, cameraCtx;
+        let cameraImage = null;
+        let cameraTextElements = [];
+        let selectedCameraTextColor = 'white';
+        let selectedCameraTextSize = 48;
+        let isDraggingCamera = false;
+        let draggedCameraTextIndex = -1;
+        let dragCameraOffsetX = 0;
+        let dragCameraOffsetY = 0;
+        let liveStream = null;
+        let currentFacingMode = 'user';
+
         async function takeSnap() {
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
+            try {
+                const liveVideo = document.getElementById('live-video');
+                const modal = document.getElementById('live-camera-modal');
 
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            video.srcObject = stream;
+                // Start live camera
+                liveStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: currentFacingMode,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                });
 
-            setTimeout(async () => {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                canvas.getContext('2d').drawImage(video, 0, 0);
-                stream.getTracks().forEach(t => t.stop());
+                liveVideo.srcObject = liveStream;
+                modal.style.display = 'flex';
 
-                const imgData = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+            } catch (e) {
+                alert('Camera error: ' + e.message);
+                console.error('Camera error:', e);
+            }
+        }
 
+        function closeLiveCamera() {
+            if (liveStream) {
+                liveStream.getTracks().forEach(t => t.stop());
+                liveStream = null;
+            }
+            document.getElementById('live-camera-modal').style.display = 'none';
+        }
+
+        async function switchCamera() {
+            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+            closeLiveCamera();
+            await takeSnap();
+        }
+
+        async function capturePhoto() {
+            const liveVideo = document.getElementById('live-video');
+            const tempCanvas = document.getElementById('canvas');
+
+            try {
+                // Wait for video to be ready
+                if (liveVideo.readyState < 2) {
+                    await new Promise(resolve => {
+                        liveVideo.onloadeddata = resolve;
+                    });
+                }
+
+                console.log('Capturing from video:', liveVideo.videoWidth, 'x', liveVideo.videoHeight);
+
+                if (liveVideo.videoWidth === 0 || liveVideo.videoHeight === 0) {
+                    throw new Error('Video has no dimensions');
+                }
+
+                tempCanvas.width = liveVideo.videoWidth;
+                tempCanvas.height = liveVideo.videoHeight;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.drawImage(liveVideo, 0, 0, tempCanvas.width, tempCanvas.height);
+
+                // Stop live stream
+                closeLiveCamera();
+
+                // Create image from canvas
+                const dataURL = tempCanvas.toDataURL('image/jpeg', 0.9);
+                console.log('Captured image, dataURL length:', dataURL.length);
+
+                const img = new Image();
+                img.onload = () => {
+                    cameraImage = img;
+                    console.log('Image loaded:', img.width, 'x', img.height);
+                    showCameraPreview();
+                };
+                img.onerror = (e) => {
+                    console.error('Failed to load image:', e);
+                    alert('Failed to load camera image');
+                };
+                img.src = dataURL;
+
+            } catch (e) {
+                alert('Capture error: ' + e.message);
+                console.error('Capture error:', e);
+            }
+        }
+
+        function retakePhoto() {
+            closeCameraPreview();
+            takeSnap();
+        }
+
+        function showCameraPreview() {
+            const modal = document.getElementById('camera-preview-modal');
+            cameraCanvas = document.getElementById('camera-canvas');
+            cameraCtx = cameraCanvas.getContext('2d');
+            cameraTextElements = [];
+
+            // Fixed 9:16 aspect ratio (like TikTok/Instagram Stories)
+            const targetWidth = 1080;
+            const targetHeight = 1920;
+
+            cameraCanvas.width = targetWidth;
+            cameraCanvas.height = targetHeight;
+
+            modal.style.display = 'flex';
+            drawCameraCanvas();
+            initCameraCanvasEvents();
+        }
+
+        function closeCameraPreview() {
+            document.getElementById('camera-preview-modal').style.display = 'none';
+            cameraImage = null;
+            cameraTextElements = [];
+        }
+
+        function drawCameraCanvas() {
+            if (!cameraImage || !cameraCtx) {
+                console.error('Cannot draw - image or context missing', cameraImage, cameraCtx);
+                return;
+            }
+
+            console.log('Drawing canvas:', cameraCanvas.width, 'x', cameraCanvas.height);
+            console.log('Drawing image:', cameraImage.width, 'x', cameraImage.height);
+
+            // Clear canvas with black background
+            cameraCtx.fillStyle = '#000';
+            cameraCtx.fillRect(0, 0, cameraCanvas.width, cameraCanvas.height);
+
+            // Calculate scaling to fit image with letterboxing (9:16 aspect ratio)
+            const imgAspect = cameraImage.width / cameraImage.height;
+            const canvasAspect = cameraCanvas.width / cameraCanvas.height;
+
+            let drawWidth, drawHeight, offsetX, offsetY;
+
+            if (imgAspect > canvasAspect) {
+                // Image is wider - fit to width with black bars top/bottom
+                drawWidth = cameraCanvas.width;
+                drawHeight = cameraCanvas.width / imgAspect;
+                offsetX = 0;
+                offsetY = (cameraCanvas.height - drawHeight) / 2;
+            } else {
+                // Image is taller - fit to height with black bars left/right
+                drawHeight = cameraCanvas.height;
+                drawWidth = cameraCanvas.height * imgAspect;
+                offsetX = (cameraCanvas.width - drawWidth) / 2;
+                offsetY = 0;
+            }
+
+            // Draw the image with letterboxing
+            cameraCtx.drawImage(cameraImage, offsetX, offsetY, drawWidth, drawHeight);
+
+            // Draw text overlays
+            cameraTextElements.forEach(text => {
+                cameraCtx.font = `${text.size}px Arial`;
+                cameraCtx.textAlign = 'center';
+                cameraCtx.textBaseline = 'middle';
+
+                // Draw outline
+                cameraCtx.strokeStyle = '#000';
+                cameraCtx.lineWidth = 4;
+                cameraCtx.strokeText(text.content, text.x, text.y);
+
+                // Draw text
+                cameraCtx.fillStyle = text.color;
+                cameraCtx.fillText(text.content, text.x, text.y);
+            });
+        }
+
+        function openCameraTextEditor() {
+            document.getElementById('camera-text-editor').style.display = 'block';
+        }
+
+        function closeCameraTextEditor() {
+            document.getElementById('camera-text-editor').style.display = 'none';
+            document.getElementById('camera-text-input').value = '';
+        }
+
+        function selectCameraTextColor(color) {
+            selectedCameraTextColor = color;
+            document.querySelectorAll('.camera-color-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+        }
+
+        document.getElementById('camera-size-slider').addEventListener('input', (e) => {
+            selectedCameraTextSize = parseInt(e.target.value);
+        });
+
+        function addCameraText() {
+            const text = document.getElementById('camera-text-input').value.trim();
+            if (!text) return;
+
+            cameraTextElements.push({
+                content: text,
+                color: selectedCameraTextColor,
+                size: selectedCameraTextSize,
+                x: cameraCanvas.width / 2,
+                y: cameraCanvas.height / 2
+            });
+
+            drawCameraCanvas();
+            closeCameraTextEditor();
+        }
+
+        // Camera Canvas Drag Events
+        function initCameraCanvasEvents() {
+            if (!cameraCanvas) return;
+
+            cameraCanvas.addEventListener('mousedown', handleCameraMouseDown);
+            cameraCanvas.addEventListener('mousemove', handleCameraMouseMove);
+            cameraCanvas.addEventListener('mouseup', handleCameraMouseUp);
+
+            cameraCanvas.addEventListener('touchstart', handleCameraTouchStart);
+            cameraCanvas.addEventListener('touchmove', handleCameraTouchMove);
+            cameraCanvas.addEventListener('touchend', handleCameraTouchEnd);
+        }
+
+        function getCameraMousePos(canvas, evt) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: (evt.clientX - rect.left) * scaleX,
+                y: (evt.clientY - rect.top) * scaleY
+            };
+        }
+
+        function getCameraTouchPos(canvas, evt) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: (evt.touches[0].clientX - rect.left) * scaleX,
+                y: (evt.touches[0].clientY - rect.top) * scaleY
+            };
+        }
+
+        function isPointInCameraText(x, y, textElement) {
+            cameraCtx.font = `${textElement.size}px Arial`;
+            const textMetrics = cameraCtx.measureText(textElement.content);
+            const textWidth = textMetrics.width;
+            const textHeight = textElement.size * 1.5;
+            const padding = 20;
+
+            return (
+                x >= textElement.x - textWidth / 2 - padding &&
+                x <= textElement.x + textWidth / 2 + padding &&
+                y >= textElement.y - textHeight / 2 - padding &&
+                y <= textElement.y + textHeight / 2 + padding
+            );
+        }
+
+        function handleCameraMouseDown(evt) {
+            const pos = getCameraMousePos(cameraCanvas, evt);
+            for (let i = cameraTextElements.length - 1; i >= 0; i--) {
+                if (isPointInCameraText(pos.x, pos.y, cameraTextElements[i])) {
+                    isDraggingCamera = true;
+                    draggedCameraTextIndex = i;
+                    dragCameraOffsetX = pos.x - cameraTextElements[i].x;
+                    dragCameraOffsetY = pos.y - cameraTextElements[i].y;
+                    cameraCanvas.style.cursor = 'grabbing';
+                    break;
+                }
+            }
+        }
+
+        function handleCameraMouseMove(evt) {
+            const pos = getCameraMousePos(cameraCanvas, evt);
+            if (isDraggingCamera && draggedCameraTextIndex >= 0) {
+                cameraTextElements[draggedCameraTextIndex].x = pos.x - dragCameraOffsetX;
+                cameraTextElements[draggedCameraTextIndex].y = pos.y - dragCameraOffsetY;
+                drawCameraCanvas();
+            } else {
+                let hovering = false;
+                for (let i = cameraTextElements.length - 1; i >= 0; i--) {
+                    if (isPointInCameraText(pos.x, pos.y, cameraTextElements[i])) {
+                        hovering = true;
+                        break;
+                    }
+                }
+                cameraCanvas.style.cursor = hovering ? 'grab' : 'default';
+            }
+        }
+
+        function handleCameraMouseUp() {
+            isDraggingCamera = false;
+            draggedCameraTextIndex = -1;
+            if (cameraCanvas) cameraCanvas.style.cursor = 'default';
+        }
+
+        function handleCameraTouchStart(evt) {
+            evt.preventDefault();
+            const pos = getCameraTouchPos(cameraCanvas, evt);
+            for (let i = cameraTextElements.length - 1; i >= 0; i--) {
+                if (isPointInCameraText(pos.x, pos.y, cameraTextElements[i])) {
+                    isDraggingCamera = true;
+                    draggedCameraTextIndex = i;
+                    dragCameraOffsetX = pos.x - cameraTextElements[i].x;
+                    dragCameraOffsetY = pos.y - cameraTextElements[i].y;
+                    break;
+                }
+            }
+        }
+
+        function handleCameraTouchMove(evt) {
+            evt.preventDefault();
+            if (!isDraggingCamera || draggedCameraTextIndex < 0) return;
+            const pos = getCameraTouchPos(cameraCanvas, evt);
+            cameraTextElements[draggedCameraTextIndex].x = pos.x - dragCameraOffsetX;
+            cameraTextElements[draggedCameraTextIndex].y = pos.y - dragCameraOffsetY;
+            drawCameraCanvas();
+        }
+
+        function handleCameraTouchEnd(evt) {
+            evt.preventDefault();
+            isDraggingCamera = false;
+            draggedCameraTextIndex = -1;
+        }
+
+        async function sendCameraImage() {
+            // Convert canvas to blob
+            const blob = await new Promise(resolve => {
+                cameraCanvas.toBlob(resolve, 'image/jpeg', 0.8);
+            });
+
+            // Convert blob to base64
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const base64 = reader.result.split(',')[1];
+
+                // Upload to server
                 const res = await fetch('/api/media/upload', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        image_data: imgData,
+                        image_data: base64,
                         file_type: 'image/jpeg'
                     })
                 });
 
                 const data = await res.json();
 
+                // Send via WebSocket
                 const viewOnceToggle = document.getElementById('view-once-toggle');
                 ws.send(JSON.stringify({
                     type: 'send_message',
@@ -1510,8 +2108,10 @@ document.querySelectorAll('#userStatus').forEach(el => {
                     view_once: viewOnceToggle.checked
                 }));
 
-                viewOnceToggle.checked = false; // Reset after sending
-            }, 500);
+                viewOnceToggle.checked = false;
+                closeCameraPreview();
+            };
+            reader.readAsDataURL(blob);
         }
 
         let friendsList = [];

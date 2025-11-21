@@ -367,6 +367,11 @@
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             border: 1px solid rgba(255, 255, 255, 0.05);
+            user-select: none;
+        }
+
+        .grid-item:active {
+            transform: scale(0.95);
         }
 
         .grid-item:hover {
@@ -376,12 +381,14 @@
             z-index: 10;
         }
 
-        .grid-item img {
+        .grid-item img,
+        .grid-item video {
             width: 100%;
             height: 100%;
             object-fit: cover;
             image-rendering: -webkit-optimize-contrast;
             image-rendering: high-quality;
+            pointer-events: none;
         }
 
         .grid-item .views {
@@ -395,6 +402,7 @@
             font-size: 12px;
             font-weight: 700;
             display: flex;
+            pointer-events: none;
             align-items: center;
             gap: 6px;
         }
@@ -590,8 +598,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
-            padding: 8px;
+            gap: 6px;
+            padding: 12px 8px;
+            min-height: 60px;
             cursor: pointer;
             color: rgba(255, 255, 255, 0.5);
             transition: all 0.2s ease;
@@ -606,13 +615,13 @@
         .bottom-nav button.active::before {
             content: '';
             position: absolute;
-            top: -2px;
+            top: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 32px;
-            height: 3px;
+            width: 40px;
+            height: 4px;
             background: linear-gradient(90deg, #B39FFF, #9d7fee);
-            border-radius: 0 0 3px 3px;
+            border-radius: 0 0 4px 4px;
             box-shadow: 0 2px 8px rgba(179, 159, 255, 0.5);
         }
 
@@ -626,11 +635,11 @@
         }
 
         .bottom-nav button i {
-            font-size: 22px;
+            font-size: 26px;
         }
 
         .bottom-nav button .label {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 700;
             letter-spacing: 0.3px;
         }
@@ -977,7 +986,7 @@
                                 mediaTag = `<img src="${escapeHtml(story.media_url)}" alt="Story" class="story-grid-image">`;
                             }
                             return `
-                                <div class="grid-item" onclick="viewStory(${story.id})">
+                                <div class="grid-item" onclick="viewStory('${story.id}')">
                                     ${mediaTag}
                                     <div class="views">
                                         <i class="bi bi-eye-fill"></i>
@@ -1168,7 +1177,8 @@
         }
 
         function viewStory(storyId) {
-            window.location.href = `/stories.html?story=${storyId}`;
+            // Navigate to stories page with user filter to show all their stories
+            window.location.href = `/stories.html?user=${viewingUserId}&story=${storyId}`;
         }
 
         function updateCharCount(input, countId, max) {

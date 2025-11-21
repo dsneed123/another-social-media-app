@@ -68,6 +68,64 @@
         }
 
         /* Stories Row */
+        /* User Stories Header */
+        .user-stories-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(179, 159, 255, 0.1);
+            padding: 16px 20px;
+            display: none;
+            align-items: center;
+            gap: 16px;
+            z-index: 101;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .user-stories-header.active {
+            display: flex;
+        }
+
+        .user-header-back {
+            background: rgba(179, 159, 255, 0.15);
+            border: none;
+            color: #fff;
+            font-size: 22px;
+            cursor: pointer;
+            padding: 12px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-header-back:hover {
+            background: linear-gradient(135deg, #B39FFF, #9d7fee);
+            transform: scale(1.1);
+        }
+
+        .user-header-info {
+            flex: 1;
+        }
+
+        .user-header-name {
+            font-size: 18px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .user-header-subtitle {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
         .stories-container {
             position: fixed;
             top: 0;
@@ -82,6 +140,10 @@
             overflow-y: hidden;
             z-index: 100;
             scrollbar-width: none;
+        }
+
+        .stories-container.with-header {
+            top: 80px;
         }
 
         .stories-container::-webkit-scrollbar {
@@ -849,11 +911,22 @@
                 box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
             }
 
+            .user-stories-header {
+                max-width: 480px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
             .stories-container {
                 max-width: 480px;
                 left: 50%;
                 transform: translateX(-50%);
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            }
+
+            .stories-container.with-header {
+                left: 50%;
+                transform: translateX(-50%);
             }
 
             .bottom-nav {
@@ -889,8 +962,19 @@
         <i class="bi bi-arrow-clockwise"></i>
     </div>
 
+    <!-- User Stories Header (shown when viewing specific user) -->
+    <div class="user-stories-header" id="userStoriesHeader">
+        <button class="user-header-back" onclick="goBackToFeed()">
+            <i class="bi bi-arrow-left"></i>
+        </button>
+        <div class="user-header-info">
+            <div class="user-header-name" id="userHeaderName">Username</div>
+            <div class="user-header-subtitle" id="userHeaderSubtitle">Stories</div>
+        </div>
+    </div>
+
     <!-- Stories Row -->
-    <div class="stories-container">
+    <div class="stories-container" id="storiesContainer">
         <div class="story-circle add-story" onclick="addStory()">
             <div class="story-avatar">
                 <i class="bi bi-plus"></i>
@@ -987,12 +1071,23 @@
             }
 
             console.log('User authenticated, loading stories...');
-            await loadStories();
-            await loadStoriesCircles();
 
-            // Check if there's a specific story to view (from profile click)
+            // Check if viewing a specific user's stories
             const urlParams = new URLSearchParams(window.location.search);
+            const userIdParam = urlParams.get('user');
             const storyIdParam = urlParams.get('story');
+
+            if (userIdParam) {
+                // Viewing specific user - show header, hide circles
+                await setupUserStoriesView(userIdParam);
+            } else {
+                // Normal feed view
+                await loadStoriesCircles();
+            }
+
+            await loadStories();
+
+            // Scroll to specific story if provided
             if (storyIdParam) {
                 setTimeout(() => scrollToStory(storyIdParam), 500);
             }
@@ -1001,39 +1096,51 @@
         // Load stories for feed
         async function loadStories() {
             try {
-                const response = await fetch(`/api/stories/feed/${currentUserId}`);
+                // Check if viewing a specific user's stories
+                const urlParams = new URLSearchParams(window.location.search);
+                const userIdParam = urlParams.get('user');
+
+                // Load stories from specific user or from feed
+                const endpoint = userIdParam
+                    ? `/api/stories/user/${userIdParam}`
+                    : `/api/stories/feed/${currentUserId}`;
+
+                const response = await fetch(endpoint);
                 if (!response.ok) throw new Error('Failed to load stories');
 
                 const data = await response.json();
                 stories = data.stories;
 
-                // Fetch and inject ads into the feed
-                try {
-                    const adResponse = await fetch(`/api/ads/next/${currentUserId}`);
-                    if (adResponse.ok) {
-                        const ad = await adResponse.json();
-                        if (ad && ad.id) {
-                            // Inject ad after 3rd story (or at index 3)
-                            const adStory = {
-                                id: ad.id,
-                                is_ad: true,
-                                ad_data: ad,
-                                media_url: ad.image_url,
-                                media_type: 'image',
-                                username: 'Sponsored',
-                                caption: ad.description,
-                                created_at: new Date().toISOString()
-                            };
+                // Only inject ads if viewing the main feed (not a specific user's stories)
+                if (!userIdParam) {
+                    // Fetch and inject ads into the feed
+                    try {
+                        const adResponse = await fetch(`/api/ads/next/${currentUserId}`);
+                        if (adResponse.ok) {
+                            const ad = await adResponse.json();
+                            if (ad && ad.id) {
+                                // Inject ad after 3rd story (or at index 3)
+                                const adStory = {
+                                    id: ad.id,
+                                    is_ad: true,
+                                    ad_data: ad,
+                                    media_url: ad.image_url,
+                                    media_type: 'image',
+                                    username: 'Sponsored',
+                                    caption: ad.description,
+                                    created_at: new Date().toISOString()
+                                };
 
-                            if (stories.length >= 3) {
-                                stories.splice(3, 0, adStory);
-                            } else {
-                                stories.push(adStory);
+                                if (stories.length >= 3) {
+                                    stories.splice(3, 0, adStory);
+                                } else {
+                                    stories.push(adStory);
+                                }
                             }
                         }
+                    } catch (adError) {
+                        console.error('Error loading ad:', adError);
                     }
-                } catch (adError) {
-                    console.error('Error loading ad:', adError);
                 }
 
                 if (stories.length === 0) {
@@ -1749,6 +1856,44 @@
         }
 
         // Navigation
+        // Setup view for specific user's stories
+        async function setupUserStoriesView(userId) {
+            try {
+                // Load user profile info
+                const response = await fetch(`/api/profile/${userId}/${currentUserId}`);
+                if (response.ok) {
+                    const userData = await response.json();
+
+                    // Show user header
+                    const header = document.getElementById('userStoriesHeader');
+                    const nameEl = document.getElementById('userHeaderName');
+                    const subtitleEl = document.getElementById('userHeaderSubtitle');
+
+                    nameEl.textContent = `@${userData.username}`;
+
+                    // Count stories for subtitle
+                    const storiesResponse = await fetch(`/api/stories/user/${userId}`);
+                    if (storiesResponse.ok) {
+                        const storiesData = await storiesResponse.json();
+                        const count = storiesData.stories?.length || 0;
+                        subtitleEl.textContent = `${count} ${count === 1 ? 'Story' : 'Stories'}`;
+                    }
+
+                    header.classList.add('active');
+
+                    // Hide stories circles and adjust container
+                    document.getElementById('storiesContainer').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error setting up user stories view:', error);
+            }
+        }
+
+        // Go back to main feed
+        function goBackToFeed() {
+            window.location.href = '/stories.html';
+        }
+
         function navigateTo(section) {
             switch(section) {
                 case 'chats':
@@ -1756,6 +1901,7 @@
                     break;
                 case 'stories':
                     // Already here
+                    goBackToFeed();
                     break;
                 case 'discover':
                     window.location.href = '/discover.html';
@@ -1850,12 +1996,15 @@
         // Smooth scroll behavior and auto-mark viewed
         let isScrolling;
         let currentStoryIndex = 0;
+        let isLooping = false;
 
         feed.addEventListener('scroll', () => {
             clearTimeout(isScrolling);
             isScrolling = setTimeout(() => {
-                // Determine which story is currently in view
                 const items = document.querySelectorAll('.video-item');
+                const feedContainer = document.getElementById('feed');
+
+                // Determine which story is currently in view
                 items.forEach((item, index) => {
                     const rect = item.getBoundingClientRect();
                     if (rect.top >= 0 && rect.top < window.innerHeight / 2) {
@@ -1865,6 +2014,23 @@
                         }
                     }
                 });
+
+                // Check if we've reached the end and loop back to the beginning
+                const scrolledToBottom = feedContainer.scrollTop + feedContainer.clientHeight >= feedContainer.scrollHeight - 100;
+
+                if (scrolledToBottom && !isLooping && stories.length > 0) {
+                    isLooping = true;
+                    setTimeout(() => {
+                        feedContainer.scrollTo({
+                            top: 0,
+                            behavior: 'smooth'
+                        });
+                        currentStoryIndex = 0;
+                        setTimeout(() => {
+                            isLooping = false;
+                        }, 1000);
+                    }, 500);
+                }
             }, 150);
         });
 

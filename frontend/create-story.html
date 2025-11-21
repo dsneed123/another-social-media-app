@@ -180,14 +180,33 @@
 
         #preview-canvas {
             max-width: 100%;
-            max-height: 100vh;
-            object-fit: contain;
+            max-height: calc(100vh - 80px);
             display: none;
             margin: 0 auto;
+            cursor: default;
+            border-radius: 0;
         }
 
         #preview-canvas.active {
             display: block;
+        }
+
+        /* Desktop - Mobile Device Style */
+        @media (min-width: 768px) {
+            .create-container {
+                background: #1a1a1a;
+            }
+
+            #preview-canvas {
+                max-width: 390px;
+                max-height: 844px;
+                border-radius: 20px;
+                box-shadow: 0 0 60px rgba(0, 0, 0, 0.9);
+            }
+
+            .preview-state {
+                padding: 20px;
+            }
         }
 
         /* Editing Tools */
@@ -727,7 +746,7 @@
         <div class="preview-state" id="preview-state">
             <img id="preview-media" style="display: none;">
             <video id="preview-video" style="display: none;" controls></video>
-            <canvas id="preview-canvas"></canvas>
+            <canvas id="preview-canvas" width="1080" height="1920"></canvas>
         </div>
     </div>
 
@@ -938,13 +957,16 @@
             ctx.font = `${fontStyle}${textElement.size}px ${textElement.font || 'Arial'}`;
             const textMetrics = ctx.measureText(textElement.content);
             const textWidth = textMetrics.width;
-            const textHeight = textElement.size;
+            const textHeight = textElement.size * 1.5; // Increase hit area
+
+            // Expand hit area for easier touching
+            const padding = 20;
 
             return (
-                x >= textElement.x - textWidth / 2 &&
-                x <= textElement.x + textWidth / 2 &&
-                y >= textElement.y - textHeight / 2 &&
-                y <= textElement.y + textHeight / 2
+                x >= textElement.x - textWidth / 2 - padding &&
+                x <= textElement.x + textWidth / 2 + padding &&
+                y >= textElement.y - textHeight / 2 - padding &&
+                y <= textElement.y + textHeight / 2 + padding
             );
         }
 
@@ -952,15 +974,18 @@
             if (!canvas) return;
 
             const pos = getMousePos(canvas, evt);
+            console.log('Mouse down at:', pos.x, pos.y);
 
             // Check if clicking on any text element (check in reverse order for top-most)
             for (let i = textElements.length - 1; i >= 0; i--) {
+                console.log('Checking text', i, 'at', textElements[i].x, textElements[i].y);
                 if (isPointInText(pos.x, pos.y, textElements[i])) {
                     isDragging = true;
                     draggedTextIndex = i;
                     dragOffsetX = pos.x - textElements[i].x;
                     dragOffsetY = pos.y - textElements[i].y;
                     canvas.style.cursor = 'grabbing';
+                    console.log('Started dragging text', i);
                     break;
                 }
             }
@@ -975,6 +1000,7 @@
                 // Update text position
                 textElements[draggedTextIndex].x = pos.x - dragOffsetX;
                 textElements[draggedTextIndex].y = pos.y - dragOffsetY;
+                console.log('Dragging text to:', textElements[draggedTextIndex].x, textElements[draggedTextIndex].y);
                 drawCanvas();
             } else {
                 // Change cursor if hovering over text
@@ -1001,6 +1027,8 @@
             if (!canvas) return;
 
             const pos = getTouchPos(canvas, evt);
+            console.log('Touch start at:', pos.x, pos.y);
+            console.log('Text elements:', textElements.length);
 
             for (let i = textElements.length - 1; i >= 0; i--) {
                 if (isPointInText(pos.x, pos.y, textElements[i])) {
@@ -1008,6 +1036,7 @@
                     draggedTextIndex = i;
                     dragOffsetX = pos.x - textElements[i].x;
                     dragOffsetY = pos.y - textElements[i].y;
+                    console.log('Started dragging text', i);
                     break;
                 }
             }
@@ -1030,19 +1059,23 @@
         }
 
         // Add event listeners when canvas is ready
+        let canvasEventsInitialized = false;
         function initCanvasEvents() {
-            if (!canvas) return;
+            if (!canvas || canvasEventsInitialized) return;
+            canvasEventsInitialized = true;
 
             // Mouse events
-            canvas.addEventListener('mousedown', handleCanvasMouseDown);
-            canvas.addEventListener('mousemove', handleCanvasMouseMove);
-            canvas.addEventListener('mouseup', handleCanvasMouseUp);
-            canvas.addEventListener('mouseleave', handleCanvasMouseUp);
+            canvas.addEventListener('mousedown', handleCanvasMouseDown, false);
+            canvas.addEventListener('mousemove', handleCanvasMouseMove, false);
+            canvas.addEventListener('mouseup', handleCanvasMouseUp, false);
+            canvas.addEventListener('mouseleave', handleCanvasMouseUp, false);
 
-            // Touch events
+            // Touch events with explicit passive: false
             canvas.addEventListener('touchstart', handleCanvasTouchStart, { passive: false });
             canvas.addEventListener('touchmove', handleCanvasTouchMove, { passive: false });
             canvas.addEventListener('touchend', handleCanvasTouchEnd, { passive: false });
+
+            console.log('Canvas events initialized');
         }
 
         function handleFileSelect(e) {
@@ -1099,22 +1132,57 @@
             canvas = document.getElementById('preview-canvas');
             ctx = canvas.getContext('2d');
 
-            // Use actual image dimensions - let CSS handle the scaling for display
-            canvas.width = img.width;
-            canvas.height = img.height;
+            // Fixed 9:16 aspect ratio (like TikTok/Instagram Stories)
+            const targetWidth = 1080;
+            const targetHeight = 1920;
+
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+
+            console.log('Canvas set to 9:16 ratio:', canvas.width, 'x', canvas.height);
 
             canvas.classList.add('active');
+
+            // Reset event initialization flag
+            canvasEventsInitialized = false;
+
             drawCanvas();
 
-            // Initialize dragging functionality
-            initCanvasEvents();
+            // Initialize dragging functionality after a short delay
+            setTimeout(() => {
+                initCanvasEvents();
+                console.log('Canvas ready for text dragging');
+            }, 100);
         }
 
         function drawCanvas() {
             if (!originalImage || !ctx) return;
 
             ctx.save();
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Fill with dark gray background (letterboxing)
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Calculate scaling to fit image with letterboxing
+            const imgAspect = originalImage.width / originalImage.height;
+            const canvasAspect = canvas.width / canvas.height;
+
+            let drawWidth, drawHeight, offsetX, offsetY;
+
+            if (imgAspect > canvasAspect) {
+                // Image is wider - fit to width
+                drawWidth = canvas.width;
+                drawHeight = canvas.width / imgAspect;
+                offsetX = 0;
+                offsetY = (canvas.height - drawHeight) / 2;
+            } else {
+                // Image is taller - fit to height
+                drawHeight = canvas.height;
+                drawWidth = canvas.height * imgAspect;
+                offsetX = (canvas.width - drawWidth) / 2;
+                offsetY = 0;
+            }
 
             // Apply transformations
             ctx.translate(canvas.width / 2, canvas.height / 2);
@@ -1123,7 +1191,7 @@
 
             // Apply filters
             ctx.filter = getFilterString();
-            ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(originalImage, offsetX, offsetY, drawWidth, drawHeight);
 
             ctx.restore();
 
