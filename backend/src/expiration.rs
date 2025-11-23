@@ -58,7 +58,7 @@ impl ExpirationService {
             .await?;
 
             // Delete associated media from S3 if exists
-            if let Some(ref media_url) = msg.media_url {
+            if let Some(media_url) = &msg.media_url {
                 if let Some(s3_key) = extract_s3_key(media_url) {
                     let _ = self.media_service.delete_media(&s3_key).await;
                 }
@@ -89,7 +89,7 @@ impl ExpirationService {
             // Delete from S3
             let _ = self.media_service.delete_media(&media.s3_key).await;
 
-            if let Some(ref thumb_key) = media.thumbnail_s3_key {
+            if let Some(thumb_key) = &media.thumbnail_s3_key {
                 let _ = self.media_service.delete_media(thumb_key).await;
             }
 
@@ -128,7 +128,7 @@ impl ExpirationService {
             .await?;
 
             // Delete media from S3
-            if let Some(ref media_url) = msg.media_url {
+            if let Some(media_url) = &msg.media_url {
                 if let Some(s3_key) = extract_s3_key(media_url) {
                     let _ = self.media_service.delete_media(&s3_key).await;
                 }

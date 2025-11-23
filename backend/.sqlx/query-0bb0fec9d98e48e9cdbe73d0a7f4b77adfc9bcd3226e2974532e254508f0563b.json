@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT\n                al.id, al.admin_id, au.username as admin_username, al.action,\n                al.target_user_id, tu.username as target_username,\n                al.target_resource_type, al.target_resource_id,\n                COALESCE(al.details, '{}'::jsonb) as \"details!: serde_json::Value\",\n                al.created_at as \"created_at: chrono::DateTime<chrono::Utc>\"\n            FROM admin_logs al\n            LEFT JOIN users au ON al.admin_id = au.id\n            LEFT JOIN users tu ON al.target_user_id = tu.id\n            WHERE al.action = $1\n            ORDER BY al.created_at DESC\n            LIMIT $2 OFFSET $3\n            ",
+  "query": "\n            SELECT\n                al.id, al.admin_id, au.username as admin_username, al.action,\n                al.target_user_id, tu.username as target_username,\n                al.target_resource_type, al.target_resource_id,\n                COALESCE(al.details, ''::text) as \"details!: String\",\n                al.created_at as \"created_at: chrono::DateTime<chrono::Utc>\"\n            FROM admin_logs al\n            LEFT JOIN users au ON al.admin_id = au.id\n            LEFT JOIN users tu ON al.target_user_id = tu.id\n            ORDER BY al.created_at DESC\n            LIMIT $1 OFFSET $2\n            ",
   "describe": {
     "columns": [
       {
@@ -45,8 +45,8 @@
       },
       {
         "ordinal": 8,
-        "name": "details!: serde_json::Value",
-        "type_info": "Jsonb"
+        "name": "details!: String",
+        "type_info": "Text"
       },
       {
         "ordinal": 9,
@@ -56,14 +56,13 @@
     ],
     "parameters": {
       "Left": [
-        "Text",
         "Int8",
         "Int8"
       ]
     },
     "nullable": [
       false,
-      false,
+      true,
       false,
       false,
       true,
@@ -71,8 +70,8 @@
       true,
       true,
       null,
-      false
+      true
     ]
   },
-  "hash": "f6e50090188c297c2c88271d611e82b2ba35d53e8ee054023b7123aaff890186"
+  "hash": "0bb0fec9d98e48e9cdbe73d0a7f4b77adfc9bcd3226e2974532e254508f0563b"
 }

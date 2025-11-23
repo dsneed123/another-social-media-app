@@ -206,7 +206,8 @@ async fn calculate_feed_scores(
         let mut score = 0.0;
 
         // Recency score (0-10 points, newer = higher)
-        let age_hours = (Utc::now() - story.created_at.and_utc()).num_hours() as f64;
+        let age_seconds = (Utc::now().timestamp() - story.created_at.and_utc().timestamp()) as f64;
+        let age_hours = age_seconds / 3600.0;
         let recency_score = (10.0_f64 - (age_hours / 16.8)).max(0.0); // Decay over 7 days
         score += recency_score;
 

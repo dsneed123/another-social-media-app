@@ -10,7 +10,7 @@
         "Uuid",
         "Varchar",
         "Uuid",
-        "Jsonb"
+        "Text"
       ]
     },
     "nullable": []

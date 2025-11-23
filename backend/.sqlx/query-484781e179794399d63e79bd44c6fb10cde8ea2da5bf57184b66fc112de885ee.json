@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        INSERT INTO story_comments (story_id, user_id, comment_text, parent_comment_id)\n        VALUES ($1, $2, $3, $4)\n        RETURNING \n            id,\n            story_id,\n            user_id,\n            (SELECT username FROM users WHERE id = $2) as \"username!\",\n            comment_text,\n            parent_comment_id,\n            reply_count,\n            created_at\n        ",
+  "query": "\n        SELECT\n            c.id,\n            c.story_id,\n            c.user_id,\n            u.username,\n            u.avatar_url,\n            c.comment_text,\n            c.parent_comment_id,\n            c.reply_count,\n            c.created_at\n        FROM story_comments c\n        JOIN users u ON c.user_id = u.id\n        WHERE c.parent_comment_id = $1\n        ORDER BY c.created_at ASC\n        ",
   "describe": {
     "columns": [
       {
@@ -20,35 +20,37 @@
       },
       {
         "ordinal": 3,
-        "name": "username!",
+        "name": "username",
         "type_info": "Varchar"
       },
       {
         "ordinal": 4,
-        "name": "comment_text",
+        "name": "avatar_url",
         "type_info": "Text"
       },
       {
         "ordinal": 5,
+        "name": "comment_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
         "name": "parent_comment_id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "reply_count",
         "type_info": "Int4"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "created_at",
         "type_info": "Timestamp"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid",
-        "Uuid",
-        "Text",
         "Uuid"
       ]
     },
@@ -56,12 +58,13 @@
       false,
       false,
       false,
-      null,
+      false,
+      true,
       false,
       true,
       true,
       false
     ]
   },
-  "hash": "9568f43761ce49d9fecaa8447c25804c08a6abfac9ff46380cd5ff457a0f8d4c"
+  "hash": "484781e179794399d63e79bd44c6fb10cde8ea2da5bf57184b66fc112de885ee"
 }

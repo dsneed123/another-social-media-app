@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT\n            sc.id,\n            sc.story_id,\n            sc.user_id,\n            u.username,\n            sc.comment_text,\n            sc.parent_comment_id,\n            sc.reply_count,\n            sc.created_at\n        FROM story_comments sc\n        JOIN users u ON sc.user_id = u.id\n        WHERE sc.story_id = $1 AND sc.parent_comment_id IS NULL\n        ORDER BY sc.created_at ASC\n        ",
+  "query": "\n        INSERT INTO story_comments (story_id, user_id, comment_text, parent_comment_id)\n        VALUES ($1, $2, $3, $4)\n        RETURNING\n            id,\n            story_id,\n            user_id,\n            (SELECT username FROM users WHERE id = $2) as \"username!\",\n            (SELECT avatar_url FROM users WHERE id = $2) as \"avatar_url\",\n            comment_text,\n            parent_comment_id,\n            reply_count,\n            created_at\n        ",
   "describe": {
     "columns": [
       {
@@ -20,32 +20,40 @@
       },
       {
         "ordinal": 3,
-        "name": "username",
+        "name": "username!",
         "type_info": "Varchar"
       },
       {
         "ordinal": 4,
-        "name": "comment_text",
+        "name": "avatar_url",
         "type_info": "Text"
       },
       {
         "ordinal": 5,
+        "name": "comment_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
         "name": "parent_comment_id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "reply_count",
         "type_info": "Int4"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "created_at",
         "type_info": "Timestamp"
       }
     ],
     "parameters": {
       "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
         "Uuid"
       ]
     },
@@ -53,12 +61,13 @@
       false,
       false,
       false,
-      false,
+      null,
+      null,
       false,
       true,
       true,
       false
     ]
   },
-  "hash": "e5a65b905f060919cadfb0b7ff2bb2a2e02f89fde9aa5e3ca79b9a24b900ec61"
+  "hash": "b62a279b608d3b8929f4e1febed4446d74cbe8447ac4a9f501fbdb356a9e1678"
 }

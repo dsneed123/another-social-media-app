@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT \n            c.id,\n            c.story_id,\n            c.user_id,\n            u.username,\n            c.comment_text,\n            c.parent_comment_id,\n            c.reply_count,\n            c.created_at\n        FROM story_comments c\n        JOIN users u ON c.user_id = u.id\n        WHERE c.parent_comment_id = $1\n        ORDER BY c.created_at ASC\n        ",
+  "query": "\n        SELECT\n            sc.id,\n            sc.story_id,\n            sc.user_id,\n            u.username,\n            u.avatar_url,\n            sc.comment_text,\n            sc.parent_comment_id,\n            sc.reply_count,\n            sc.created_at\n        FROM story_comments sc\n        JOIN users u ON sc.user_id = u.id\n        WHERE sc.story_id = $1 AND sc.parent_comment_id IS NULL\n        ORDER BY sc.created_at ASC\n        ",
   "describe": {
     "columns": [
       {
@@ -25,21 +25,26 @@
       },
       {
         "ordinal": 4,
-        "name": "comment_text",
+        "name": "avatar_url",
         "type_info": "Text"
       },
       {
         "ordinal": 5,
+        "name": "comment_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
         "name": "parent_comment_id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "reply_count",
         "type_info": "Int4"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "created_at",
         "type_info": "Timestamp"
       }
@@ -54,11 +59,12 @@
       false,
       false,
       false,
+      true,
       false,
       true,
       true,
       false
     ]
   },
-  "hash": "ebf732b06af231e4666d88568757180d7a7f738d0e1e0f3a1654c3f1a09c6f62"
+  "hash": "5fd4999c6ad9c8fa6d721f8878f4258a3d448b1584e364e0ca404348c15e2b1a"
 }

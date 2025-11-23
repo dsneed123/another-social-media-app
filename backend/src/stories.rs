@@ -308,7 +308,7 @@ pub async fn get_feed_stories(
                 let ad = &ads[ad_index];
                 let ad_story = Story {
                     id: ad.id,
-                    user_id: ad.created_by,
+                    user_id: ad.created_by.unwrap_or_default(),
                     media_url: ad.image_url.clone().unwrap_or_default(),
                     media_type: "image".to_string(),
                     thumbnail_url: ad.image_url.clone(),
@@ -316,7 +316,7 @@ pub async fn get_feed_stories(
                     view_count: None,
                     like_count: None,
                     comment_count: None,
-                    created_at: ad.created_at,
+                    created_at: ad.created_at.unwrap_or_else(|| Utc::now().naive_utc()),
                     expires_at: Utc::now().naive_utc() + chrono::Duration::days(1),
                     username: Some("Sponsored".to_string()),
                     is_viewed: None,
