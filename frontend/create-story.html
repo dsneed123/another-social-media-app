@@ -1988,7 +1988,7 @@
                 }
 
                 // Add speed
-                if (videoEditor && videoEditor.speed !== 1.0) {
+                if (videoEditor && videoEditor.speed !== undefined && videoEditor.speed !== 1.0) {
                     formData.append('speed', videoEditor.speed.toString());
                 }
 
