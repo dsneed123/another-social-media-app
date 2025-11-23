@@ -709,17 +709,42 @@
         }
 
         .upload-progress-container {
-            margin-top: 20px;
+            margin-top: 24px;
             width: 100%;
+            max-width: 420px;
+        }
+
+        .upload-step-indicator {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .upload-step-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #B39FFF;
+            margin-bottom: 8px;
+        }
+
+        .upload-step-subtitle {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 4px;
+        }
+
+        .upload-step-detail {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
         }
 
         .upload-progress-bar {
             width: 100%;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
             overflow: hidden;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .upload-progress-fill {
@@ -727,8 +752,8 @@
             background: linear-gradient(90deg, #B39FFF, #667eea);
             border-radius: 4px;
             width: 0%;
-            transition: width 0.3s ease;
-            box-shadow: 0 0 10px rgba(179, 159, 255, 0.5);
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 15px rgba(179, 159, 255, 0.6);
         }
 
         .upload-progress-text {
@@ -737,6 +762,25 @@
             display: flex;
             justify-content: space-between;
             margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .upload-checkmark {
+            font-size: 48px;
+            color: #4ade80;
+            margin-bottom: 12px;
+            animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes scaleIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         @keyframes spin {
@@ -943,6 +987,11 @@
             <div class="spinner"></div>
             <p id="loading-status">Preparing your story...</p>
             <div class="upload-progress-container" id="upload-progress-container" style="display: none;">
+                <div class="upload-step-indicator" id="upload-step-indicator">
+                    <div class="upload-step-title" id="upload-step-title">Preparing...</div>
+                    <div class="upload-step-subtitle" id="upload-step-subtitle">Getting your story ready</div>
+                    <div class="upload-step-detail" id="upload-step-detail"></div>
+                </div>
                 <div class="upload-progress-bar">
                     <div class="upload-progress-fill" id="upload-progress-fill"></div>
                 </div>
@@ -1649,9 +1698,21 @@
             const progressFill = document.getElementById('upload-progress-fill');
             const progressPercent = document.getElementById('upload-progress-percent');
             const progressSpeed = document.getElementById('upload-progress-speed');
+            const stepTitle = document.getElementById('upload-step-title');
+            const stepSubtitle = document.getElementById('upload-step-subtitle');
+            const stepDetail = document.getElementById('upload-step-detail');
 
             loadingOverlay.classList.add('active');
-            loadingStatus.textContent = 'Preparing your story...';
+            loadingStatus.style.display = 'none';
+            progressContainer.style.display = 'block';
+
+            // Step 1: Preparing
+            stepTitle.textContent = 'Step 1 of 4: Preparing';
+            stepSubtitle.textContent = 'Getting your story ready';
+            stepDetail.textContent = '';
+            progressFill.style.width = '10%';
+            progressPercent.textContent = '10%';
+            progressSpeed.textContent = '';
 
             try {
                 // Get user info
@@ -1670,13 +1731,21 @@
                 if (isVideo) {
                     // Check if we have a rendered video with edits
                     if (window.renderedVideoFile) {
-                        loadingStatus.textContent = 'Preparing edited video...';
+                        stepTitle.textContent = 'Step 2 of 4: Processing';
+                        stepSubtitle.textContent = 'Preparing edited video';
+                        stepDetail.textContent = 'Using rendered video with effects';
+                        progressFill.style.width = '20%';
+                        progressPercent.textContent = '20%';
                         finalBlob = window.renderedVideoFile;
                         fileExtension = 'webm'; // Rendered videos are WebM format
                         console.log('Using rendered video with edits');
                         console.log('Rendered video size:', (finalBlob.size / (1024 * 1024)).toFixed(2), 'MB');
                     } else {
-                        loadingStatus.textContent = 'Compressing video...';
+                        stepTitle.textContent = 'Step 2 of 4: Compressing';
+                        stepSubtitle.textContent = 'Optimizing video quality';
+                        stepDetail.textContent = 'This may take a moment...';
+                        progressFill.style.width = '20%';
+                        progressPercent.textContent = '20%';
                         finalBlob = await compressVideo(selectedFile);
                         if (!finalBlob) {
                             loadingOverlay.classList.remove('active');
@@ -1684,7 +1753,11 @@
                         }
                     }
                 } else {
-                    loadingStatus.textContent = 'Processing image...';
+                    stepTitle.textContent = 'Step 2 of 4: Processing';
+                    stepSubtitle.textContent = 'Optimizing image';
+                    stepDetail.textContent = 'Preparing your photo';
+                    progressFill.style.width = '20%';
+                    progressPercent.textContent = '20%';
                     // Get the canvas with all edits
                     finalBlob = await new Promise(resolve => {
                         canvas.toBlob(resolve, 'image/jpeg', 0.8);
@@ -1719,8 +1792,11 @@
                 }
 
                 // Use XMLHttpRequest for upload progress
-                loadingStatus.textContent = 'Uploading story...';
-                progressContainer.style.display = 'block';
+                stepTitle.textContent = 'Step 3 of 4: Uploading';
+                stepSubtitle.textContent = 'Sending to server';
+                stepDetail.textContent = `File size: ${fileSizeMB.toFixed(1)} MB`;
+                progressFill.style.width = '30%';
+                progressPercent.textContent = '30%';
 
                 const uploadStartTime = Date.now();
                 let lastLoaded = 0;
@@ -1734,9 +1810,11 @@
 
                     xhr.upload.addEventListener('progress', (e) => {
                         if (e.lengthComputable) {
-                            const percent = Math.round((e.loaded / e.total) * 100);
-                            progressFill.style.width = percent + '%';
-                            progressPercent.textContent = percent + '%';
+                            // Map upload progress to 30-80% range
+                            const uploadPercent = Math.round((e.loaded / e.total) * 100);
+                            const overallPercent = 30 + Math.round(uploadPercent * 0.5);
+                            progressFill.style.width = overallPercent + '%';
+                            progressPercent.textContent = overallPercent + '%';
 
                             // Calculate speed
                             const now = Date.now();
@@ -1746,6 +1824,7 @@
                             if (timeDiff > 0.5) { // Update speed every 0.5s
                                 const speedMBps = (bytesDiff / timeDiff / (1024 * 1024)).toFixed(2);
                                 progressSpeed.textContent = speedMBps + ' MB/s';
+                                stepDetail.textContent = `Uploading: ${(e.loaded / (1024 * 1024)).toFixed(1)} / ${fileSizeMB.toFixed(1)} MB`;
                                 lastLoaded = e.loaded;
                                 lastTime = now;
                             }
@@ -1791,23 +1870,38 @@
                     xhr.send(formData);
                 });
 
-                // Success
+                // Success - Step 4: Complete
                 console.log('Story created successfully');
-                loadingStatus.textContent = '✅ Story posted!';
+                stepTitle.innerHTML = '<div class="upload-checkmark">✓</div>Step 4 of 4: Complete!';
+                stepTitle.style.color = '#4ade80';
+                stepSubtitle.textContent = 'Your story has been posted';
+                stepDetail.textContent = 'Redirecting...';
+                progressFill.style.width = '100%';
+                progressFill.style.background = 'linear-gradient(90deg, #4ade80, #22c55e)';
+                progressPercent.textContent = '100%';
+                progressSpeed.textContent = '✓';
 
                 setTimeout(() => {
                     window.location.href = '/stories.html?refresh=' + Date.now();
-                }, 500);
+                }, 1200);
 
             } catch (error) {
                 console.error('Error posting story:', error);
+                stepTitle.textContent = 'Upload Failed';
+                stepTitle.style.color = '#ef4444';
+                stepSubtitle.textContent = error.message || 'Please try again';
+                stepDetail.textContent = '';
+                progressFill.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
                 alert('Failed to post story. Please try again.');
-            } finally {
+
                 setTimeout(() => {
                     loadingOverlay.classList.remove('active');
+                    loadingStatus.style.display = 'block';
                     progressContainer.style.display = 'none';
                     progressFill.style.width = '0%';
-                }, 2000);
+                    progressFill.style.background = 'linear-gradient(90deg, #B39FFF, #667eea)';
+                    stepTitle.style.color = '#B39FFF';
+                }, 3000);
             }
         }
 
