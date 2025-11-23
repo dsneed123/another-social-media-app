@@ -157,16 +157,16 @@ async fn get_active_media_urls(pool: &PgPool) -> Result<Vec<String>, String> {
         }
     }
 
-    // Get profile pictures
+    // Get profile pictures (avatar_url)
     let users = sqlx::query_as::<_, (Option<String>,)>(
-        "SELECT profile_pic FROM users WHERE profile_pic IS NOT NULL"
+        "SELECT avatar_url FROM users WHERE avatar_url IS NOT NULL"
     )
     .fetch_all(pool)
     .await
     .map_err(|e| format!("Failed to fetch user profiles: {}", e))?;
 
-    for (profile_pic,) in users {
-        if let Some(pic) = profile_pic {
+    for (avatar_url,) in users {
+        if let Some(pic) = avatar_url {
             urls.push(pic);
         }
     }
