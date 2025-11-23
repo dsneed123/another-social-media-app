@@ -1656,9 +1656,13 @@
                     </button>
                 ` : '';
 
+                const avatarContent = comment.avatar_url
+                    ? `<img src="${comment.avatar_url}" alt="${comment.username}" style="width: 100%; height: 100%; object-fit: cover;">`
+                    : (comment.username || 'U')[0].toUpperCase();
+
                 return `
                     <div class="comment-item" data-comment-id="${comment.id}">
-                        <div class="comment-avatar">${(comment.username || 'U')[0].toUpperCase()}</div>
+                        <div class="comment-avatar">${avatarContent}</div>
                         <div class="comment-content">
                             <div class="comment-header">
                                 <span class="comment-username">@${comment.username}</span>
@@ -1720,9 +1724,13 @@
                     </button>
                 ` : '';
 
+                const avatarContent = reply.avatar_url
+                    ? `<img src="${reply.avatar_url}" alt="${reply.username}" style="width: 100%; height: 100%; object-fit: cover;">`
+                    : (reply.username || 'U')[0].toUpperCase();
+
                 return `
                     <div class="comment-item" data-comment-id="${reply.id}" style="margin-bottom: 15px;">
-                        <div class="comment-avatar" style="width: 30px; height: 30px; font-size: 12px;">${(reply.username || 'U')[0].toUpperCase()}</div>
+                        <div class="comment-avatar" style="width: 30px; height: 30px; font-size: 12px;">${avatarContent}</div>
                         <div class="comment-content">
                             <div class="comment-header">
                                 <span class="comment-username">@${reply.username}</span>

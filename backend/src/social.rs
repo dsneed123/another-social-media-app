@@ -342,6 +342,7 @@ pub struct Comment {
     pub story_id: Uuid,
     pub user_id: Uuid,
     pub username: String,
+    pub avatar_url: Option<String>,
     pub comment_text: String,
     pub parent_comment_id: Option<Uuid>,
     pub reply_count: Option<i32>,
@@ -383,11 +384,12 @@ pub async fn add_comment(
     // Fetch the created comment with username
     let comment = sqlx::query!(
         r#"
-        SELECT 
+        SELECT
             sc.id,
             sc.story_id,
             sc.user_id,
             u.username,
+            u.avatar_url,
             sc.comment_text,
             sc.created_at
         FROM story_comments sc
@@ -407,6 +409,7 @@ pub async fn add_comment(
             story_id: comment.story_id,
             user_id: comment.user_id,
             username: comment.username,
+            avatar_url: comment.avatar_url,
             comment_text: comment.comment_text,
             parent_comment_id: None,
             reply_count: Some(0),
@@ -427,6 +430,7 @@ pub async fn get_story_comments(
             sc.story_id,
             sc.user_id,
             u.username,
+            u.avatar_url,
             sc.comment_text,
             sc.parent_comment_id,
             sc.reply_count,
@@ -447,6 +451,7 @@ pub async fn get_story_comments(
         story_id: c.story_id,
         user_id: c.user_id,
         username: c.username,
+        avatar_url: c.avatar_url,
         comment_text: c.comment_text,
         parent_comment_id: c.parent_comment_id,
         reply_count: c.reply_count,
@@ -621,6 +626,7 @@ pub struct CommentWithReplies {
     pub story_id: Uuid,
     pub user_id: Uuid,
     pub username: String,
+    pub avatar_url: Option<String>,
     pub comment_text: String,
     pub parent_comment_id: Option<Uuid>,
     pub reply_count: Option<i32>,
@@ -644,11 +650,12 @@ pub async fn add_reply(
         r#"
         INSERT INTO story_comments (story_id, user_id, comment_text, parent_comment_id)
         VALUES ($1, $2, $3, $4)
-        RETURNING 
+        RETURNING
             id,
             story_id,
             user_id,
             (SELECT username FROM users WHERE id = $2) as "username!",
+            (SELECT avatar_url FROM users WHERE id = $2) as "avatar_url",
             comment_text,
             parent_comment_id,
             reply_count,
@@ -674,11 +681,12 @@ pub async fn get_comment_replies(
     let replies = sqlx::query_as!(
         CommentWithReplies,
         r#"
-        SELECT 
+        SELECT
             c.id,
             c.story_id,
             c.user_id,
             u.username,
+            u.avatar_url,
             c.comment_text,
             c.parent_comment_id,
             c.reply_count,
