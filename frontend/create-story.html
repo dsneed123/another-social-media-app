@@ -1988,8 +1988,8 @@
                 }
 
                 // Add speed
-                if (videoEditor && videoEditor.speed !== undefined && videoEditor.speed !== 1.0) {
-                    formData.append('speed', videoEditor.speed.toString());
+                if (videoEditor && videoEditor.playbackSpeed !== undefined && videoEditor.playbackSpeed !== 1.0) {
+                    formData.append('speed', videoEditor.playbackSpeed.toString());
                 }
 
                 console.log('Sending render request to server...');
