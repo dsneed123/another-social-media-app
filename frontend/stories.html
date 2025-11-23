@@ -367,7 +367,76 @@
             gap: 6px;
         }
 
-        /* Right Side Actions - REMOVED */
+        /* Right Side Actions */
+        .video-actions {
+            position: absolute;
+            right: 16px;
+            bottom: 120px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:active {
+            transform: scale(0.9);
+        }
+
+        .action-btn i {
+            font-size: 28px;
+            color: #fff;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+        }
+
+        .action-btn.liked i {
+            color: #ff6b6b;
+            animation: heartBeat 0.3s ease;
+        }
+
+        @keyframes heartBeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .action-btn .action-count {
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            margin-top: 4px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .profile-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #B39FFF, #9d7fee);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .profile-avatar:active {
+            transform: scale(0.95);
+        }
 
         /* Bottom Navigation */
         .bottom-nav {
@@ -666,6 +735,16 @@
                 max-width: 62px;
             }
 
+            .video-actions {
+                right: 12px;
+                bottom: 100px;
+                gap: 18px;
+            }
+
+            .action-btn i {
+                font-size: 26px;
+            }
+
             .video-info {
                 padding: 20px 14px;
             }
@@ -841,6 +920,10 @@
                 transform: translateX(-50%);
                 border-radius: 0;
                 box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+            }
+
+            .action-btn:hover {
+                transform: scale(1.1);
             }
 
             .story-circle:hover {
@@ -1123,6 +1206,12 @@
                                 </button>
                             ` : ''}
                         </div>
+
+                        <div class="video-actions">
+                            <div class="profile-avatar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <i class="bi bi-megaphone"></i>
+                            </div>
+                        </div>
                     `;
 
                     // After adding, check aspect ratio and adjust fit if needed
@@ -1155,9 +1244,29 @@
                                 <i class="bi bi-clock"></i>
                                 ${getTimeAgo(story.created_at)}
                                 ${story.view_count > 0 ? `<span style="margin-left: 12px;"><i class="bi bi-eye"></i> ${story.view_count}</span>` : ''}
-                                ${story.like_count > 0 ? `<span style="margin-left: 12px;"><i class="bi bi-heart"></i> ${story.like_count}</span>` : ''}
-                                ${story.comment_count > 0 ? `<span style="margin-left: 12px;"><i class="bi bi-chat"></i> ${story.comment_count}</span>` : ''}
                             </div>
+                        </div>
+
+                        <div class="video-actions">
+                            <div class="profile-avatar" onclick="viewProfile('${story.user_id}', '${story.username}')">${(story.username || 'U')[0].toUpperCase()}</div>
+
+                            <button class="action-btn ${story.is_liked ? 'liked' : ''}" onclick="toggleStoryLike(this, '${story.id}')">
+                                <i class="bi bi-heart${story.is_liked ? '-fill' : ''}"></i>
+                                <span class="action-count">${story.like_count || 0}</span>
+                            </button>
+
+                            <button class="action-btn" onclick="openComments('${story.id}', ${story.comment_count || 0})">
+                                <i class="bi bi-chat"></i>
+                                <span class="action-count">${story.comment_count || 0}</span>
+                            </button>
+
+                            <button class="action-btn" onclick="shareStory('${story.id}')">
+                                <i class="bi bi-share"></i>
+                            </button>
+
+                            <button class="action-btn" onclick="viewProfile('${story.user_id}', '${story.username}')">
+                                <i class="bi bi-person-circle"></i>
+                            </button>
                         </div>
                     `;
 
@@ -1670,7 +1779,7 @@
                     input.placeholder = 'Add a comment...';
                     replyingTo = null;
                     await loadModalComments(storyId);
-                    
+
                     // Update comment count in the story feed
                     const storyItem = document.querySelector(`[data-story-id="${storyId}"]`);
                     if (storyItem) {
