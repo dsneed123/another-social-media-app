@@ -43,7 +43,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      dockerfile: Dockerfile
     container_name: relays-backend
     environment:
       DATABASE_URL: postgresql://relayhub_user:${POSTGRES_PASSWORD:-supersecretpassword}@postgres:5432/relayhub

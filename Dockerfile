@@ -47,10 +47,12 @@ FROM debian:bookworm-slim
 
 WORKDIR /app
 
-# Install runtime dependencies
+# Install runtime dependencies including FFmpeg for video rendering
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     libssl3 \
+    ffmpeg \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the built binary from builder
