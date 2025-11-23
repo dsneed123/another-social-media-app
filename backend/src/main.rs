@@ -186,6 +186,7 @@ async fn main() {
         // Stories endpoints (also needs increased limit for media uploads)
         .route("/api/stories/create", post(stories::create_story_multipart))
         .route("/api/stories/render", post(video_render::render_video))
+        .route("/api/stories/proxy/*s3_key", get(video_render::proxy_rendered_video))
         .route("/api/stories/user/:user_id", get(stories::get_user_stories))
         .route("/api/stories/feed/:viewer_id", get(stories::get_feed_stories))
         .route("/api/stories/by-user/:viewer_id", get(stories::get_stories_by_user))

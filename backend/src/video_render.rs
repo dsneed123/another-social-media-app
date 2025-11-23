@@ -1,7 +1,9 @@
 use axum::{
-    extract::{State, Multipart},
+    extract::{State, Multipart, Path},
     Json,
     http::StatusCode,
+    response::Response,
+    body::Body,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -312,14 +314,11 @@ pub async fn render_video(
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
-    // Construct public URL
-    let video_url = if let Some(ref public_base) = state.media_service.public_url_base {
-        format!("{}/{}", public_base, s3_key)
-    } else {
-        format!("https://{}.s3.amazonaws.com/{}", state.media_service.bucket_name, s3_key)
-    };
+    // Use proxy URL to avoid CORS issues
+    let video_url = format!("/api/stories/proxy/{}", s3_key);
 
-    println!("✅ Rendered video uploaded: {}", video_url);
+    println!("✅ Rendered video uploaded to S3: {}", s3_key);
+    println!("✅ Proxy URL: {}", video_url);
 
     Ok(Json(RenderResponse {
         render_id,
@@ -327,4 +326,51 @@ pub async fn render_video(
         message: "Video rendered successfully".to_string(),
         render_time_seconds: render_time,
     }))
+}
+
+/// Proxy endpoint to download rendered videos from R2 (avoids CORS issues)
+pub async fn proxy_rendered_video(
+    State(state): State<Arc<AppState>>,
+    Path(s3_key): Path<String>,
+) -> Result<Response, StatusCode> {
+    println!("📥 Proxying video download: {}", s3_key);
+
+    // Download from S3/R2
+    let get_result = state.media_service.s3_client
+        .get_object()
+        .bucket(&state.media_service.bucket_name)
+        .key(&s3_key)
+        .send()
+        .await
+        .map_err(|e| {
+            eprintln!("❌ Failed to download from R2: {}", e);
+            StatusCode::NOT_FOUND
+        })?;
+
+    // Get content type
+    let content_type = get_result.content_type()
+        .unwrap_or("video/mp4")
+        .to_string();
+
+    // Read body
+    let body_bytes = get_result.body
+        .collect()
+        .await
+        .map_err(|e| {
+            eprintln!("❌ Failed to read video body: {}", e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .into_bytes();
+
+    println!("✅ Downloaded {} bytes from R2", body_bytes.len());
+
+    // Return video with proper headers
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", content_type)
+        .header("Content-Length", body_bytes.len().to_string())
+        .header("Accept-Ranges", "bytes")
+        .header("Cache-Control", "public, max-age=31536000")
+        .body(Body::from(body_bytes))
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
