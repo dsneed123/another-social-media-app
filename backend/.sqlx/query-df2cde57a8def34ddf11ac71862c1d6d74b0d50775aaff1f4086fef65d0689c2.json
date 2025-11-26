@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT\n                al.id, al.admin_id, au.username as admin_username, al.action,\n                al.target_user_id, tu.username as target_username,\n                al.target_resource_type, al.target_resource_id,\n                COALESCE(al.details, ''::text) as \"details!: String\",\n                al.created_at as \"created_at: chrono::DateTime<chrono::Utc>\"\n            FROM admin_logs al\n            LEFT JOIN users au ON al.admin_id = au.id\n            LEFT JOIN users tu ON al.target_user_id = tu.id\n            WHERE al.action = $1\n            ORDER BY al.created_at DESC\n            LIMIT $2 OFFSET $3\n            ",
+  "query": "\n            SELECT\n                al.id, al.admin_id, au.username as admin_username, al.action,\n                al.target_user_id, tu.username as target_username,\n                al.target_resource_type, al.target_resource_id,\n                COALESCE(al.details::text, '') as \"details!: String\",\n                al.created_at as \"created_at: chrono::DateTime<chrono::Utc>\"\n            FROM admin_logs al\n            LEFT JOIN users au ON al.admin_id = au.id\n            LEFT JOIN users tu ON al.target_user_id = tu.id\n            ORDER BY al.created_at DESC\n            LIMIT $1 OFFSET $2\n            ",
   "describe": {
     "columns": [
       {
@@ -56,14 +56,13 @@
     ],
     "parameters": {
       "Left": [
-        "Text",
         "Int8",
         "Int8"
       ]
     },
     "nullable": [
       false,
-      true,
+      false,
       false,
       false,
       true,
@@ -71,8 +70,8 @@
       true,
       true,
       null,
-      true
+      false
     ]
   },
-  "hash": "e618266971afeda8b6df472d0d2697060d4360febe953f7a6aa100ce31c3572e"
+  "hash": "df2cde57a8def34ddf11ac71862c1d6d74b0d50775aaff1f4086fef65d0689c2"
 }

@@ -485,7 +485,6 @@ async fn log_admin_action(
     target_resource_id: Option<Uuid>,
     details: serde_json::Value,
 ) {
-    let details_str = serde_json::to_string(&details).unwrap_or_default();
     let _ = sqlx::query!(
         "INSERT INTO admin_logs (admin_id, action, target_user_id, target_resource_type, target_resource_id, details) VALUES ($1, $2, $3, $4, $5, $6)",
         admin_id,
@@ -493,7 +492,7 @@ async fn log_admin_action(
         target_user_id,
         target_resource_type,
         target_resource_id,
-        details_str
+        details
     )
     .execute(state.pool.as_ref())
     .await
@@ -547,7 +546,7 @@ pub async fn get_admin_logs(
                 al.id, al.admin_id, au.username as admin_username, al.action,
                 al.target_user_id, tu.username as target_username,
                 al.target_resource_type, al.target_resource_id,
-                COALESCE(al.details, ''::text) as "details!: String",
+                COALESCE(al.details::text, '') as "details!: String",
                 al.created_at as "created_at: chrono::DateTime<chrono::Utc>"
             FROM admin_logs al
             LEFT JOIN users au ON al.admin_id = au.id
@@ -570,7 +569,7 @@ pub async fn get_admin_logs(
                 al.id, al.admin_id, au.username as admin_username, al.action,
                 al.target_user_id, tu.username as target_username,
                 al.target_resource_type, al.target_resource_id,
-                COALESCE(al.details, ''::text) as "details!: String",
+                COALESCE(al.details::text, '') as "details!: String",
                 al.created_at as "created_at: chrono::DateTime<chrono::Utc>"
             FROM admin_logs al
             LEFT JOIN users au ON al.admin_id = au.id
@@ -867,8 +866,8 @@ pub async fn create_ad(
         click_count: ad.click_count,
         ctr_percentage: ctr,
         status: ad.status,
-        created_at: ad.created_at.map(|dt| dt.and_utc()).unwrap_or_else(|| Utc::now()),
-        updated_at: ad.updated_at.map(|dt| dt.and_utc()).unwrap_or_else(|| Utc::now()),
+        created_at: ad.created_at.and_utc(),
+        updated_at: ad.updated_at.and_utc(),
         expires_at: ad.expires_at.map(|dt| dt.and_utc()),
         created_by_username: Some(admin.0.username),
     }))
@@ -1027,8 +1026,8 @@ pub async fn list_ads(
             click_count: row.click_count,
             ctr_percentage: ctr,
             status: row.status,
-            created_at: row.created_at.map(|dt| dt.and_utc()).unwrap_or_else(|| Utc::now()),
-            updated_at: row.updated_at.map(|dt| dt.and_utc()).unwrap_or_else(|| Utc::now()),
+            created_at: row.created_at.and_utc(),
+            updated_at: row.updated_at.and_utc(),
             expires_at: row.expires_at.map(|dt| dt.and_utc()),
             created_by_username: row.created_by_username,
         }
@@ -1371,7 +1370,7 @@ pub async fn create_ad_public(
         input.link_url,
         input.target_impressions,
         input.package_type,
-        input.price,
+        BigDecimal::from_f64(input.price),
         input.contact_email
     )
     .fetch_one(state.pool.as_ref())

@@ -286,9 +286,10 @@ async fn main() {
         .layer(DefaultBodyLimit::max(100 * 1024 * 1024)) // 100MB limit for uploads
         .layer(
             CorsLayer::new()
-                .allow_origin([HeaderValue::from_static("https://relays.social")])
+                .allow_origin(Any)
                 .allow_methods(Any)
                 .allow_headers(Any)
+                .allow_credentials(false)
         )
         .with_state(state)
         // Serve static files from frontend directory as fallback

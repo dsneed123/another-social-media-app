@@ -18,7 +18,7 @@
         "Text",
         "Int4",
         "Varchar",
-        "Float8",
+        "Numeric",
         "Varchar"
       ]
     },
